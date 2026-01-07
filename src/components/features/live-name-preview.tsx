@@ -21,7 +21,7 @@ interface LiveNamePreviewProps {
 }
 
 /**
- * LiveNamePreview - Compact, centered display of the full name with font options
+ * LiveNamePreview - Two-line name display with first+middle on top, last name below
  */
 export function LiveNamePreview({
   firstName,
@@ -31,30 +31,49 @@ export function LiveNamePreview({
   const [selectedFont, setSelectedFont] = useState<FontStyle>("playfair");
   const [fontExpanded, setFontExpanded] = useState(false);
 
-  const parts = [firstName, middleName, lastName].filter((p) => p.trim());
-  const fullName = parts.join(" ");
-  const hasName = fullName.length > 0;
+  // Split into first+middle vs last name
+  const firstMiddle = [firstName, middleName].filter((p) => p.trim()).join(" ");
+  const lastNameTrimmed = lastName.trim();
+  const hasFirstMiddle = firstMiddle.length > 0;
+  const hasLastName = lastNameTrimmed.length > 0;
+  const hasAnyName = hasFirstMiddle || hasLastName;
 
   const currentStyle = fontStyles.find((f) => f.id === selectedFont) || fontStyles[0];
 
   return (
     <div className="space-y-2 sm:space-y-3">
-      {/* Name Display */}
-      <div className="min-h-20 sm:min-h-24 md:min-h-28 flex items-center justify-center py-3 sm:py-2">
+      {/* Name Display - Split into two lines */}
+      <div className="min-h-24 sm:min-h-28 md:min-h-32 flex items-center justify-center py-3 sm:py-2">
         <AnimatePresence mode="popLayout">
-          {hasName ? (
-            <motion.h1
-              key={fullName}
+          {hasAnyName ? (
+            <motion.div
+              key={`${firstMiddle}-${lastNameTrimmed}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.1 }}
               layout
-              style={{ fontFamily: currentStyle.fontVar }}
-              className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-foreground text-center px-1 sm:px-4 break-words max-w-full leading-tight ${currentStyle.className}`}
+              className="text-center"
             >
-              {fullName}
-            </motion.h1>
+              {/* First + Middle Name */}
+              {hasFirstMiddle && (
+                <h1
+                  style={{ fontFamily: currentStyle.fontVar }}
+                  className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-foreground leading-tight ${currentStyle.className}`}
+                >
+                  {firstMiddle}
+                </h1>
+              )}
+              {/* Last Name - slightly smaller, muted */}
+              {hasLastName && (
+                <p
+                  style={{ fontFamily: currentStyle.fontVar }}
+                  className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-foreground/70 leading-tight mt-1 ${currentStyle.className}`}
+                >
+                  {lastNameTrimmed}
+                </p>
+              )}
+            </motion.div>
           ) : (
             <motion.p
               key="placeholder"
