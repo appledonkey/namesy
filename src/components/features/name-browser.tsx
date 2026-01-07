@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { SkeletonNameList } from "@/components/ui/skeleton";
 import { NameCardStack } from "./name-card-stack";
 import { NameDetailSheet } from "./name-detail-sheet";
+import { SwipeListPanel } from "./swipe-list-panel";
 import { haptics } from "@/lib/haptics";
 
 type Gender = "F" | "M" | "all";
@@ -136,15 +137,6 @@ export function NameBrowser({
   };
 
   // Card stack handlers
-  const handleCardLike = (name: NameData) => {
-    haptics.save();
-    onSelectName(name.name);
-  };
-
-  const handleCardSkip = () => {
-    // Just move to next card - no action needed
-  };
-
   const handleCardDetails = (name: NameData) => {
     setDetailSheet({ isOpen: true, name });
   };
@@ -156,8 +148,10 @@ export function NameBrowser({
         {/* Card Stack */}
         <NameCardStack
           names={cardNames}
-          onLike={handleCardLike}
-          onSkip={handleCardSkip}
+          onSwipeAction={() => {
+            // Swipe actions are recorded in the component itself
+            // Could add callback here if parent needs to know
+          }}
           onDetails={handleCardDetails}
           onSelect={(name) => {
             haptics.select();
@@ -202,6 +196,9 @@ export function NameBrowser({
             })}
           </div>
         </div>
+
+        {/* Liked Names Panel */}
+        <SwipeListPanel onSelectName={onSelectName} />
       </div>
 
       {/* Detail Sheet for card view */}

@@ -14,7 +14,6 @@ import { FloatingActionButton } from "@/components/features/floating-action-butt
 import { FavoritesPanel } from "@/components/features/favorites-panel";
 import { ComparePanel } from "@/components/features/compare-panel";
 import { NameRadarChart, createRadarData } from "@/components/features/radar-chart";
-import { PullToRandomize } from "@/components/features/pull-to-randomize";
 import { ChevronDown } from "lucide-react";
 import { analyzeFullName, calculateRadarScores } from "@/lib/analysis";
 import { getRandomName } from "@/lib/names-data";
@@ -94,7 +93,14 @@ export default function Home() {
   const handleRandomize = useCallback(() => {
     const gender = selectedGender === "all" ? (Math.random() > 0.5 ? "M" : "F") : selectedGender;
     const first = getRandomName(gender);
-    const middle = getRandomName(gender);
+
+    // Ensure middle name is different from first name
+    let middle = getRandomName(gender);
+    let attempts = 0;
+    while (middle.name === first.name && attempts < 10) {
+      middle = getRandomName(gender);
+      attempts++;
+    }
 
     setFirstName(first.name);
     setMiddleName(middle.name);
@@ -181,9 +187,6 @@ export default function Home() {
           </div>
         </div>
       </nav>
-
-      {/* Mobile Pull-to-Randomize */}
-      <PullToRandomize onRandomize={handleRandomize} />
 
       {/* Fixed Warning Overlay - doesn't affect layout */}
       <NameWarnings

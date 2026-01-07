@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from "framer-motion";
-import { Heart, X, Info } from "lucide-react";
+import { Heart, X, Info, Star } from "lucide-react";
 import { haptics } from "@/lib/haptics";
+import { recordSwipe, SwipeAction } from "@/lib/swipe-preferences";
 
 interface NameData {
   id: string;
@@ -14,23 +15,22 @@ interface NameData {
 
 interface NameCardStackProps {
   names: NameData[];
-  onLike: (name: NameData) => void;
-  onSkip: (name: NameData) => void;
+  onSwipeAction: (name: NameData, action: SwipeAction) => void;
   onDetails: (name: NameData) => void;
   onSelect: (name: string) => void;
 }
 
 /**
  * NameCardStack - Tinder-style swipeable card stack for mobile
- * - Swipe right = Like/Save
- * - Swipe left = Skip
+ * - Swipe right = Like (add to liked list)
+ * - Swipe left = Dislike (skip and record)
+ * - Heart button = Super Like (add to super liked list)
  * - Swipe up = View details
- * - Tap = Select name
+ * - Tap = Select name for the form
  */
 export function NameCardStack({
   names,
-  onLike,
-  onSkip,
+  onSwipeAction,
   onDetails,
   onSelect,
 }: NameCardStackProps) {
@@ -47,17 +47,38 @@ export function NameCardStack({
     setExitDirection(direction);
 
     if (direction === "right") {
+      // Like
       haptics.save();
-      onLike(currentName);
+      recordSwipe(currentName.name, "like", currentName.origins, currentName.meanings);
+      onSwipeAction(currentName, "like");
     } else if (direction === "left") {
+      // Dislike
       haptics.swipe();
-      onSkip(currentName);
+      recordSwipe(currentName.name, "dislike", currentName.origins, currentName.meanings);
+      onSwipeAction(currentName, "dislike");
     } else if (direction === "up") {
+      // View details (don't record as swipe)
       haptics.tap();
       onDetails(currentName);
+      setExitDirection(null);
+      return; // Don't advance to next card
     }
 
     // Move to next card after animation
+    setTimeout(() => {
+      setCurrentIndex((i) => i + 1);
+      setExitDirection(null);
+    }, 200);
+  };
+
+  const handleSuperLike = () => {
+    if (!currentName) return;
+
+    haptics.save();
+    recordSwipe(currentName.name, "superlike", currentName.origins, currentName.meanings);
+    onSwipeAction(currentName, "superlike");
+
+    setExitDirection("right");
     setTimeout(() => {
       setCurrentIndex((i) => i + 1);
       setExitDirection(null);
@@ -105,25 +126,39 @@ export function NameCardStack({
       </div>
 
       {/* Action buttons */}
-      <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-6 pb-4">
+      <div className="absolute bottom-0 left-0 right-0 flex justify-center items-end gap-4 pb-4">
+        {/* Dislike button */}
         <button
           onClick={() => handleSwipe("left")}
-          aria-label="Skip this name"
-          className="w-14 h-14 rounded-full bg-card border border-border shadow-md flex items-center justify-center text-muted"
+          aria-label="Dislike this name"
+          className="w-14 h-14 rounded-full bg-card border border-border shadow-md flex items-center justify-center text-error"
         >
           <X className="w-6 h-6" aria-hidden="true" />
         </button>
+
+        {/* Info button */}
         <button
           onClick={() => handleSwipe("up")}
           aria-label="View name details"
-          className="w-12 h-12 rounded-full bg-card border border-border shadow-md flex items-center justify-center text-muted"
+          className="w-11 h-11 rounded-full bg-card border border-border shadow-md flex items-center justify-center text-muted"
         >
           <Info className="w-5 h-5" aria-hidden="true" />
         </button>
+
+        {/* Super Like button */}
+        <button
+          onClick={handleSuperLike}
+          aria-label="Super like this name"
+          className="w-12 h-12 rounded-full bg-amber-400 shadow-md flex items-center justify-center text-white"
+        >
+          <Star className="w-5 h-5 fill-current" aria-hidden="true" />
+        </button>
+
+        {/* Like button */}
         <button
           onClick={() => handleSwipe("right")}
           aria-label="Like this name"
-          className="w-14 h-14 rounded-full bg-rose-500 shadow-md flex items-center justify-center text-white"
+          className="w-14 h-14 rounded-full bg-success shadow-md flex items-center justify-center text-white"
         >
           <Heart className="w-6 h-6" aria-hidden="true" />
         </button>
@@ -145,9 +180,9 @@ function SwipeCard({ name, onSwipe, onTap }: SwipeCardProps) {
   // Rotation based on horizontal drag
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
 
-  // Opacity for like/skip indicators
+  // Opacity for like/dislike indicators
   const likeOpacity = useTransform(x, [0, 100], [0, 1]);
-  const skipOpacity = useTransform(x, [-100, 0], [1, 0]);
+  const dislikeOpacity = useTransform(x, [-100, 0], [1, 0]);
 
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const swipeThreshold = 100;
@@ -161,7 +196,7 @@ function SwipeCard({ name, onSwipe, onTap }: SwipeCardProps) {
       return;
     }
 
-    // Swipe left (skip)
+    // Swipe left (dislike)
     if (offset.x < -swipeThreshold || velocity.x < -velocityThreshold) {
       onSwipe("left");
       return;
@@ -194,12 +229,12 @@ function SwipeCard({ name, onSwipe, onTap }: SwipeCardProps) {
           LIKE
         </motion.div>
 
-        {/* Skip indicator */}
+        {/* Dislike indicator */}
         <motion.div
-          style={{ opacity: skipOpacity }}
+          style={{ opacity: dislikeOpacity }}
           className="absolute top-4 right-4 px-3 py-1 bg-error text-white rounded-lg font-bold text-sm rotate-[15deg]"
         >
-          SKIP
+          NOPE
         </motion.div>
 
         {/* Card content */}
@@ -218,7 +253,7 @@ function SwipeCard({ name, onSwipe, onTap }: SwipeCardProps) {
             </p>
           )}
           <p className="text-xs text-muted/60 mt-4">
-            Tap to select · Swipe to browse
+            Tap to select · Swipe to rate
           </p>
         </div>
       </div>
