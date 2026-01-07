@@ -134,7 +134,7 @@ export function NicknamePreview({ firstName }: NicknamePreviewProps) {
 
   // Always render container for stable layout
   return (
-    <div className="h-5 flex items-center justify-center">
+    <div className="h-7 sm:h-8 flex items-center justify-center">
       <AnimatePresence mode="wait">
         {nicknames.length > 0 && (
           <motion.div
@@ -144,8 +144,8 @@ export function NicknamePreview({ firstName }: NicknamePreviewProps) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
           >
-            <Text size="sm" muted className="text-xs">
-              Nicknames: <span className="text-foreground">{nicknames.slice(0, 3).join(", ")}</span>
+            <Text size="sm" muted className="text-sm sm:text-base">
+              Nicknames: <span className="text-foreground font-medium">{nicknames.slice(0, 3).join(", ")}</span>
             </Text>
           </motion.div>
         )}

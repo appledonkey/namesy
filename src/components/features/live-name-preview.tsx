@@ -40,7 +40,7 @@ export function LiveNamePreview({
   return (
     <div className="space-y-2 sm:space-y-3">
       {/* Name Display */}
-      <div className="min-h-12 sm:min-h-16 md:min-h-20 flex items-center justify-center">
+      <div className="min-h-20 sm:min-h-24 md:min-h-28 flex items-center justify-center py-3 sm:py-2">
         <AnimatePresence mode="wait">
           {hasName ? (
             <motion.h1
@@ -50,7 +50,7 @@ export function LiveNamePreview({
               exit={{ opacity: 0, y: -5 }}
               transition={{ duration: 0.15 }}
               style={{ fontFamily: currentStyle.fontVar }}
-              className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-foreground text-center px-1 sm:px-4 break-words max-w-full leading-tight ${currentStyle.className}`}
+              className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-foreground text-center px-1 sm:px-4 break-words max-w-full leading-tight ${currentStyle.className}`}
             >
               {fullName}
             </motion.h1>
@@ -61,7 +61,7 @@ export function LiveNamePreview({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               style={{ fontFamily: currentStyle.fontVar }}
-              className={`text-lg sm:text-xl md:text-2xl text-muted/40 ${currentStyle.className}`}
+              className={`text-2xl sm:text-3xl md:text-4xl text-muted/40 ${currentStyle.className}`}
             >
               Your name here...
             </motion.p>

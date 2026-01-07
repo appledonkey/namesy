@@ -208,7 +208,6 @@ export default function Home() {
             initials={analysis.initials}
             isBadAcronym={analysis.isBadAcronym}
             totalSyllables={analysis.totalSyllables}
-            flowScore={analysis.flowScore}
             hasName={analysis.hasName}
           />
           <NicknamePreview firstName={firstName} />

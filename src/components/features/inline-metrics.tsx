@@ -7,7 +7,6 @@ interface InlineMetricsProps {
   initials: string;
   isBadAcronym: boolean;
   totalSyllables: number;
-  flowScore: number;
   hasName: boolean;
 }
 
@@ -19,7 +18,6 @@ export const InlineMetrics = memo(function InlineMetrics({
   initials,
   isBadAcronym,
   totalSyllables,
-  flowScore,
   hasName,
 }: InlineMetricsProps) {
   if (!hasName) {
@@ -41,20 +39,7 @@ export const InlineMetrics = memo(function InlineMetrics({
       <span className="text-border-strong">·</span>
 
       {/* Syllables */}
-      <span className="text-muted">{totalSyllables} syl</span>
-
-      <span className="text-border-strong">·</span>
-
-      {/* Flow Score */}
-      <div className="flex items-center gap-1">
-        <span className={`font-medium ${
-          flowScore >= 70 ? "text-success" :
-          flowScore >= 50 ? "text-warning" : "text-error"
-        }`}>
-          {flowScore}%
-        </span>
-        <span className="text-muted">flow</span>
-      </div>
+      <span className="text-muted">{totalSyllables} syllables</span>
     </div>
   );
 });
