@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useDeferredValue, Suspense, lazy } from "react";
+import dynamic from "next/dynamic";
 import { Text } from "@/components/ui/typography";
 import { LiveNamePreview } from "@/components/features/live-name-preview";
 import { NameWarnings } from "@/components/features/name-warnings";
@@ -12,12 +13,10 @@ import { NicknamePreview } from "@/components/features/nickname-preview";
 import { ActionBar } from "@/components/features/action-bar";
 import { FloatingActionButton } from "@/components/features/floating-action-button";
 import { FavoritesPanel } from "@/components/features/favorites-panel";
-import { ComparePanel } from "@/components/features/compare-panel";
-import { NameRadarChart, createRadarData } from "@/components/features/radar-chart";
 import { ChevronDown } from "lucide-react";
 import { analyzeFullName, calculateRadarScores } from "@/lib/analysis";
 import { getRandomName } from "@/lib/names-data";
-import { useDebounce } from "@/hooks/use-debounce";
+import { createRadarData } from "@/components/features/radar-chart";
 import {
   getFavorites,
   addFavorite,
@@ -26,6 +25,20 @@ import {
   clearFavorites,
   FavoriteName,
 } from "@/lib/favorites";
+
+// Lazy load heavy components for better initial load performance
+const ComparePanel = dynamic(
+  () => import("@/components/features/compare-panel").then(m => ({ default: m.ComparePanel })),
+  { ssr: false }
+);
+
+const NameRadarChart = dynamic(
+  () => import("@/components/features/radar-chart").then(m => ({ default: m.NameRadarChart })),
+  {
+    ssr: false,
+    loading: () => <div className="h-[240px] sm:h-[300px] animate-pulse bg-muted/20 rounded-lg" />
+  }
+);
 
 // Common last names for randomization
 const COMMON_LAST_NAMES = [
@@ -54,17 +67,18 @@ export default function Home() {
     return isFavorited(firstName, middleName, lastName);
   }, [firstName, middleName, lastName, favorites]);
 
-  // Debounce name values for expensive computations (radar chart)
-  const debouncedFirst = useDebounce(firstName, 150);
-  const debouncedMiddle = useDebounce(middleName, 150);
-  const debouncedLast = useDebounce(lastName, 150);
+  // Use React 18 useDeferredValue for expensive computations (radar chart)
+  // This is more efficient than custom debounce hooks
+  const deferredFirst = useDeferredValue(firstName);
+  const deferredMiddle = useDeferredValue(middleName);
+  const deferredLast = useDeferredValue(lastName);
 
-  // Compute analysis - basic analysis is instant, radar scores use debounced values
+  // Compute analysis - basic analysis is instant, radar scores use deferred values
   const analysis = useMemo(() => {
     const nameAnalysis = analyzeFullName(firstName, middleName, lastName);
-    const radarScores = calculateRadarScores(debouncedFirst, debouncedMiddle, debouncedLast);
+    const radarScores = calculateRadarScores(deferredFirst, deferredMiddle, deferredLast);
     return { ...nameAnalysis, radarScores };
-  }, [firstName, middleName, lastName, debouncedFirst, debouncedMiddle, debouncedLast]);
+  }, [firstName, middleName, lastName, deferredFirst, deferredMiddle, deferredLast]);
 
   const radarData = createRadarData(analysis.radarScores);
 
@@ -112,11 +126,14 @@ export default function Home() {
     }
   }, [selectedGender, lastName]);
 
-  // Favorites handlers
+  // Favorites handlers - compute isFavorited inside to avoid dependency on isFav
   const handleToggleFavorite = useCallback(() => {
     if (!analysis.hasName) return;
 
-    if (isFav) {
+    // Compute favorited state inside callback to avoid stale closure issues
+    const currentlyFavorited = isFavorited(firstName, middleName, lastName);
+
+    if (currentlyFavorited) {
       const currentFavorites = getFavorites();
       const toRemove = currentFavorites.find(
         (f) => f.fullName === analysis.fullName
@@ -130,7 +147,7 @@ export default function Home() {
 
     // Refresh favorites list - isFav will be recomputed automatically
     setFavorites(getFavorites());
-  }, [firstName, middleName, lastName, analysis.initials, analysis.fullName, analysis.hasName, isFav]);
+  }, [firstName, middleName, lastName, analysis.initials, analysis.fullName, analysis.hasName]);
 
   // Keyboard shortcuts - must be after handler definitions
   useEffect(() => {

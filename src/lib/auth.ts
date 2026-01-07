@@ -1,36 +1,24 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import CredentialsProvider from "next-auth/providers/credentials";
+
+// Validate required environment variables
+if (!process.env.NEXTAUTH_SECRET) {
+  console.warn("Warning: NEXTAUTH_SECRET is not set. Authentication may not work properly.");
+}
 
 export const authOptions: NextAuthOptions = {
   // Using JWT strategy for simpler setup without database dependency during build
-  // To use database adapter, configure Prisma with accelerateUrl or adapter
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
     }),
-    // Credentials provider for development/demo
-    CredentialsProvider({
-      name: "Demo",
-      credentials: {
-        email: { label: "Email", type: "email" },
-      },
-      async authorize(credentials) {
-        // Demo auth - in production, verify against database
-        if (credentials?.email) {
-          return {
-            id: "demo-user",
-            email: credentials.email,
-            name: credentials.email.split("@")[0],
-          };
-        }
-        return null;
-      },
-    }),
+    // Note: CredentialsProvider removed for security
+    // To add email/password auth, implement proper verification with bcrypt
   ],
   pages: {
     signIn: "/auth/signin",

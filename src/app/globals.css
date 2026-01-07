@@ -47,7 +47,12 @@
   /* Typography - Fonts defined in layout */
   /* Using --font-family-* prefix for Tailwind v4 font utilities */
   --font-family-heading: var(--font-playfair);
-  --font-family-body: var(--font-source-sans);
+  --font-family-body: var(--font-inter);
+
+  /* Font fallbacks for removed fonts (performance optimization) */
+  --font-source-sans: var(--font-inter);
+  --font-dancing-script: var(--font-playfair);
+  --font-lora: var(--font-playfair);
 
   /* Border Radius - Organic shapes */
   --radius-sm: 0.5rem;
@@ -76,7 +81,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-family-body, var(--font-source-sans), 'Source Sans 3', sans-serif);
+  font-family: var(--font-family-body, var(--font-inter), 'Inter', system-ui, sans-serif);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

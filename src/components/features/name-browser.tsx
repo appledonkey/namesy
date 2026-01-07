@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { ChevronDown, ChevronUp, X, AlertCircle, RefreshCw } from "lucide-react";
 import { Text } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 import { SkeletonNameList } from "@/components/ui/skeleton";
@@ -22,6 +22,22 @@ interface NameData {
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 const INITIAL_LIMIT = 12;
+
+// Simple in-memory cache for API responses
+const apiCache = new Map<string, { data: NameData[]; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function getCachedData(key: string): NameData[] | null {
+  const cached = apiCache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+  return null;
+}
+
+function setCachedData(key: string, data: NameData[]): void {
+  apiCache.set(key, { data, timestamp: Date.now() });
+}
 
 interface NameBrowserProps {
   onSelectName: (name: string) => void;
@@ -43,6 +59,7 @@ export function NameBrowser({
   const [letterNames, setLetterNames] = useState<NameData[]>([]);
   const [totalForLetter, setTotalForLetter] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Mobile card stack state
   const [cardNames, setCardNames] = useState<NameData[]>([]);
@@ -51,12 +68,27 @@ export function NameBrowser({
     name: null,
   });
 
+  // Retry function ref
+  const retryRef = useRef<(() => void) | null>(null);
+
   // Fetch popular names when gender changes
   useEffect(() => {
     const abortController = new AbortController();
 
     const fetchPopularNames = async () => {
+      const cacheKey = `popular-${selectedGender}`;
+      const cached = getCachedData(cacheKey);
+
+      if (cached) {
+        setPopularNames(cached);
+        if (!selectedLetter) {
+          setCardNames(cached);
+        }
+        return;
+      }
+
       try {
+        setError(null);
         const params = new URLSearchParams({
           popular: "true",
           limit: "50",
@@ -68,16 +100,26 @@ export function NameBrowser({
         const response = await fetch(`/api/names?${params}`, {
           signal: abortController.signal,
         });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
         const data = await response.json();
-        setPopularNames(data.names || []);
+        const names = data.names || [];
+
+        setCachedData(cacheKey, names);
+        setPopularNames(names);
         // Initialize card names with popular names
         if (!selectedLetter) {
-          setCardNames(data.names || []);
+          setCardNames(names);
         }
-      } catch (error) {
-        if ((error as Error).name !== "AbortError") {
-          console.error("Failed to fetch popular names:", error);
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          console.error("Failed to fetch popular names:", err);
+          setError("Failed to load names. Tap to retry.");
           setPopularNames([]);
+          retryRef.current = fetchPopularNames;
         }
       }
     };
@@ -89,7 +131,19 @@ export function NameBrowser({
 
   // Fetch names for selected letter
   const fetchLetterNames = useCallback(async (letter: string, all: boolean) => {
+    const cacheKey = `letter-${letter}-${selectedGender}-${all ? 'all' : 'initial'}`;
+    const cached = getCachedData(cacheKey);
+
+    if (cached) {
+      setLetterNames(cached);
+      setTotalForLetter(cached.length);
+      setCardNames(cached);
+      return;
+    }
+
     setLoading(true);
+    setError(null);
+
     try {
       const params = new URLSearchParams({
         letter,
@@ -100,16 +154,26 @@ export function NameBrowser({
       }
 
       const response = await fetch(`/api/names?${params}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
       const data = await response.json();
-      setLetterNames(data.names || []);
+      const names = data.names || [];
+
+      setCachedData(cacheKey, names);
+      setLetterNames(names);
       setTotalForLetter(data.total || 0);
       // Update card names for mobile swipe view
-      setCardNames(data.names || []);
-    } catch (error) {
-      console.error("Failed to fetch names by letter:", error);
+      setCardNames(names);
+    } catch (err) {
+      console.error("Failed to fetch names by letter:", err);
+      setError("Failed to load names. Tap to retry.");
       setLetterNames([]);
       setTotalForLetter(0);
       setCardNames([]);
+      retryRef.current = () => fetchLetterNames(letter, all);
     } finally {
       setLoading(false);
     }
@@ -141,8 +205,33 @@ export function NameBrowser({
     setDetailSheet({ isOpen: true, name });
   };
 
+  // Handle retry
+  const handleRetry = () => {
+    setError(null);
+    if (retryRef.current) {
+      retryRef.current();
+    }
+  };
+
   return (
     <div className="w-full space-y-4">
+      {/* Error UI */}
+      {error && (
+        <div className="bg-error/10 border border-error/20 rounded-xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-error">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <Text size="sm" className="text-error">{error}</Text>
+          </div>
+          <button
+            onClick={handleRetry}
+            className="flex items-center gap-1 text-sm text-primary font-medium hover:underline"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Mobile: Card Stack View (always visible) */}
       <div className="sm:hidden space-y-4">
         {/* Card Stack */}

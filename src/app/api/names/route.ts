@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
     const popular = searchParams.get("popular") === "true";
     const rawLetter = searchParams.get("letter");
 
-    // Sanitize and validate query string
-    const query = rawQuery.slice(0, MAX_QUERY_LENGTH).replace(/[^\w\s-]/g, "");
+    // Sanitize and validate query string (allow apostrophes and hyphens for names like O'Brien, Mary-Anne)
+    const query = rawQuery.slice(0, MAX_QUERY_LENGTH).replace(/[^\w\s'-]/g, "");
 
     // Validate gender
     const gender = VALID_GENDERS.includes(rawGender as typeof VALID_GENDERS[number])
