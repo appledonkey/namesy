@@ -189,10 +189,6 @@ export default function Home() {
       <NameWarnings
         initials={analysis.initials}
         isBadAcronym={analysis.isBadAcronym}
-        hasRhyme={analysis.hasRhyme}
-        flowScore={analysis.flowScore}
-        firstName={firstName}
-        lastName={lastName}
         hasName={analysis.hasName}
       />
 
