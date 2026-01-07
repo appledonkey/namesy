@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getNameById, getNameByName, namesData, NameData } from "@/lib/names-data";
 import { calculateRadarScores } from "@/lib/analysis";
 
 export async function GET(
@@ -9,46 +9,11 @@ export async function GET(
   const { id } = await params;
 
   // Try to find by ID first, then by name
-  let nameData = await prisma.name.findUnique({
-    where: { id },
-    include: {
-      origins: { include: { origin: true } },
-      meanings: true,
-      nicknames: true,
-      alternateSpellings: true,
-      popularityHistory: { orderBy: { year: "asc" } },
-      namesakes: true,
-    },
-  });
+  let nameData = getNameById(id);
 
-  // Try by name if not found by ID (search both genders)
+  // Try by name if not found by ID
   if (!nameData) {
-    nameData = await prisma.name.findFirst({
-      where: { name: id.charAt(0).toUpperCase() + id.slice(1).toLowerCase() },
-      include: {
-        origins: { include: { origin: true } },
-        meanings: true,
-        nicknames: true,
-        alternateSpellings: true,
-        popularityHistory: { orderBy: { year: "asc" } },
-        namesakes: true,
-      },
-    });
-  }
-
-  // Try by normalized name
-  if (!nameData) {
-    nameData = await prisma.name.findFirst({
-      where: { normalizedName: id.toLowerCase() },
-      include: {
-        origins: { include: { origin: true } },
-        meanings: true,
-        nicknames: true,
-        alternateSpellings: true,
-        popularityHistory: { orderBy: { year: "asc" } },
-        namesakes: true,
-      },
-    });
+    nameData = getNameByName(id);
   }
 
   if (!nameData) {
@@ -62,7 +27,7 @@ export async function GET(
   const radarScores = calculateRadarScores(nameData.name, "", "");
 
   // Find similar names
-  const similarNames = await findSimilarNames(nameData);
+  const similarNames = findSimilarNames(nameData);
 
   // Determine teasing risk level
   const teasingRiskLevel = getTeasingRiskLevel(nameData.name);
@@ -73,16 +38,13 @@ export async function GET(
     name: nameData.name,
     normalizedName: nameData.normalizedName,
     gender: nameData.gender,
-    origins: nameData.origins.map((o) => o.origin.name),
-    meanings: nameData.meanings.map((m) => m.meaning),
+    origins: nameData.origins,
+    meanings: nameData.meanings,
     syllables: nameData.syllables,
     phonetic: nameData.phonetic,
-    nicknames: nameData.nicknames.map((n) => n.nickname),
-    alternateSpellings: nameData.alternateSpellings.map((a) => a.spelling),
-    famousNamesakes: nameData.namesakes.map((n) => ({
-      name: n.personName,
-      description: n.description,
-    })),
+    nicknames: nameData.nicknames,
+    alternateSpellings: nameData.alternateSpellings,
+    famousNamesakes: nameData.famousNamesakes || [],
     currentRank: nameData.currentRank,
     trend: nameData.trend,
     scores: {
@@ -99,10 +61,12 @@ export async function GET(
     rhymingProblems: [],
     soundAlikeIssues: [],
     slangConflicts: [],
-    popularityData: nameData.popularityHistory.map((h) => ({
-      year: h.year,
-      rank: h.rank,
-    })),
+    popularityData: nameData.historicalRanks
+      ? Object.entries(nameData.historicalRanks).map(([year, rank]) => ({
+          year: parseInt(year),
+          rank: rank,
+        }))
+      : [],
     similarNames,
   };
 
@@ -112,36 +76,25 @@ export async function GET(
 /**
  * Find similar names based on gender and characteristics
  */
-async function findSimilarNames(nameData: {
-  id: string;
-  gender: string;
-  origins: { origin: { name: string } }[];
-  syllables: number;
-  name: string;
-}): Promise<string[]> {
-  const originNames = nameData.origins.map((o) => o.origin.name);
+function findSimilarNames(nameData: NameData): string[] {
+  return namesData
+    .filter((n) => {
+      if (n.id === nameData.id) return false;
+      if (n.gender !== nameData.gender) return false;
 
-  // Find names with similar characteristics
-  const similar = await prisma.name.findMany({
-    where: {
-      AND: [
-        { id: { not: nameData.id } },
-        { gender: nameData.gender },
-        {
-          OR: [
-            // Similar syllables
-            { syllables: { gte: nameData.syllables - 1, lte: nameData.syllables + 1 } },
-            // Same origin
-            { origins: { some: { origin: { name: { in: originNames } } } } },
-          ],
-        },
-      ],
-    },
-    take: 6,
-    orderBy: { currentRank: "asc" },
-  });
+      // Similar syllables
+      const syllableDiff = Math.abs(n.syllables - nameData.syllables);
+      if (syllableDiff <= 1) return true;
 
-  return similar.map((n) => n.name);
+      // Same origin
+      const hasCommonOrigin = n.origins.some((o) => nameData.origins.includes(o));
+      if (hasCommonOrigin) return true;
+
+      return false;
+    })
+    .sort((a, b) => a.currentRank - b.currentRank)
+    .slice(0, 6)
+    .map((n) => n.name);
 }
 
 /**

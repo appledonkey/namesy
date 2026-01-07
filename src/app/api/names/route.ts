@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import {
+  getPopularNames,
+  getNamesByLetter,
+  searchNames,
+  NameData,
+} from "@/lib/names-data";
 
 // Constants for validation
 const MAX_LIMIT = 100;
@@ -24,7 +29,7 @@ export async function GET(request: NextRequest) {
     // Validate gender
     const gender = VALID_GENDERS.includes(rawGender as typeof VALID_GENDERS[number])
       ? (rawGender as "M" | "F" | "all")
-      : null;
+      : "all";
 
     // Validate page (must be positive integer)
     const page = Math.max(1, Math.floor(Number(rawPage) || 1));
@@ -35,41 +40,9 @@ export async function GET(request: NextRequest) {
     // Validate letter (single A-Z character)
     const letter = rawLetter && /^[A-Za-z]$/.test(rawLetter) ? rawLetter.toUpperCase() : null;
 
-    // Build where clause
-    const where: {
-      gender?: string;
-      OR?: { normalizedName?: { contains: string } }[];
-      name?: { startsWith: string };
-    } = {};
-
-    if (gender && gender !== "all") {
-      where.gender = gender;
-    }
-
-    if (query) {
-      where.OR = [
-        { normalizedName: { contains: query.toLowerCase() } },
-      ];
-    }
-
-    if (letter) {
-      where.name = { startsWith: letter };
-    }
-
     // If requesting popular names
     if (popular) {
-      const names = await prisma.name.findMany({
-        where,
-        orderBy: { currentRank: "asc" },
-        take: limit,
-        include: {
-          origins: { include: { origin: true } },
-          meanings: true,
-          nicknames: true,
-          alternateSpellings: true,
-        },
-      });
-
+      const names = getPopularNames(gender, limit);
       const formattedNames = names.map(formatName);
 
       return NextResponse.json({
@@ -81,32 +54,31 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get total count
-    const total = await prisma.name.count({ where });
+    // If requesting by letter
+    if (letter) {
+      const names = getNamesByLetter(letter, { gender, limit });
+      const formattedNames = names.map(formatName);
 
-    // Get paginated results
+      return NextResponse.json({
+        names: formattedNames,
+        total: formattedNames.length,
+        page: 1,
+        limit,
+        totalPages: 1,
+      });
+    }
+
+    // Search by query
     const offset = (page - 1) * limit;
-    const names = await prisma.name.findMany({
-      where,
-      orderBy: letter ? { name: "asc" } : { currentRank: "asc" },
-      skip: offset,
-      take: limit,
-      include: {
-        origins: { include: { origin: true } },
-        meanings: true,
-        nicknames: true,
-        alternateSpellings: true,
-      },
-    });
-
-    const formattedNames = names.map(formatName);
+    const result = searchNames(query, { gender, limit, offset });
+    const formattedNames = result.names.map(formatName);
 
     return NextResponse.json({
       names: formattedNames,
-      total,
+      total: result.total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(result.total / limit),
     });
   } catch (error) {
     console.error("API Error:", error);
@@ -117,33 +89,20 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Helper to format database name to API response format
-function formatName(dbName: {
-  id: string;
-  name: string;
-  normalizedName: string;
-  gender: string;
-  syllables: number;
-  phonetic: string | null;
-  currentRank: number;
-  trend: string;
-  origins: { origin: { name: string } }[];
-  meanings: { meaning: string }[];
-  nicknames: { nickname: string }[];
-  alternateSpellings: { spelling: string }[];
-}) {
+// Helper to format name to API response format
+function formatName(name: NameData) {
   return {
-    id: dbName.id,
-    name: dbName.name,
-    normalizedName: dbName.normalizedName,
-    gender: dbName.gender,
-    origins: dbName.origins.map((o) => o.origin.name),
-    meanings: dbName.meanings.map((m) => m.meaning),
-    syllables: dbName.syllables,
-    phonetic: dbName.phonetic,
-    nicknames: dbName.nicknames.map((n) => n.nickname),
-    alternateSpellings: dbName.alternateSpellings.map((a) => a.spelling),
-    currentRank: dbName.currentRank,
-    trend: dbName.trend,
+    id: name.id,
+    name: name.name,
+    normalizedName: name.normalizedName,
+    gender: name.gender,
+    origins: name.origins,
+    meanings: name.meanings,
+    syllables: name.syllables,
+    phonetic: name.phonetic,
+    nicknames: name.nicknames,
+    alternateSpellings: name.alternateSpellings,
+    currentRank: name.currentRank,
+    trend: name.trend,
   };
 }

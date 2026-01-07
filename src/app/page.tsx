@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Text } from "@/components/ui/typography";
 import { LiveNamePreview } from "@/components/features/live-name-preview";
 import { NameWarnings } from "@/components/features/name-warnings";
@@ -290,26 +289,19 @@ export default function Home() {
               />
             </button>
 
-            {/* Mobile: Animated collapsible chart */}
-            <div className="sm:hidden">
-              <AnimatePresence initial={false}>
-                {radarExpanded && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className={`px-4 pb-4 transition-opacity duration-300 ${analysis.hasName ? "opacity-100" : "opacity-40"}`}>
-                      <NameRadarChart
-                        data={radarData}
-                        name={firstName || "Name"}
-                      />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            {/* Mobile: Collapsible chart using CSS grid for smooth animation */}
+            <div
+              className="sm:hidden grid transition-[grid-template-rows] duration-200 ease-out"
+              style={{ gridTemplateRows: radarExpanded ? "1fr" : "0fr" }}
+            >
+              <div className="overflow-hidden">
+                <div className={`px-4 pb-4 transition-opacity duration-300 ${analysis.hasName ? "opacity-100" : "opacity-40"}`}>
+                  <NameRadarChart
+                    data={radarData}
+                    name={firstName || "Name"}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Desktop: Always visible chart */}
