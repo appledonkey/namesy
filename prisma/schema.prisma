@@ -1,0 +1,110 @@
+// Baby Name Application - Database Schema
+// Using SQLite for simplicity and speed
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ============================================
+// NAME DATA MODELS
+// ============================================
+
+model Name {
+  id             String  @id @default(cuid())
+  name           String
+  normalizedName String  // lowercase for search
+  gender         String  // M, F, N (neutral)
+  syllables      Int     @default(1)
+  phonetic       String?
+
+  // Current popularity
+  currentRank Int     @default(0)
+  trend       String  @default("stable") // rising, falling, stable
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  origins            NameOrigin[]
+  meanings           Meaning[]
+  nicknames          Nickname[]
+  alternateSpellings AlternateSpelling[]
+  popularityHistory  PopularityHistory[]
+  namesakes          Namesake[]
+
+  @@unique([name, gender])
+  @@index([normalizedName])
+  @@index([gender])
+  @@index([currentRank])
+}
+
+model Origin {
+  id    String       @id @default(cuid())
+  name  String       @unique
+  names NameOrigin[]
+}
+
+model NameOrigin {
+  id       String @id @default(cuid())
+  nameId   String
+  name     Name   @relation(fields: [nameId], references: [id], onDelete: Cascade)
+  originId String
+  origin   Origin @relation(fields: [originId], references: [id], onDelete: Cascade)
+
+  @@unique([nameId, originId])
+}
+
+model Meaning {
+  id      String  @id @default(cuid())
+  nameId  String
+  name    Name    @relation(fields: [nameId], references: [id], onDelete: Cascade)
+  meaning String
+  source  String?
+
+  @@index([nameId])
+}
+
+model Nickname {
+  id       String @id @default(cuid())
+  nameId   String
+  name     Name   @relation(fields: [nameId], references: [id], onDelete: Cascade)
+  nickname String
+
+  @@index([nameId])
+}
+
+model AlternateSpelling {
+  id       String @id @default(cuid())
+  nameId   String
+  name     Name   @relation(fields: [nameId], references: [id], onDelete: Cascade)
+  spelling String
+
+  @@index([nameId])
+}
+
+model PopularityHistory {
+  id     String @id @default(cuid())
+  nameId String
+  name   Name   @relation(fields: [nameId], references: [id], onDelete: Cascade)
+  year   Int
+  rank   Int?
+  count  Int?
+
+  @@unique([nameId, year])
+  @@index([year])
+}
+
+model Namesake {
+  id          String  @id @default(cuid())
+  nameId      String
+  name        Name    @relation(fields: [nameId], references: [id], onDelete: Cascade)
+  personName  String
+  description String?
+  birthYear   Int?
+
+  @@index([nameId])
+}

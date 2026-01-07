@@ -1,0 +1,246 @@
+@import "tailwindcss";
+
+/* Botanical / Organic Serif Design System */
+:root {
+  /* Core Colors - High Contrast */
+  --background: #FAFAF7;           /* Warm Off-white */
+  --foreground: #1A2420;           /* Near-black forest */
+  --primary: #3D5A36;              /* Rich forest green - more saturated */
+  --primary-light: #6B8B63;        /* Lighter sage for hovers */
+  --secondary: #E5DCD0;            /* Warmer clay background */
+  --secondary-dark: #C4B5A3;       /* Richer clay for contrast */
+  --accent: #C45A3B;               /* Vivid terracotta - pops more */
+  --border: #CCC7BC;               /* Stronger stone borders */
+  --border-strong: #B5AEA0;        /* Bold dividers */
+  --card: #FFFFFF;
+  --card-alt: #F3F0E9;             /* More distinct alt card */
+  --muted: #4A5B50;                /* Darker muted - readable */
+  --success: #2D7044;              /* Bold forest success */
+  --warning: #C97A1F;              /* Richer amber */
+  --error: #C44040;                /* Vivid red for attention */
+
+  /* Shadows - More prominent */
+  --shadow-sm: 0 2px 8px -2px rgba(26, 36, 32, 0.12), 0 1px 4px rgba(26, 36, 32, 0.08);
+  --shadow-md: 0 4px 16px -4px rgba(26, 36, 32, 0.15), 0 2px 8px rgba(26, 36, 32, 0.10);
+  --shadow-lg: 0 8px 30px -8px rgba(26, 36, 32, 0.18), 0 4px 12px rgba(26, 36, 32, 0.10);
+  --shadow-xl: 0 20px 50px -12px rgba(26, 36, 32, 0.25);
+}
+
+@theme inline {
+  /* Colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
+  --color-secondary: var(--secondary);
+  --color-secondary-dark: var(--secondary-dark);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-card: var(--card);
+  --color-card-alt: var(--card-alt);
+  --color-muted: var(--muted);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+
+  /* Typography - Fonts defined in layout */
+  /* Using --font-family-* prefix for Tailwind v4 font utilities */
+  --font-family-heading: var(--font-playfair);
+  --font-family-body: var(--font-source-sans);
+
+  /* Border Radius - Organic shapes */
+  --radius-sm: 0.5rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
+  --radius-2xl: 2.5rem;
+  --radius-3xl: 3rem;
+  --radius-full: 9999px;
+  --radius-arch: 200px;
+
+  /* Shadows */
+  --shadow-soft: var(--shadow-sm);
+  --shadow-medium: var(--shadow-md);
+  --shadow-large: var(--shadow-lg);
+  --shadow-bloom: var(--shadow-xl);
+
+  /* Animation Durations - Slow, graceful */
+  --duration-fast: 300ms;
+  --duration-normal: 500ms;
+  --duration-slow: 700ms;
+  --duration-slower: 1000ms;
+}
+
+/* Base Styles */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-family-body, var(--font-source-sans), 'Source Sans 3', sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography Defaults */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-heading, var(--font-playfair), 'Playfair Display', serif);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* Focus States - Sage green ring */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: var(--primary);
+  color: white;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom Utilities */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Arch-shaped clip path for images */
+  .clip-arch {
+    clip-path: ellipse(100% 100% at 50% 100%);
+  }
+
+  /* Staggered grid offset */
+  .stagger-offset {
+    @media (min-width: 768px) {
+      transform: translateY(3rem);
+    }
+  }
+
+  /* Mobile-first utilities */
+
+  /* Safe area support for notched devices */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+  .safe-x {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  .safe-y {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Touch target minimum (WCAG 2.1 - 44x44px) */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Disable tap highlight and add active feedback */
+  .tap-highlight {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Show active state on touch devices (no hover) */
+  @media (hover: none) {
+    .touch-feedback:active {
+      opacity: 0.7;
+      transform: scale(0.98);
+    }
+  }
+
+  /* Hide on touch devices */
+  @media (hover: none) {
+    .hover-only {
+      display: none;
+    }
+  }
+
+  /* Show only on touch devices */
+  .touch-only {
+    display: none;
+  }
+  @media (hover: none) {
+    .touch-only {
+      display: block;
+    }
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* iOS 26 Liquid Glass - Mobile only */
+  @media (max-width: 639px) {
+    .glass-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 20px;
+    }
+
+    .glass-sheet {
+      background: rgba(250, 250, 247, 0.85);
+      backdrop-filter: blur(40px) saturate(180%);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
+      border-top: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .glass-fab {
+      background: rgba(61, 90, 54, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(61, 90, 54, 0.4);
+    }
+  }
+
+  /* Skeleton loading animation */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--secondary) 25%,
+      var(--card-alt) 50%,
+      var(--secondary) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Swipe action reveal background */
+  .swipe-delete-bg {
+    background: linear-gradient(90deg, transparent 0%, var(--error) 50%);
+  }
+
+  /* Pull to refresh indicator */
+  .pull-indicator {
+    transition: transform 0.2s ease-out;
+  }
+}

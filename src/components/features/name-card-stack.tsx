@@ -1,0 +1,227 @@
+"use client";
+
+import { useState } from "react";
+import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from "framer-motion";
+import { Heart, X, Info } from "lucide-react";
+import { haptics } from "@/lib/haptics";
+
+interface NameData {
+  id: string;
+  name: string;
+  origins: string[];
+  meanings: string[];
+}
+
+interface NameCardStackProps {
+  names: NameData[];
+  onLike: (name: NameData) => void;
+  onSkip: (name: NameData) => void;
+  onDetails: (name: NameData) => void;
+  onSelect: (name: string) => void;
+}
+
+/**
+ * NameCardStack - Tinder-style swipeable card stack for mobile
+ * - Swipe right = Like/Save
+ * - Swipe left = Skip
+ * - Swipe up = View details
+ * - Tap = Select name
+ */
+export function NameCardStack({
+  names,
+  onLike,
+  onSkip,
+  onDetails,
+  onSelect,
+}: NameCardStackProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [exitDirection, setExitDirection] = useState<"left" | "right" | "up" | null>(null);
+
+  const currentName = names[currentIndex];
+  const nextName = names[currentIndex + 1];
+  const hasMore = currentIndex < names.length;
+
+  const handleSwipe = (direction: "left" | "right" | "up") => {
+    if (!currentName) return;
+
+    setExitDirection(direction);
+
+    if (direction === "right") {
+      haptics.save();
+      onLike(currentName);
+    } else if (direction === "left") {
+      haptics.swipe();
+      onSkip(currentName);
+    } else if (direction === "up") {
+      haptics.tap();
+      onDetails(currentName);
+    }
+
+    // Move to next card after animation
+    setTimeout(() => {
+      setCurrentIndex((i) => i + 1);
+      setExitDirection(null);
+    }, 200);
+  };
+
+  if (!hasMore) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-center">
+        <div className="text-4xl mb-4">🎉</div>
+        <p className="text-muted">You&apos;ve seen all the names!</p>
+        <button
+          onClick={() => setCurrentIndex(0)}
+          className="mt-4 px-6 py-2 bg-primary text-white rounded-full text-sm font-medium"
+        >
+          Start Over
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative h-80 w-full">
+      {/* Card stack */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        {/* Next card (behind) */}
+        {nextName && (
+          <div className="absolute w-[90%] h-64 bg-card rounded-3xl border border-border shadow-sm scale-95 opacity-60" />
+        )}
+
+        {/* Current card */}
+        <AnimatePresence mode="wait">
+          {currentName && !exitDirection && (
+            <SwipeCard
+              key={currentName.id}
+              name={currentName}
+              onSwipe={handleSwipe}
+              onTap={() => {
+                haptics.select();
+                onSelect(currentName.name);
+              }}
+            />
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Action buttons */}
+      <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-6 pb-4">
+        <button
+          onClick={() => handleSwipe("left")}
+          aria-label="Skip this name"
+          className="w-14 h-14 rounded-full bg-card border border-border shadow-md flex items-center justify-center text-muted"
+        >
+          <X className="w-6 h-6" aria-hidden="true" />
+        </button>
+        <button
+          onClick={() => handleSwipe("up")}
+          aria-label="View name details"
+          className="w-12 h-12 rounded-full bg-card border border-border shadow-md flex items-center justify-center text-muted"
+        >
+          <Info className="w-5 h-5" aria-hidden="true" />
+        </button>
+        <button
+          onClick={() => handleSwipe("right")}
+          aria-label="Like this name"
+          className="w-14 h-14 rounded-full bg-rose-500 shadow-md flex items-center justify-center text-white"
+        >
+          <Heart className="w-6 h-6" aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+interface SwipeCardProps {
+  name: NameData;
+  onSwipe: (direction: "left" | "right" | "up") => void;
+  onTap: () => void;
+}
+
+function SwipeCard({ name, onSwipe, onTap }: SwipeCardProps) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  // Rotation based on horizontal drag
+  const rotate = useTransform(x, [-200, 200], [-15, 15]);
+
+  // Opacity for like/skip indicators
+  const likeOpacity = useTransform(x, [0, 100], [0, 1]);
+  const skipOpacity = useTransform(x, [-100, 0], [1, 0]);
+
+  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const swipeThreshold = 100;
+    const velocityThreshold = 500;
+
+    const { offset, velocity } = info;
+
+    // Swipe right (like)
+    if (offset.x > swipeThreshold || velocity.x > velocityThreshold) {
+      onSwipe("right");
+      return;
+    }
+
+    // Swipe left (skip)
+    if (offset.x < -swipeThreshold || velocity.x < -velocityThreshold) {
+      onSwipe("left");
+      return;
+    }
+
+    // Swipe up (details)
+    if (offset.y < -swipeThreshold || velocity.y < -velocityThreshold) {
+      onSwipe("up");
+      return;
+    }
+  };
+
+  return (
+    <motion.div
+      style={{ x, y, rotate }}
+      drag
+      dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+      dragElastic={1}
+      onDragEnd={handleDragEnd}
+      onClick={onTap}
+      whileTap={{ scale: 0.98 }}
+      className="absolute w-[90%] h-64 cursor-grab active:cursor-grabbing"
+    >
+      <div className="relative w-full h-full bg-card rounded-3xl border border-border shadow-lg glass-card overflow-hidden">
+        {/* Like indicator */}
+        <motion.div
+          style={{ opacity: likeOpacity }}
+          className="absolute top-4 left-4 px-3 py-1 bg-success text-white rounded-lg font-bold text-sm rotate-[-15deg]"
+        >
+          LIKE
+        </motion.div>
+
+        {/* Skip indicator */}
+        <motion.div
+          style={{ opacity: skipOpacity }}
+          className="absolute top-4 right-4 px-3 py-1 bg-error text-white rounded-lg font-bold text-sm rotate-[15deg]"
+        >
+          SKIP
+        </motion.div>
+
+        {/* Card content */}
+        <div className="flex flex-col items-center justify-center h-full p-6">
+          <h3 className="font-heading text-4xl font-semibold text-foreground mb-2">
+            {name.name}
+          </h3>
+          {name.meanings.length > 0 && (
+            <p className="text-base text-foreground/80 mb-1 text-center">
+              &ldquo;{name.meanings[0]}&rdquo;
+            </p>
+          )}
+          {name.origins.length > 0 && (
+            <p className="text-sm text-muted">
+              {name.origins.slice(0, 2).join(", ")} origin
+            </p>
+          )}
+          <p className="text-xs text-muted/60 mt-4">
+            Tap to select · Swipe to browse
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
