@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Text } from "@/components/ui/typography";
 
 // Common nickname patterns
@@ -135,22 +134,11 @@ export function NicknamePreview({ firstName }: NicknamePreviewProps) {
   // Always render container for stable layout
   return (
     <div className="h-7 sm:h-8 flex items-center justify-center">
-      <AnimatePresence mode="popLayout">
-        {nicknames.length > 0 && (
-          <motion.div
-            key={nicknames.join(",")}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.1 }}
-            layout
-          >
-            <Text size="sm" muted className="text-sm sm:text-base">
-              Nicknames: <span className="text-foreground font-medium">{nicknames.slice(0, 3).join(", ")}</span>
-            </Text>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {nicknames.length > 0 && (
+        <Text size="sm" muted className="text-sm sm:text-base">
+          Nicknames: <span className="text-foreground font-medium">{nicknames.slice(0, 3).join(", ")}</span>
+        </Text>
+      )}
     </div>
   );
 }

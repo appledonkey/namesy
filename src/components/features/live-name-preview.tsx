@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion"; // Used for font selector
 import { Type, ChevronDown } from "lucide-react";
 import { Text } from "@/components/ui/typography";
 
@@ -44,50 +44,35 @@ export function LiveNamePreview({
     <div className="space-y-2 sm:space-y-3">
       {/* Name Display - Split into two lines */}
       <div className="min-h-24 sm:min-h-28 md:min-h-32 flex items-center justify-center py-3 sm:py-2">
-        <AnimatePresence mode="popLayout">
-          {hasAnyName ? (
-            <motion.div
-              key={`${firstMiddle}-${lastNameTrimmed}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.1 }}
-              layout
-              className="text-center"
-            >
-              {/* First + Middle Name */}
-              {hasFirstMiddle && (
-                <h1
-                  style={{ fontFamily: currentStyle.fontVar }}
-                  className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-foreground leading-tight ${currentStyle.className}`}
-                >
-                  {firstMiddle}
-                </h1>
-              )}
-              {/* Last Name - slightly smaller, muted */}
-              {hasLastName && (
-                <p
-                  style={{ fontFamily: currentStyle.fontVar }}
-                  className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-foreground/70 leading-tight mt-1 ${currentStyle.className}`}
-                >
-                  {lastNameTrimmed}
-                </p>
-              )}
-            </motion.div>
-          ) : (
-            <motion.p
-              key="placeholder"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.1 }}
-              style={{ fontFamily: currentStyle.fontVar }}
-              className={`text-2xl sm:text-3xl md:text-4xl text-muted/40 ${currentStyle.className}`}
-            >
-              Your name here...
-            </motion.p>
-          )}
-        </AnimatePresence>
+        {hasAnyName ? (
+          <div className="text-center">
+            {/* First + Middle Name */}
+            {hasFirstMiddle && (
+              <h1
+                style={{ fontFamily: currentStyle.fontVar }}
+                className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-foreground leading-tight ${currentStyle.className}`}
+              >
+                {firstMiddle}
+              </h1>
+            )}
+            {/* Last Name - slightly smaller, muted */}
+            {hasLastName && (
+              <p
+                style={{ fontFamily: currentStyle.fontVar }}
+                className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-foreground/70 leading-tight mt-1 ${currentStyle.className}`}
+              >
+                {lastNameTrimmed}
+              </p>
+            )}
+          </div>
+        ) : (
+          <p
+            style={{ fontFamily: currentStyle.fontVar }}
+            className={`text-2xl sm:text-3xl md:text-4xl text-muted/40 ${currentStyle.className}`}
+          >
+            Your name here...
+          </p>
+        )}
       </div>
 
       {/* Font Selector - Collapsible on mobile */}
