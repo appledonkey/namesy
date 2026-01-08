@@ -64,3 +64,5 @@ logs/
 idea.txt
 site_prompt.txt
 style_guide.md
+
+.vercel

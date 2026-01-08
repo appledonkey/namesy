@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getNameByName, getPopularNames, getAllNames } from "@/lib/names-data";
+import { analyzeNameScores } from "@/lib/name-analysis";
 import { NameDetailContent, NameDetailData } from "./name-detail-content";
 
 interface PageProps {
@@ -22,27 +23,28 @@ function getNameData(slug: string): NameDetailData | null {
   if (!name) {
     // Return fallback data for names not in dataset
     const displayName = slug.charAt(0).toUpperCase() + slug.slice(1).toLowerCase();
+    const syllables = Math.max(1, displayName.split(/[aeiou]/i).length - 1);
     return {
       name: displayName,
       gender: "N",
       origins: [],
       meanings: [],
-      syllables: Math.max(1, displayName.split(/[aeiou]/i).length - 1),
+      syllables,
       phonetic: null,
       nicknames: [],
       alternateSpellings: [],
       famousNamesakes: [],
       popularityData: [],
-      scores: {
-        Uniqueness: 50,
-        Timelessness: 50,
-        Pronunciation: 50,
-        Spelling: 50,
-        Nicknames: 50,
-        Professional: 50,
-        "Teasing Resistance": 50,
-        Flow: 50,
-      },
+      scores: analyzeNameScores(
+        displayName,
+        "N",
+        syllables,
+        [],
+        [],
+        9999, // Unknown rank = very unique
+        "stable",
+        undefined
+      ),
       teasingRisk: "LOW",
       rhymingProblems: [],
       soundAlikeIssues: [],
@@ -82,16 +84,16 @@ function getNameData(slug: string): NameDetailData | null {
       type: n.description,
     })) || [],
     popularityData,
-    scores: {
-      Uniqueness: name.currentRank > 50 ? 70 : 30,
-      Timelessness: 75,
-      Pronunciation: 80,
-      Spelling: 85,
-      Nicknames: name.nicknames.length > 0 ? 80 : 40,
-      Professional: 85,
-      "Teasing Resistance": 80,
-      Flow: 75,
-    },
+    scores: analyzeNameScores(
+      name.name,
+      name.gender,
+      name.syllables,
+      name.nicknames,
+      name.alternateSpellings,
+      name.currentRank,
+      name.trend,
+      name.historicalRanks
+    ),
     teasingRisk: "LOW",
     rhymingProblems: [],
     soundAlikeIssues: [],
