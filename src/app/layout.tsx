@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter, Lavishly_Yours } from "next/font/google";
+import { Playfair_Display, Inter, Meow_Script } from "next/font/google";
 import "./globals.css";
 import { PaperTexture } from "@/components/ui/paper-texture";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -20,8 +20,8 @@ const inter = Inter({
   weight: ["400", "500", "600"],
 });
 
-const lavishlyYours = Lavishly_Yours({
-  variable: "--font-lavishly-yours",
+const meowScript = Meow_Script({
+  variable: "--font-meow-script",
   subsets: ["latin"],
   display: "swap",
   weight: "400",
@@ -127,7 +127,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${playfair.variable} ${inter.variable} ${lavishlyYours.variable} antialiased bg-background text-foreground`}
+        className={`${playfair.variable} ${inter.variable} ${meowScript.variable} antialiased bg-background text-foreground`}
       >
         <PaperTexture />
         <ErrorBoundary>

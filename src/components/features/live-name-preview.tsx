@@ -10,7 +10,7 @@ type FontStyle = "playfair" | "inter" | "script";
 const fontStyles: { id: FontStyle; label: string; fontVar: string; className: string }[] = [
   { id: "playfair", label: "Serif", fontVar: "var(--font-playfair)", className: "font-semibold" },
   { id: "inter", label: "Sans", fontVar: "var(--font-inter)", className: "font-medium" },
-  { id: "script", label: "Script", fontVar: "var(--font-lavishly-yours)", className: "" },
+  { id: "script", label: "Script", fontVar: "var(--font-meow-script)", className: "" },
 ];
 
 interface LiveNamePreviewProps {
