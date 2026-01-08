@@ -1,38 +1,26 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import prisma from "@/lib/prisma";
+import { getNameByName, getPopularNames, getAllNames } from "@/lib/names-data";
 import { NameDetailContent, NameDetailData } from "./name-detail-content";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-// Fetch name data from database
-async function getNameData(slug: string): Promise<NameDetailData | null> {
-  const normalizedSlug = slug.toLowerCase();
+// Generate static pages for all names in the dataset
+export async function generateStaticParams() {
+  const names = getAllNames();
+  return names.map((name) => ({
+    slug: name.normalizedName,
+  }));
+}
 
-  const name = await prisma.name.findFirst({
-    where: {
-      normalizedName: normalizedSlug,
-    },
-    include: {
-      origins: {
-        include: {
-          origin: true,
-        },
-      },
-      meanings: true,
-      nicknames: true,
-      alternateSpellings: true,
-      popularityHistory: {
-        orderBy: { year: "asc" },
-      },
-      namesakes: true,
-    },
-  });
+// Get name data from static data (works offline, no database needed)
+function getNameData(slug: string): NameDetailData | null {
+  const name = getNameByName(slug);
 
   if (!name) {
-    // Return fallback data for names not in database
+    // Return fallback data for names not in dataset
     const displayName = slug.charAt(0).toUpperCase() + slug.slice(1).toLowerCase();
     return {
       name: displayName,
@@ -62,27 +50,40 @@ async function getNameData(slug: string): Promise<NameDetailData | null> {
     };
   }
 
+  // Convert historical ranks to popularity data
+  const popularityData: { year: number; rank: number }[] = [];
+  if (name.historicalRanks) {
+    Object.entries(name.historicalRanks).forEach(([year, rank]) => {
+      if (rank > 0) {
+        popularityData.push({ year: parseInt(year), rank });
+      }
+    });
+    popularityData.sort((a, b) => a.year - b.year);
+  }
+
+  // Get similar names (same gender, similar rank)
+  const genderFilter = name.gender === "N" ? "all" : name.gender;
+  const similarNames = getPopularNames(genderFilter, 20)
+    .filter(n => n.name !== name.name)
+    .slice(0, 6)
+    .map(n => n.name);
+
   return {
     name: name.name,
-    gender: name.gender as "M" | "F" | "N",
-    origins: name.origins.map((o) => o.origin.name),
-    meanings: name.meanings.map((m) => m.meaning),
+    gender: name.gender,
+    origins: name.origins,
+    meanings: name.meanings,
     syllables: name.syllables,
-    phonetic: name.phonetic,
-    nicknames: name.nicknames.map((n) => n.nickname),
-    alternateSpellings: name.alternateSpellings.map((a) => a.spelling),
-    famousNamesakes: name.namesakes.map((n) => ({
-      name: n.personName,
-      type: n.description || "Notable person",
-    })),
-    popularityData: name.popularityHistory
-      .filter((p) => p.rank !== null)
-      .map((p) => ({
-        year: p.year,
-        rank: p.rank!,
-      })),
+    phonetic: name.phonetic || null,
+    nicknames: name.nicknames,
+    alternateSpellings: name.alternateSpellings,
+    famousNamesakes: name.famousNamesakes?.map(n => ({
+      name: n.name,
+      type: n.description,
+    })) || [],
+    popularityData,
     scores: {
-      Uniqueness: 50,
+      Uniqueness: name.currentRank > 50 ? 70 : 30,
       Timelessness: 75,
       Pronunciation: 80,
       Spelling: 85,
@@ -94,14 +95,14 @@ async function getNameData(slug: string): Promise<NameDetailData | null> {
     teasingRisk: "LOW",
     rhymingProblems: [],
     soundAlikeIssues: [],
-    similarNames: [],
+    similarNames,
   };
 }
 
 // Generate dynamic metadata for SEO
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const nameData = await getNameData(slug);
+  const nameData = getNameData(slug);
 
   if (!nameData) {
     return {
@@ -300,7 +301,7 @@ function generateStructuredData(nameData: NameDetailData, slug: string) {
 
 export default async function NameDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const nameData = await getNameData(slug);
+  const nameData = getNameData(slug);
 
   if (!nameData) {
     notFound();

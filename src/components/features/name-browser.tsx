@@ -10,6 +10,7 @@ import { NameCardStack } from "./name-card-stack";
 import { NameDetailSheet } from "./name-detail-sheet";
 import { SwipeListPanel } from "./swipe-list-panel";
 import { haptics } from "@/lib/haptics";
+import { getPopularNames, getNamesByLetter } from "@/lib/names-data";
 
 type Gender = "F" | "M" | "all";
 
@@ -71,11 +72,9 @@ export function NameBrowser({
   // Retry function ref
   const retryRef = useRef<(() => void) | null>(null);
 
-  // Fetch popular names when gender changes
+  // Load popular names when gender changes (no API call - direct data access)
   useEffect(() => {
-    const abortController = new AbortController();
-
-    const fetchPopularNames = async () => {
+    const loadPopularNames = () => {
       const cacheKey = `popular-${selectedGender}`;
       const cached = getCachedData(cacheKey);
 
@@ -89,24 +88,13 @@ export function NameBrowser({
 
       try {
         setError(null);
-        const params = new URLSearchParams({
-          popular: "true",
-          limit: "50",
-        });
-        if (selectedGender !== "all") {
-          params.set("gender", selectedGender);
-        }
-
-        const response = await fetch(`/api/names?${params}`, {
-          signal: abortController.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const data = await response.json();
-        const names = data.names || [];
+        // Direct data access - works offline
+        const names = getPopularNames(selectedGender, 50).map(n => ({
+          id: n.id,
+          name: n.name,
+          origins: n.origins,
+          meanings: n.meanings,
+        }));
 
         setCachedData(cacheKey, names);
         setPopularNames(names);
@@ -115,22 +103,18 @@ export function NameBrowser({
           setCardNames(names);
         }
       } catch (err) {
-        if ((err as Error).name !== "AbortError") {
-          console.error("Failed to fetch popular names:", err);
-          setError("Failed to load names. Tap to retry.");
-          setPopularNames([]);
-          retryRef.current = fetchPopularNames;
-        }
+        console.error("Failed to load popular names:", err);
+        setError("Failed to load names. Tap to retry.");
+        setPopularNames([]);
+        retryRef.current = loadPopularNames;
       }
     };
 
-    fetchPopularNames();
-
-    return () => abortController.abort();
+    loadPopularNames();
   }, [selectedGender, selectedLetter]);
 
-  // Fetch names for selected letter
-  const fetchLetterNames = useCallback(async (letter: string, all: boolean) => {
+  // Load names for selected letter (no API call - direct data access)
+  const loadLetterNames = useCallback((letter: string, all: boolean) => {
     const cacheKey = `letter-${letter}-${selectedGender}-${all ? 'all' : 'initial'}`;
     const cached = getCachedData(cacheKey);
 
@@ -145,51 +129,47 @@ export function NameBrowser({
     setError(null);
 
     try {
-      const params = new URLSearchParams({
-        letter,
-        limit: all ? "100" : String(INITIAL_LIMIT),
+      // Direct data access - works offline
+      const limit = all ? 100 : INITIAL_LIMIT;
+      const allLetterNames = getNamesByLetter(letter, {
+        gender: selectedGender === "all" ? "all" : selectedGender,
       });
-      if (selectedGender !== "all") {
-        params.set("gender", selectedGender);
-      }
 
-      const response = await fetch(`/api/names?${params}`);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-      const names = data.names || [];
+      const names = allLetterNames.slice(0, limit).map(n => ({
+        id: n.id,
+        name: n.name,
+        origins: n.origins,
+        meanings: n.meanings,
+      }));
 
       setCachedData(cacheKey, names);
       setLetterNames(names);
-      setTotalForLetter(data.total || 0);
+      setTotalForLetter(allLetterNames.length);
       // Update card names for mobile swipe view
       setCardNames(names);
     } catch (err) {
-      console.error("Failed to fetch names by letter:", err);
+      console.error("Failed to load names by letter:", err);
       setError("Failed to load names. Tap to retry.");
       setLetterNames([]);
       setTotalForLetter(0);
       setCardNames([]);
-      retryRef.current = () => fetchLetterNames(letter, all);
+      retryRef.current = () => loadLetterNames(letter, all);
     } finally {
       setLoading(false);
     }
   }, [selectedGender]);
 
-  // Fetch when letter or showAll changes
+  // Load when letter or showAll changes
   useEffect(() => {
     if (selectedLetter) {
-      fetchLetterNames(selectedLetter, showAll);
+      loadLetterNames(selectedLetter, showAll);
     } else {
       setLetterNames([]);
       setTotalForLetter(0);
       // Reset to popular names when no letter selected
       setCardNames(popularNames);
     }
-  }, [selectedLetter, showAll, fetchLetterNames, popularNames]);
+  }, [selectedLetter, showAll, loadLetterNames, popularNames]);
 
   const handleLetterSelect = (letter: string) => {
     if (selectedLetter === letter) {
