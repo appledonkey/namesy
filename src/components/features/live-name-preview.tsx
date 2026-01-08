@@ -5,10 +5,9 @@ import { motion, AnimatePresence } from "framer-motion"; // Used for font select
 import { Type, ChevronDown } from "lucide-react";
 import { Text } from "@/components/ui/typography";
 
-type FontStyle = "playfair" | "inter" | "script";
+type FontStyle = "inter" | "script";
 
 const fontStyles: { id: FontStyle; label: string; fontVar: string; className: string }[] = [
-  { id: "playfair", label: "Serif", fontVar: "var(--font-playfair)", className: "font-semibold" },
   { id: "inter", label: "Sans", fontVar: "var(--font-inter)", className: "font-medium" },
   { id: "script", label: "Script", fontVar: "var(--font-meow-script)", className: "" },
 ];
@@ -27,7 +26,7 @@ export function LiveNamePreview({
   middleName,
   lastName,
 }: LiveNamePreviewProps) {
-  const [selectedFont, setSelectedFont] = useState<FontStyle>("playfair");
+  const [selectedFont, setSelectedFont] = useState<FontStyle>("inter");
   const [fontExpanded, setFontExpanded] = useState(false);
 
   // Split into first+middle vs last name
@@ -100,7 +99,7 @@ export function LiveNamePreview({
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="grid grid-cols-4 gap-2 px-2 pb-2">
+                <div className="grid grid-cols-2 gap-2 px-2 pb-2">
                   {fontStyles.map((style) => (
                     <button
                       key={style.id}
