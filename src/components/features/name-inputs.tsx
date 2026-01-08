@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { X, Lock, Unlock } from "lucide-react";
 import { Label } from "@/components/ui/typography";
 import { haptics } from "@/lib/haptics";
 
@@ -15,6 +15,10 @@ interface NameInputsProps {
   onLastNameChange: (value: string) => void;
   focusedField?: InputField;
   onFocusChange?: (field: InputField) => void;
+  firstNameLocked?: boolean;
+  middleNameLocked?: boolean;
+  onFirstNameLockToggle?: () => void;
+  onMiddleNameLockToggle?: () => void;
 }
 
 /**
@@ -30,6 +34,10 @@ export function NameInputs({
   onMiddleNameChange,
   onLastNameChange,
   onFocusChange,
+  firstNameLocked = false,
+  middleNameLocked = false,
+  onFirstNameLockToggle,
+  onMiddleNameLockToggle,
 }: NameInputsProps) {
   const handleClear = (field: 'first' | 'middle' | 'last') => {
     haptics.tap();
@@ -43,6 +51,15 @@ export function NameInputs({
       case 'last':
         onLastNameChange('');
         break;
+    }
+  };
+
+  const handleLockToggle = (field: 'first' | 'middle') => {
+    haptics.tap();
+    if (field === 'first') {
+      onFirstNameLockToggle?.();
+    } else {
+      onMiddleNameLockToggle?.();
     }
   };
 
@@ -96,7 +113,17 @@ export function NameInputs({
         <div className="grid grid-cols-2 gap-2">
           {/* First Name */}
           <div>
-            <Label className="mb-1.5 block text-xs text-center text-muted">First Name</Label>
+            <div className="flex items-center justify-center gap-1.5 mb-1.5">
+              <Label className="text-xs text-muted">First Name</Label>
+              <button
+                type="button"
+                onClick={() => handleLockToggle('first')}
+                className={`p-0.5 rounded transition-colors ${firstNameLocked ? 'text-primary' : 'text-muted/40 hover:text-muted'}`}
+                title={firstNameLocked ? 'Unlock first name' : 'Lock first name'}
+              >
+                {firstNameLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+              </button>
+            </div>
             <div className="relative">
               <input
                 type="text"
@@ -110,11 +137,12 @@ export function NameInputs({
                 autoCapitalize="words"
                 autoCorrect="off"
                 spellCheck="false"
-                className="w-full text-center text-base py-3 px-2 bg-card border border-border rounded-xl
+                className={`w-full text-center text-base py-3 px-2 bg-card border rounded-xl
                   placeholder:text-muted/40 text-foreground
                   focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
                   hover:border-border-strong transition-all duration-200
-                  touch-target tap-highlight"
+                  touch-target tap-highlight
+                  ${firstNameLocked ? 'border-primary/50 bg-primary/5' : 'border-border'}`}
               />
               {firstName && (
                 <button
@@ -130,7 +158,17 @@ export function NameInputs({
 
           {/* Middle Name */}
           <div>
-            <Label className="mb-1.5 block text-xs text-center text-muted">Middle Name</Label>
+            <div className="flex items-center justify-center gap-1.5 mb-1.5">
+              <Label className="text-xs text-muted">Middle Name</Label>
+              <button
+                type="button"
+                onClick={() => handleLockToggle('middle')}
+                className={`p-0.5 rounded transition-colors ${middleNameLocked ? 'text-primary' : 'text-muted/40 hover:text-muted'}`}
+                title={middleNameLocked ? 'Unlock middle name' : 'Lock middle name'}
+              >
+                {middleNameLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+              </button>
+            </div>
             <div className="relative">
               <input
                 type="text"
@@ -144,11 +182,12 @@ export function NameInputs({
                 autoCapitalize="words"
                 autoCorrect="off"
                 spellCheck="false"
-                className="w-full text-center text-base py-3 px-2 bg-card border border-border rounded-xl
+                className={`w-full text-center text-base py-3 px-2 bg-card border rounded-xl
                   placeholder:text-muted/40 text-foreground
                   focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
                   hover:border-border-strong transition-all duration-200
-                  touch-target tap-highlight"
+                  touch-target tap-highlight
+                  ${middleNameLocked ? 'border-primary/50 bg-primary/5' : 'border-border'}`}
               />
               {middleName && (
                 <button
@@ -168,7 +207,17 @@ export function NameInputs({
       <div className="hidden sm:grid sm:grid-cols-3 gap-3">
         {/* First Name */}
         <div>
-          <Label className="mb-2 block text-sm text-center text-muted">First Name</Label>
+          <div className="flex items-center justify-center gap-1.5 mb-2">
+            <Label className="text-sm text-muted">First Name</Label>
+            <button
+              type="button"
+              onClick={() => handleLockToggle('first')}
+              className={`p-0.5 rounded transition-colors ${firstNameLocked ? 'text-primary' : 'text-muted/40 hover:text-muted'}`}
+              title={firstNameLocked ? 'Unlock first name' : 'Lock first name'}
+            >
+              {firstNameLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+            </button>
+          </div>
           <div className="relative">
             <input
               type="text"
@@ -182,17 +231,28 @@ export function NameInputs({
               autoCapitalize="words"
               autoCorrect="off"
               spellCheck="false"
-              className="w-full text-center text-lg py-3 px-4 bg-card border border-border rounded-xl
+              className={`w-full text-center text-lg py-3 px-4 bg-card border rounded-xl
                 placeholder:text-muted/40 text-foreground
                 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
-                hover:border-border-strong transition-all duration-200"
+                hover:border-border-strong transition-all duration-200
+                ${firstNameLocked ? 'border-primary/50 bg-primary/5' : 'border-border'}`}
             />
           </div>
         </div>
 
         {/* Middle Name */}
         <div>
-          <Label className="mb-2 block text-sm text-center text-muted">Middle Name</Label>
+          <div className="flex items-center justify-center gap-1.5 mb-2">
+            <Label className="text-sm text-muted">Middle Name</Label>
+            <button
+              type="button"
+              onClick={() => handleLockToggle('middle')}
+              className={`p-0.5 rounded transition-colors ${middleNameLocked ? 'text-primary' : 'text-muted/40 hover:text-muted'}`}
+              title={middleNameLocked ? 'Unlock middle name' : 'Lock middle name'}
+            >
+              {middleNameLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+            </button>
+          </div>
           <div className="relative">
             <input
               type="text"
@@ -206,10 +266,11 @@ export function NameInputs({
               autoCapitalize="words"
               autoCorrect="off"
               spellCheck="false"
-              className="w-full text-center text-lg py-3 px-4 bg-card border border-border rounded-xl
+              className={`w-full text-center text-lg py-3 px-4 bg-card border rounded-xl
                 placeholder:text-muted/40 text-foreground
                 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
-                hover:border-border-strong transition-all duration-200"
+                hover:border-border-strong transition-all duration-200
+                ${middleNameLocked ? 'border-primary/50 bg-primary/5' : 'border-border'}`}
             />
           </div>
         </div>

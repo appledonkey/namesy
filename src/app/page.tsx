@@ -57,6 +57,8 @@ export default function Home() {
   const [favorites, setFavorites] = useState<FavoriteName[]>([]);
   const [showCompare, setShowCompare] = useState(false);
   const [radarExpanded, setRadarExpanded] = useState(false);
+  const [firstNameLocked, setFirstNameLocked] = useState(false);
+  const [middleNameLocked, setMiddleNameLocked] = useState(false);
 
   // Load favorites from localStorage on mount
   useEffect(() => {
@@ -107,25 +109,32 @@ export default function Home() {
 
   const handleRandomize = useCallback(() => {
     const gender = selectedGender === "all" ? (Math.random() > 0.5 ? "M" : "F") : selectedGender;
-    const first = getRandomName(gender);
 
-    // Ensure middle name is different from first name
-    let middle = getRandomName(gender);
-    let attempts = 0;
-    while (middle.name === first.name && attempts < 10) {
-      middle = getRandomName(gender);
-      attempts++;
+    // Only randomize first name if not locked
+    if (!firstNameLocked) {
+      const first = getRandomName(gender);
+      setFirstName(first.name);
     }
 
-    setFirstName(first.name);
-    setMiddleName(middle.name);
+    // Only randomize middle name if not locked
+    if (!middleNameLocked) {
+      const middle = getRandomName(gender);
+      // Ensure middle name is different from first name
+      let attempts = 0;
+      let finalMiddle = middle;
+      while (finalMiddle.name === firstName && attempts < 10) {
+        finalMiddle = getRandomName(gender);
+        attempts++;
+      }
+      setMiddleName(finalMiddle.name);
+    }
 
     // Only set last name if empty - preserve user's entered last name
     if (!lastName) {
       const lastIndex = Math.floor(Math.random() * COMMON_LAST_NAMES.length);
       setLastName(COMMON_LAST_NAMES[lastIndex]);
     }
-  }, [selectedGender, lastName]);
+  }, [selectedGender, lastName, firstNameLocked, middleNameLocked, firstName]);
 
   // Favorites handlers - compute isFavorited inside to avoid dependency on isFav
   const handleToggleFavorite = useCallback(() => {
@@ -206,10 +215,6 @@ export default function Home() {
             />
             <span className="font-heading text-xl font-semibold">namesy</span>
           </div>
-          <div className="hidden sm:flex items-center gap-4 text-xs text-muted">
-            <span><kbd className="px-1.5 py-0.5 bg-secondary/50 rounded">R</kbd> random</span>
-            <span><kbd className="px-1.5 py-0.5 bg-secondary/50 rounded">S</kbd> save</span>
-          </div>
         </div>
       </nav>
 
@@ -249,6 +254,10 @@ export default function Home() {
             onLastNameChange={setLastName}
             focusedField={focusedField}
             onFocusChange={setFocusedField}
+            firstNameLocked={firstNameLocked}
+            middleNameLocked={middleNameLocked}
+            onFirstNameLockToggle={() => setFirstNameLocked(!firstNameLocked)}
+            onMiddleNameLockToggle={() => setMiddleNameLocked(!middleNameLocked)}
           />
         </section>
 
