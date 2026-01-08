@@ -48,8 +48,9 @@ export const NameRadarChart = memo(function NameRadarChart({
       <ResponsiveContainer width="100%" height="100%">
         <RechartsRadarChart cx="50%" cy="50%" outerRadius="65%" data={chartData}>
           <PolarGrid
-            stroke="var(--border-strong)"
-            strokeOpacity={0.8}
+            stroke="var(--muted)"
+            strokeOpacity={0.5}
+            gridType="polygon"
           />
           <PolarAngleAxis
             dataKey="axis"
@@ -72,19 +73,19 @@ export const NameRadarChart = memo(function NameRadarChart({
           <Radar
             name={name}
             dataKey={name}
-            stroke="var(--primary)"
-            fill="var(--primary)"
-            fillOpacity={0.45}
-            strokeWidth={2.5}
+            stroke="#D4726A"
+            fill="#E8A0A0"
+            fillOpacity={0.6}
+            strokeWidth={3}
           />
           {compareData && (
             <Radar
               name={compareName || "Compare"}
               dataKey={compareName || "Compare"}
-              stroke="var(--accent)"
-              fill="var(--accent)"
-              fillOpacity={0.35}
-              strokeWidth={2.5}
+              stroke="#A68B2E"
+              fill="#C9A962"
+              fillOpacity={0.5}
+              strokeWidth={3}
             />
           )}
           {compareData && <Legend />}
