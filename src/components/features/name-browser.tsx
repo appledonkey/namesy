@@ -68,6 +68,7 @@ export function NameBrowser({
     isOpen: false,
     name: null,
   });
+  const [swipeRefreshKey, setSwipeRefreshKey] = useState(0);
 
   // Retry function ref
   const retryRef = useRef<(() => void) | null>(null);
@@ -218,8 +219,8 @@ export function NameBrowser({
         <NameCardStack
           names={cardNames}
           onSwipeAction={() => {
-            // Swipe actions are recorded in the component itself
-            // Could add callback here if parent needs to know
+            // Trigger refresh of the liked names panel
+            setSwipeRefreshKey(k => k + 1);
           }}
           onDetails={handleCardDetails}
           onSelect={(name) => {
@@ -267,7 +268,7 @@ export function NameBrowser({
         </div>
 
         {/* Liked Names Panel */}
-        <SwipeListPanel onSelectName={onSelectName} />
+        <SwipeListPanel onSelectName={onSelectName} refreshKey={swipeRefreshKey} />
       </div>
 
       {/* Detail Sheet for card view */}

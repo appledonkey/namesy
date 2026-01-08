@@ -21,13 +21,14 @@ type FilterTab = "all" | "superliked" | "liked";
 
 interface SwipeListPanelProps {
   onSelectName: (name: string) => void;
+  refreshKey?: number;
 }
 
 /**
  * SwipeListPanel - View and manage liked/super-liked names
  * Collapsible panel showing swiped names organized by preference
  */
-export function SwipeListPanel({ onSelectName }: SwipeListPanelProps) {
+export function SwipeListPanel({ onSelectName, refreshKey = 0 }: SwipeListPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [names, setNames] = useState<SwipedName[]>([]);
@@ -51,6 +52,13 @@ export function SwipeListPanel({ onSelectName }: SwipeListPanelProps) {
       setNames(getLikedNames());
     }
   }, [isExpanded]);
+
+  // Refresh when refreshKey changes (triggered by swipe actions)
+  useEffect(() => {
+    if (refreshKey > 0) {
+      setNames(getLikedNames());
+    }
+  }, [refreshKey]);
 
   const filteredNames = names.filter((n) => {
     if (activeTab === "all") return true;
