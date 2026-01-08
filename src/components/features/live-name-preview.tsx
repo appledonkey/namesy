@@ -113,7 +113,7 @@ export function LiveNamePreview({
                       className={`px-3 py-2 text-xs rounded-full transition-all duration-200
                         touch-target tap-highlight touch-feedback ${style.className} ${
                         selectedFont === style.id
-                          ? "bg-primary text-white"
+                          ? "bg-primary text-foreground font-semibold"
                           : "bg-card text-muted border border-border active:bg-secondary/50"
                       }`}
                     >
@@ -136,7 +136,7 @@ export function LiveNamePreview({
               className={`px-4 py-2.5 text-sm rounded-full transition-all duration-200
                 touch-target tap-highlight touch-feedback ${style.className} ${
                 selectedFont === style.id
-                  ? "bg-primary text-white"
+                  ? "bg-primary text-foreground font-semibold"
                   : "bg-card text-muted border border-border hover:border-primary hover:text-foreground active:bg-secondary/50"
               }`}
             >

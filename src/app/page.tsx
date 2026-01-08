@@ -14,6 +14,7 @@ import { ActionBar } from "@/components/features/action-bar";
 import { FloatingActionButton } from "@/components/features/floating-action-button";
 import { FavoritesPanel } from "@/components/features/favorites-panel";
 import { ChevronDown } from "lucide-react";
+import Image from "next/image";
 import { analyzeFullName, calculateRadarScores } from "@/lib/analysis";
 import { getRandomName } from "@/lib/names-data";
 import { createRadarData } from "@/components/features/radar-chart";
@@ -195,8 +196,15 @@ export default function Home() {
       {/* Compact Navigation */}
       <nav className="bg-background border-b border-border sticky top-0 z-40 safe-top">
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between">
-          <div className="font-heading text-xl font-semibold">
-            namesy
+          <div className="flex items-center gap-2">
+            <Image
+              src="/icon.png"
+              alt="Namesy"
+              width={28}
+              height={28}
+              className="rounded-lg"
+            />
+            <span className="font-heading text-xl font-semibold">namesy</span>
           </div>
           <div className="hidden sm:flex items-center gap-4 text-xs text-muted">
             <span><kbd className="px-1.5 py-0.5 bg-secondary/50 rounded">R</kbd> random</span>
