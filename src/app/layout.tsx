@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
+import { Playfair_Display, Inter, Lavishly_Yours } from "next/font/google";
 import "./globals.css";
 import { PaperTexture } from "@/components/ui/paper-texture";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -20,10 +20,12 @@ const inter = Inter({
   weight: ["400", "500", "600"],
 });
 
-// CSS fallbacks for removed fonts (in globals.css):
-// --font-source-sans: var(--font-inter)
-// --font-dancing-script: var(--font-playfair)
-// --font-lora: var(--font-playfair)
+const lavishlyYours = Lavishly_Yours({
+  variable: "--font-lavishly-yours",
+  subsets: ["latin"],
+  display: "swap",
+  weight: "400",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -125,7 +127,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${playfair.variable} ${inter.variable} antialiased bg-background text-foreground`}
+        className={`${playfair.variable} ${inter.variable} ${lavishlyYours.variable} antialiased bg-background text-foreground`}
       >
         <PaperTexture />
         <ErrorBoundary>

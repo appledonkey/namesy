@@ -49,10 +49,8 @@
   --font-family-heading: var(--font-playfair);
   --font-family-body: var(--font-inter);
 
-  /* Font fallbacks for removed fonts (performance optimization) */
+  /* Font alias for backwards compatibility */
   --font-source-sans: var(--font-inter);
-  --font-dancing-script: var(--font-playfair);
-  --font-lora: var(--font-playfair);
 
   /* Border Radius - Organic shapes */
   --radius-sm: 0.5rem;
