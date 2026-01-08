@@ -62,8 +62,8 @@ function getNameData(slug: string): NameDetailData | null {
   }
 
   // Get similar names (same gender, similar rank)
-  const genderFilter = name.gender === "N" ? "all" : name.gender;
-  const similarNames = getPopularNames(genderFilter, 20)
+  const genderFilter = name.gender === "N" ? undefined : name.gender;
+  const similarNames = getPopularNames(20, genderFilter)
     .filter(n => n.name !== name.name)
     .slice(0, 6)
     .map(n => n.name);

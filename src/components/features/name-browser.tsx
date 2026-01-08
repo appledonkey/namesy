@@ -89,7 +89,7 @@ export function NameBrowser({
       try {
         setError(null);
         // Direct data access - works offline
-        const names = getPopularNames(selectedGender, 50).map(n => ({
+        const names = getPopularNames(50, selectedGender === "all" ? undefined : selectedGender).map(n => ({
           id: n.id,
           name: n.name,
           origins: n.origins,
