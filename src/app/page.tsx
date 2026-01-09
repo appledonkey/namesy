@@ -156,7 +156,7 @@ export default function Home() {
                   focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20
                   transition-all duration-200"
               >
-                👦 Boy names
+                Boy names
               </button>
 
               <button
@@ -167,7 +167,7 @@ export default function Home() {
                   focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-400/20
                   transition-all duration-200"
               >
-                👧 Girl names
+                Girl names
               </button>
 
               <button
@@ -178,7 +178,7 @@ export default function Home() {
                   focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20
                   transition-all duration-200"
               >
-                🎉 Either / Surprise
+                Either
               </button>
             </div>
           </div>
