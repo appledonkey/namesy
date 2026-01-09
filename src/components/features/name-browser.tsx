@@ -10,16 +10,9 @@ import { NameCardStack } from "./name-card-stack";
 import { NameDetailSheet } from "./name-detail-sheet";
 import { SwipeListPanel } from "./swipe-list-panel";
 import { haptics } from "@/lib/haptics";
-import { getPopularNames, getNamesByLetter } from "@/lib/names-data";
+import { getPopularNames, getNamesByLetter, type NameData } from "@/lib/names-data";
 
 type Gender = "F" | "M" | "all";
-
-interface NameData {
-  id: string;
-  name: string;
-  origins: string[];
-  meanings: string[];
-}
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 const INITIAL_LIMIT = 12;
@@ -90,12 +83,7 @@ export function NameBrowser({
       try {
         setError(null);
         // Direct data access - works offline
-        const names = getPopularNames(50, selectedGender === "all" ? undefined : selectedGender).map(n => ({
-          id: n.id,
-          name: n.name,
-          origins: n.origins,
-          meanings: n.meanings,
-        }));
+        const names = getPopularNames(50, selectedGender === "all" ? undefined : selectedGender);
 
         setCachedData(cacheKey, names);
         setPopularNames(names);
@@ -136,12 +124,7 @@ export function NameBrowser({
         gender: selectedGender === "all" ? "all" : selectedGender,
       });
 
-      const names = allLetterNames.slice(0, limit).map(n => ({
-        id: n.id,
-        name: n.name,
-        origins: n.origins,
-        meanings: n.meanings,
-      }));
+      const names = allLetterNames.slice(0, limit);
 
       setCachedData(cacheKey, names);
       setLetterNames(names);

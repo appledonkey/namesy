@@ -2,17 +2,17 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { ArrowRight, Settings } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LivePreview } from "@/components/features/live-preview";
 import { GenderFilter } from "@/components/features/gender-filter";
-import { NameCardRow } from "@/components/features/name-card-row";
+import { NameCardStack } from "@/components/features/name-card-stack";
 import { NameDetails } from "@/components/features/name-details";
 import { getPopularNames, type NameData } from "@/lib/names-data";
+import type { SwipeAction } from "@/lib/swipe-preferences";
 
 type Step = "lastname" | "main";
 type GenderOption = "all" | "M" | "F";
-const NAMES_PER_PAGE = 5;
 
 export default function Home() {
   const [step, setStep] = useState<Step>("lastname");
@@ -22,25 +22,18 @@ export default function Home() {
   // Main step state
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
+  const [firstNameLocked, setFirstNameLocked] = useState(false);
+  const [middleNameLocked, setMiddleNameLocked] = useState(false);
   const [gender, setGender] = useState<GenderOption>("all");
-  const [page, setPage] = useState(0);
-  const [selectedIndex, setSelectedIndex] = useState(0);
   const [savedNames, setSavedNames] = useState<Set<string>>(new Set());
+  const [currentSwipeName, setCurrentSwipeName] = useState<NameData | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
 
-  // Get filtered names
-  const filteredNames = useMemo(() => {
+  // Get filtered names for swiper
+  const swiperNames = useMemo(() => {
     const genderFilter = gender === "all" ? undefined : gender;
     return getPopularNames(500, genderFilter);
   }, [gender]);
-
-  // Get current page of names
-  const pageNames = useMemo(() => {
-    const start = page * NAMES_PER_PAGE;
-    return filteredNames.slice(start, start + NAMES_PER_PAGE);
-  }, [filteredNames, page]);
-
-  const totalPages = Math.ceil(filteredNames.length / NAMES_PER_PAGE);
-  const selectedName = pageNames[selectedIndex] || null;
 
   // Load saved data from localStorage on mount
   useEffect(() => {
@@ -57,16 +50,6 @@ export default function Home() {
     setIsLoaded(true);
   }, []);
 
-  // Reset selection when page or gender changes
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [page, gender]);
-
-  // Reset page when gender changes
-  useEffect(() => {
-    setPage(0);
-  }, [gender]);
-
   // Save last name to localStorage
   const handleContinue = () => {
     if (lastName.trim()) {
@@ -82,14 +65,44 @@ export default function Home() {
     }
   };
 
-  // Handle saving a name
-  const handleSaveName = () => {
-    if (!selectedName) return;
+  // Handle swipe actions
+  const handleSwipeAction = (name: NameData, action: SwipeAction) => {
+    if (action === "like" || action === "superlike") {
+      // Fill first name if not locked
+      if (!firstNameLocked) {
+        setFirstName(name.name);
+      }
+      // Save to favorites
+      const newSaved = new Set(savedNames);
+      newSaved.add(name.id);
+      setSavedNames(newSaved);
+      localStorage.setItem("namesy-saved-names", JSON.stringify([...newSaved]));
+    }
+    setCurrentSwipeName(null);
+    setShowDetails(false);
+  };
+
+  // Handle showing details
+  const handleShowDetails = (name: NameData) => {
+    setCurrentSwipeName(name);
+    setShowDetails(true);
+  };
+
+  // Handle selecting a name (tap on card)
+  const handleSelectName = (name: string) => {
+    if (!firstNameLocked) {
+      setFirstName(name);
+    }
+  };
+
+  // Handle saving current name from details
+  const handleSaveFromDetails = () => {
+    if (!currentSwipeName) return;
     const newSaved = new Set(savedNames);
-    if (newSaved.has(selectedName.id)) {
-      newSaved.delete(selectedName.id);
+    if (newSaved.has(currentSwipeName.id)) {
+      newSaved.delete(currentSwipeName.id);
     } else {
-      newSaved.add(selectedName.id);
+      newSaved.add(currentSwipeName.id);
     }
     setSavedNames(newSaved);
     localStorage.setItem("namesy-saved-names", JSON.stringify([...newSaved]));
@@ -100,14 +113,9 @@ export default function Home() {
     setStep("lastname");
   };
 
-  // Handle selecting a name from cards
-  const handleSelectName = (index: number) => {
-    setSelectedIndex(index);
-    const name = pageNames[index];
-    if (name) {
-      setFirstName(name.name);
-    }
-  };
+  // Toggle lock states
+  const toggleFirstNameLock = () => setFirstNameLocked(!firstNameLocked);
+  const toggleMiddleNameLock = () => setMiddleNameLocked(!middleNameLocked);
 
   // Don't render until we've checked localStorage
   if (!isLoaded) {
@@ -192,42 +200,48 @@ export default function Home() {
 
       {/* Main: Name discovery area */}
       {step === "main" && (
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
           {/* Live Preview */}
           <LivePreview
             firstName={firstName}
             middleName={middleName}
             lastName={lastName}
+            firstNameLocked={firstNameLocked}
+            middleNameLocked={middleNameLocked}
             onFirstNameChange={setFirstName}
             onMiddleNameChange={setMiddleName}
+            onFirstNameLockToggle={toggleFirstNameLock}
+            onMiddleNameLockToggle={toggleMiddleNameLock}
           />
 
           {/* Gender Filter */}
-          <div className="mb-6">
+          <div className="mb-4">
             <GenderFilter value={gender} onChange={setGender} />
           </div>
 
-          {/* Name Cards */}
-          <div className="mb-6">
-            <NameCardRow
-              names={pageNames}
-              selectedIndex={selectedIndex}
+          {/* Swiper */}
+          <div className="mb-4">
+            <NameCardStack
+              names={swiperNames}
+              onSwipeAction={handleSwipeAction}
+              onDetails={handleShowDetails}
               onSelect={handleSelectName}
-              page={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
             />
           </div>
 
-          {/* Selected Name Details */}
-          <NameDetails
-            name={selectedName}
-            isSaved={selectedName ? savedNames.has(selectedName.id) : false}
-            onSave={handleSaveName}
-          />
+          {/* Details panel (shown when info is tapped) */}
+          {showDetails && currentSwipeName && (
+            <div className="mb-4">
+              <NameDetails
+                name={currentSwipeName}
+                isSaved={savedNames.has(currentSwipeName.id)}
+                onSave={handleSaveFromDetails}
+              />
+            </div>
+          )}
 
           {/* Change last name link */}
-          <div className="text-center mt-8">
+          <div className="text-center mt-4">
             <button
               onClick={handleChangeLastName}
               className="text-muted hover:text-foreground text-sm underline underline-offset-4 transition-colors"

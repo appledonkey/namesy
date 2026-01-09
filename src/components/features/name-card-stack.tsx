@@ -5,13 +5,7 @@ import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from "
 import { Heart, X, Info, Star } from "lucide-react";
 import { haptics } from "@/lib/haptics";
 import { recordSwipe, SwipeAction } from "@/lib/swipe-preferences";
-
-interface NameData {
-  id: string;
-  name: string;
-  origins: string[];
-  meanings: string[];
-}
+import type { NameData } from "@/lib/names-data";
 
 interface NameCardStackProps {
   names: NameData[];

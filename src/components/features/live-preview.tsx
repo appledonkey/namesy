@@ -1,22 +1,31 @@
 "use client";
 
 import { useMemo } from "react";
+import { Lock, Unlock } from "lucide-react";
 import { Text } from "@/components/ui/typography";
 
 interface LivePreviewProps {
   firstName: string;
   middleName: string;
   lastName: string;
+  firstNameLocked: boolean;
+  middleNameLocked: boolean;
   onFirstNameChange: (value: string) => void;
   onMiddleNameChange: (value: string) => void;
+  onFirstNameLockToggle: () => void;
+  onMiddleNameLockToggle: () => void;
 }
 
 export function LivePreview({
   firstName,
   middleName,
   lastName,
+  firstNameLocked,
+  middleNameLocked,
   onFirstNameChange,
   onMiddleNameChange,
+  onFirstNameLockToggle,
+  onMiddleNameLockToggle,
 }: LivePreviewProps) {
   const displayName = [firstName, middleName, lastName]
     .filter(Boolean)
@@ -39,10 +48,10 @@ export function LivePreview({
   }, [nameLength]);
 
   return (
-    <div className="text-center py-6 sm:py-10">
+    <div className="text-center py-6 sm:py-8">
       {/* Large name preview - fits on one row */}
       <h1
-        className={`font-heading font-semibold italic leading-tight text-foreground whitespace-nowrap ${textSizeClass} mb-2`}
+        className={`font-heading font-semibold italic leading-tight text-foreground whitespace-nowrap ${textSizeClass} mb-1`}
       >
         {displayName || "Enter a name"}
       </h1>
@@ -54,49 +63,93 @@ export function LivePreview({
         </Text>
       )}
 
-      {/* Name inputs */}
+      {/* Name inputs with lock toggles */}
       <div className="max-w-md mx-auto grid grid-cols-2 gap-3">
         {/* First name input */}
-        <label className="block">
-          <Text size="sm" muted className="mb-1">
+        <div className="space-y-1">
+          <Text size="sm" muted>
             First name
           </Text>
-          <input
-            type="text"
-            value={firstName}
-            onChange={(e) => onFirstNameChange(e.target.value)}
-            placeholder="First"
-            autoCapitalize="words"
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck="false"
-            className="w-full text-center text-lg py-3 px-4 bg-card border border-border rounded-xl
-              placeholder:text-muted/50 text-foreground
-              focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
-              transition-all duration-200"
-          />
-        </label>
+          <div className="relative">
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => onFirstNameChange(e.target.value)}
+              placeholder="First"
+              disabled={firstNameLocked}
+              autoCapitalize="words"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck="false"
+              className={`w-full text-center text-lg py-3 px-4 pr-12 bg-card border rounded-xl
+                placeholder:text-muted/50 text-foreground
+                focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
+                transition-all duration-200
+                ${firstNameLocked ? "border-primary bg-primary/5" : "border-border"}
+                ${firstNameLocked ? "cursor-not-allowed" : ""}
+              `}
+            />
+            <button
+              onClick={onFirstNameLockToggle}
+              className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors
+                ${firstNameLocked
+                  ? "text-primary hover:text-primary/80"
+                  : "text-muted hover:text-foreground"
+                }
+              `}
+              title={firstNameLocked ? "Unlock first name" : "Lock first name"}
+            >
+              {firstNameLocked ? (
+                <Lock className="w-5 h-5" />
+              ) : (
+                <Unlock className="w-5 h-5" />
+              )}
+            </button>
+          </div>
+        </div>
 
         {/* Middle name input */}
-        <label className="block">
-          <Text size="sm" muted className="mb-1">
+        <div className="space-y-1">
+          <Text size="sm" muted>
             Middle (optional)
           </Text>
-          <input
-            type="text"
-            value={middleName}
-            onChange={(e) => onMiddleNameChange(e.target.value)}
-            placeholder="Middle"
-            autoCapitalize="words"
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck="false"
-            className="w-full text-center text-lg py-3 px-4 bg-card border border-border rounded-xl
-              placeholder:text-muted/50 text-foreground
-              focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
-              transition-all duration-200"
-          />
-        </label>
+          <div className="relative">
+            <input
+              type="text"
+              value={middleName}
+              onChange={(e) => onMiddleNameChange(e.target.value)}
+              placeholder="Middle"
+              disabled={middleNameLocked}
+              autoCapitalize="words"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck="false"
+              className={`w-full text-center text-lg py-3 px-4 pr-12 bg-card border rounded-xl
+                placeholder:text-muted/50 text-foreground
+                focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
+                transition-all duration-200
+                ${middleNameLocked ? "border-primary bg-primary/5" : "border-border"}
+                ${middleNameLocked ? "cursor-not-allowed" : ""}
+              `}
+            />
+            <button
+              onClick={onMiddleNameLockToggle}
+              className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors
+                ${middleNameLocked
+                  ? "text-primary hover:text-primary/80"
+                  : "text-muted hover:text-foreground"
+                }
+              `}
+              title={middleNameLocked ? "Unlock middle name" : "Lock middle name"}
+            >
+              {middleNameLocked ? (
+                <Lock className="w-5 h-5" />
+              ) : (
+                <Unlock className="w-5 h-5" />
+              )}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
