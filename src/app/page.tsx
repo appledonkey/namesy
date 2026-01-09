@@ -8,6 +8,7 @@ import { LivePreview } from "@/components/features/live-preview";
 import { GenderFilter } from "@/components/features/gender-filter";
 import { NameCardStack } from "@/components/features/name-card-stack";
 import { NameDetails } from "@/components/features/name-details";
+import { SwipeListPanel } from "@/components/features/swipe-list-panel";
 import { getPopularNames, type NameData } from "@/lib/names-data";
 import type { SwipeAction } from "@/lib/swipe-preferences";
 
@@ -28,6 +29,7 @@ export default function Home() {
   const [savedNames, setSavedNames] = useState<Set<string>>(new Set());
   const [currentSwipeName, setCurrentSwipeName] = useState<NameData | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [swipeRefreshKey, setSwipeRefreshKey] = useState(0);
 
   // Get filtered names for swiper
   const swiperNames = useMemo(() => {
@@ -80,6 +82,8 @@ export default function Home() {
     }
     setCurrentSwipeName(null);
     setShowDetails(false);
+    // Trigger refresh of swipe list panel
+    setSwipeRefreshKey((k) => k + 1);
   };
 
   // Handle showing details
@@ -116,6 +120,21 @@ export default function Home() {
   // Toggle lock states
   const toggleFirstNameLock = () => setFirstNameLocked(!firstNameLocked);
   const toggleMiddleNameLock = () => setMiddleNameLocked(!middleNameLocked);
+
+  // Random name handlers
+  const handleRandomFirstName = () => {
+    if (swiperNames.length > 0) {
+      const randomIndex = Math.floor(Math.random() * swiperNames.length);
+      setFirstName(swiperNames[randomIndex].name);
+    }
+  };
+
+  const handleRandomMiddleName = () => {
+    if (swiperNames.length > 0) {
+      const randomIndex = Math.floor(Math.random() * swiperNames.length);
+      setMiddleName(swiperNames[randomIndex].name);
+    }
+  };
 
   // Don't render until we've checked localStorage
   if (!isLoaded) {
@@ -212,6 +231,8 @@ export default function Home() {
             onMiddleNameChange={setMiddleName}
             onFirstNameLockToggle={toggleFirstNameLock}
             onMiddleNameLockToggle={toggleMiddleNameLock}
+            onRandomFirstName={handleRandomFirstName}
+            onRandomMiddleName={handleRandomMiddleName}
           />
 
           {/* Gender Filter */}
@@ -226,6 +247,14 @@ export default function Home() {
               onSwipeAction={handleSwipeAction}
               onDetails={handleShowDetails}
               onSelect={handleSelectName}
+            />
+          </div>
+
+          {/* Swipe History Panel */}
+          <div className="mb-4">
+            <SwipeListPanel
+              onSelectName={handleSelectName}
+              refreshKey={swipeRefreshKey}
             />
           </div>
 

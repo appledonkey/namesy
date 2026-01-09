@@ -17,7 +17,7 @@ import {
 } from "@/lib/swipe-preferences";
 import { haptics } from "@/lib/haptics";
 
-type FilterTab = "all" | "superliked" | "liked";
+type FilterTab = "all" | "superliked" | "liked" | "skipped";
 
 interface SwipeListPanelProps {
   onSelectName: (name: string) => void;
@@ -29,14 +29,14 @@ interface SwipeListPanelProps {
  * Collapsible panel showing swiped names organized by preference
  */
 export function SwipeListPanel({ onSelectName, refreshKey = 0 }: SwipeListPanelProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [activeTab, setActiveTab] = useState<FilterTab>("all");
+  const [isExpanded, setIsExpanded] = useState(true); // Start expanded
+  const [activeTab, setActiveTab] = useState<FilterTab>("superliked");
   const [names, setNames] = useState<SwipedName[]>([]);
 
   // Load names from storage
   useEffect(() => {
     const loadNames = () => {
-      setNames(getLikedNames()); // Only show liked and super-liked
+      setNames(getSwipedNames()); // Load all swiped names
     };
 
     loadNames();
@@ -49,55 +49,79 @@ export function SwipeListPanel({ onSelectName, refreshKey = 0 }: SwipeListPanelP
   // Refresh when expanded
   useEffect(() => {
     if (isExpanded) {
-      setNames(getLikedNames());
+      setNames(getSwipedNames());
     }
   }, [isExpanded]);
 
   // Refresh when refreshKey changes (triggered by swipe actions)
   useEffect(() => {
     if (refreshKey > 0) {
-      setNames(getLikedNames());
+      setNames(getSwipedNames());
     }
   }, [refreshKey]);
 
   const filteredNames = names.filter((n) => {
-    if (activeTab === "all") return true;
+    if (activeTab === "all") return n.action !== "dislike"; // All except skipped
     if (activeTab === "superliked") return n.action === "superlike";
     if (activeTab === "liked") return n.action === "like";
+    if (activeTab === "skipped") return n.action === "dislike";
     return true;
   });
 
-  const superlikedCount = names.filter((n) => n.action === "superlike").length;
-  const likedCount = names.filter((n) => n.action === "like").length;
-  const totalCount = names.length;
+  const superlikedNames = names.filter((n) => n.action === "superlike");
+  const likedNames = names.filter((n) => n.action === "like");
+  const skippedNames = names.filter((n) => n.action === "dislike");
+  const superlikedCount = superlikedNames.length;
+  const likedCount = likedNames.length;
+  const skippedCount = skippedNames.length;
+  const totalCount = superlikedCount + likedCount;
+
+  // Get recent favorites for preview (most recent first)
+  const recentFavorites = [...superlikedNames, ...likedNames]
+    .sort((a, b) => b.swipedAt - a.swipedAt)
+    .slice(0, 5);
 
   const handleRemove = (id: string) => {
     haptics.tap();
     removeSwipedName(id);
-    setNames(getLikedNames());
+    setNames(getSwipedNames());
   };
 
   const handleUpgrade = (id: string) => {
     haptics.save();
     updateSwipeAction(id, "superlike");
-    setNames(getLikedNames());
+    setNames(getSwipedNames());
   };
 
   const handleDowngrade = (id: string) => {
     haptics.tap();
     updateSwipeAction(id, "like");
-    setNames(getLikedNames());
+    setNames(getSwipedNames());
+  };
+
+  const handleRescue = (id: string) => {
+    haptics.save();
+    updateSwipeAction(id, "like");
+    setNames(getSwipedNames());
   };
 
   const handleClearAll = () => {
-    if (confirm("Clear all liked names?")) {
-      clearByAction("like");
-      clearByAction("superlike");
-      setNames([]);
+    const message = activeTab === "skipped"
+      ? "Clear all skipped names?"
+      : "Clear all liked names?";
+    if (confirm(message)) {
+      if (activeTab === "skipped") {
+        clearByAction("dislike");
+      } else {
+        clearByAction("like");
+        clearByAction("superlike");
+      }
+      setNames(getSwipedNames());
     }
   };
 
-  if (totalCount === 0) {
+  // Show panel if there are any swiped names
+  if (totalCount === 0 && skippedCount === 0) {
     return null;
   }
 
@@ -112,16 +136,21 @@ export function SwipeListPanel({ onSelectName, refreshKey = 0 }: SwipeListPanelP
         className="w-full p-4 flex items-center justify-between touch-target tap-highlight"
       >
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <Heart className="w-4 h-4 text-success" />
-            <span className="text-sm font-medium">{totalCount} Liked</span>
+          <span className="text-sm font-medium">Your Favorites</span>
+          <div className="flex items-center gap-2 text-xs">
+            {superlikedCount > 0 && (
+              <div className="flex items-center gap-1 text-amber-500">
+                <Star className="w-3 h-3 fill-current" />
+                <span>{superlikedCount}</span>
+              </div>
+            )}
+            {likedCount > 0 && (
+              <div className="flex items-center gap-1 text-success">
+                <Heart className="w-3 h-3" />
+                <span>{likedCount}</span>
+              </div>
+            )}
           </div>
-          {superlikedCount > 0 && (
-            <div className="flex items-center gap-1 text-amber-500">
-              <Star className="w-4 h-4 fill-current" />
-              <span className="text-sm">{superlikedCount}</span>
-            </div>
-          )}
         </div>
         <ChevronDown
           className={`w-5 h-5 text-muted transition-transform duration-200 ${
@@ -129,6 +158,43 @@ export function SwipeListPanel({ onSelectName, refreshKey = 0 }: SwipeListPanelP
           }`}
         />
       </button>
+
+      {/* Live preview of recent favorites (visible when collapsed) */}
+      {!isExpanded && recentFavorites.length > 0 && (
+        <div className="px-4 pb-3 -mt-2">
+          <div className="flex flex-wrap gap-1.5">
+            <AnimatePresence mode="popLayout">
+              {recentFavorites.map((item) => (
+                <motion.button
+                  key={item.id}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  layout
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectName(item.name);
+                  }}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors
+                    ${item.action === "superlike"
+                      ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                      : "bg-success/10 text-success hover:bg-success/20"
+                    }
+                  `}
+                >
+                  {item.action === "superlike" && <Star className="w-2.5 h-2.5 inline mr-1 fill-current" />}
+                  {item.name}
+                </motion.button>
+              ))}
+            </AnimatePresence>
+            {totalCount > 5 && (
+              <span className="px-2 py-1 text-xs text-muted">
+                +{totalCount - 5} more
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Expandable content */}
       <AnimatePresence>
@@ -142,14 +208,7 @@ export function SwipeListPanel({ onSelectName, refreshKey = 0 }: SwipeListPanelP
           >
             <div className="px-4 pb-4 space-y-3">
               {/* Filter tabs */}
-              <div className="flex gap-2">
-                <TabButton
-                  active={activeTab === "all"}
-                  onClick={() => setActiveTab("all")}
-                  count={totalCount}
-                >
-                  All
-                </TabButton>
+              <div className="flex gap-2 flex-wrap">
                 <TabButton
                   active={activeTab === "superliked"}
                   onClick={() => setActiveTab("superliked")}
@@ -165,6 +224,14 @@ export function SwipeListPanel({ onSelectName, refreshKey = 0 }: SwipeListPanelP
                   icon={<Heart className="w-3 h-3" />}
                 >
                   Liked
+                </TabButton>
+                <TabButton
+                  active={activeTab === "skipped"}
+                  onClick={() => setActiveTab("skipped")}
+                  count={skippedCount}
+                  icon={<X className="w-3 h-3" />}
+                >
+                  Skipped
                 </TabButton>
               </div>
 
@@ -183,13 +250,14 @@ export function SwipeListPanel({ onSelectName, refreshKey = 0 }: SwipeListPanelP
                       onRemove={() => handleRemove(item.id)}
                       onUpgrade={() => handleUpgrade(item.id)}
                       onDowngrade={() => handleDowngrade(item.id)}
+                      onRescue={() => handleRescue(item.id)}
                     />
                   ))
                 )}
               </div>
 
               {/* Clear all button */}
-              {totalCount > 0 && (
+              {filteredNames.length > 0 && (
                 <div className="pt-2 border-t border-border">
                   <Button
                     variant="ghost"
@@ -198,7 +266,7 @@ export function SwipeListPanel({ onSelectName, refreshKey = 0 }: SwipeListPanelP
                     className="w-full text-muted hover:text-error"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Clear All
+                    {activeTab === "skipped" ? "Clear Skipped" : "Clear All"}
                   </Button>
                 </div>
               )}
@@ -243,17 +311,23 @@ interface SwipeListItemProps {
   onRemove: () => void;
   onUpgrade: () => void;
   onDowngrade: () => void;
+  onRescue: () => void;
 }
 
-function SwipeListItem({ item, onSelect, onRemove, onUpgrade, onDowngrade }: SwipeListItemProps) {
+function SwipeListItem({ item, onSelect, onRemove, onUpgrade, onDowngrade, onRescue }: SwipeListItemProps) {
   const isSuperLiked = item.action === "superlike";
+  const isSkipped = item.action === "dislike";
 
   return (
     <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/30 group">
-      {/* Star/Heart indicator */}
-      <div className={`flex-shrink-0 ${isSuperLiked ? "text-amber-500" : "text-success"}`}>
+      {/* Status indicator */}
+      <div className={`flex-shrink-0 ${
+        isSuperLiked ? "text-amber-500" : isSkipped ? "text-muted" : "text-success"
+      }`}>
         {isSuperLiked ? (
           <Star className="w-4 h-4 fill-current" />
+        ) : isSkipped ? (
+          <X className="w-4 h-4" />
         ) : (
           <Heart className="w-4 h-4" />
         )}
@@ -262,7 +336,9 @@ function SwipeListItem({ item, onSelect, onRemove, onUpgrade, onDowngrade }: Swi
       {/* Name - clickable to select */}
       <button
         onClick={onSelect}
-        className="flex-1 text-left font-medium text-sm hover:text-primary transition-colors"
+        className={`flex-1 text-left font-medium text-sm hover:text-primary transition-colors ${
+          isSkipped ? "text-muted" : ""
+        }`}
       >
         {item.name}
         {item.meanings && item.meanings.length > 0 && (
@@ -273,9 +349,17 @@ function SwipeListItem({ item, onSelect, onRemove, onUpgrade, onDowngrade }: Swi
       </button>
 
       {/* Actions */}
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        {/* Upgrade/Downgrade button */}
-        {isSuperLiked ? (
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity">
+        {/* Rescue button for skipped names */}
+        {isSkipped ? (
+          <button
+            onClick={onRescue}
+            className="p-1.5 rounded-full hover:bg-success/20 text-success"
+            title="Rescue - move to liked"
+          >
+            <Heart className="w-3.5 h-3.5" />
+          </button>
+        ) : isSuperLiked ? (
           <button
             onClick={onDowngrade}
             className="p-1.5 rounded-full hover:bg-secondary text-muted"

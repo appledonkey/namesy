@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Lock, Unlock } from "lucide-react";
+import { Lock, Unlock, Shuffle } from "lucide-react";
 import { Text } from "@/components/ui/typography";
 
 interface LivePreviewProps {
@@ -14,6 +14,8 @@ interface LivePreviewProps {
   onMiddleNameChange: (value: string) => void;
   onFirstNameLockToggle: () => void;
   onMiddleNameLockToggle: () => void;
+  onRandomFirstName: () => void;
+  onRandomMiddleName: () => void;
 }
 
 export function LivePreview({
@@ -26,6 +28,8 @@ export function LivePreview({
   onMiddleNameChange,
   onFirstNameLockToggle,
   onMiddleNameLockToggle,
+  onRandomFirstName,
+  onRandomMiddleName,
 }: LivePreviewProps) {
   const displayName = [firstName, middleName, lastName]
     .filter(Boolean)
@@ -81,7 +85,7 @@ export function LivePreview({
               autoComplete="off"
               autoCorrect="off"
               spellCheck="false"
-              className={`w-full text-center text-lg py-3 px-4 pr-12 bg-card border rounded-xl
+              className={`w-full text-center text-lg py-3 px-10 bg-card border rounded-xl
                 placeholder:text-muted/50 text-foreground
                 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
                 transition-all duration-200
@@ -90,8 +94,21 @@ export function LivePreview({
               `}
             />
             <button
+              onClick={onRandomFirstName}
+              disabled={firstNameLocked}
+              className={`absolute left-2 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors
+                ${firstNameLocked
+                  ? "text-muted/30 cursor-not-allowed"
+                  : "text-muted hover:text-primary"
+                }
+              `}
+              title="Random first name"
+            >
+              <Shuffle className="w-5 h-5" />
+            </button>
+            <button
               onClick={onFirstNameLockToggle}
-              className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors
+              className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors
                 ${firstNameLocked
                   ? "text-primary hover:text-primary/80"
                   : "text-muted hover:text-foreground"
@@ -124,7 +141,7 @@ export function LivePreview({
               autoComplete="off"
               autoCorrect="off"
               spellCheck="false"
-              className={`w-full text-center text-lg py-3 px-4 pr-12 bg-card border rounded-xl
+              className={`w-full text-center text-lg py-3 px-10 bg-card border rounded-xl
                 placeholder:text-muted/50 text-foreground
                 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
                 transition-all duration-200
@@ -133,8 +150,21 @@ export function LivePreview({
               `}
             />
             <button
+              onClick={onRandomMiddleName}
+              disabled={middleNameLocked}
+              className={`absolute left-2 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors
+                ${middleNameLocked
+                  ? "text-muted/30 cursor-not-allowed"
+                  : "text-muted hover:text-primary"
+                }
+              `}
+              title="Random middle name"
+            >
+              <Shuffle className="w-5 h-5" />
+            </button>
+            <button
               onClick={onMiddleNameLockToggle}
-              className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors
+              className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors
                 ${middleNameLocked
                   ? "text-primary hover:text-primary/80"
                   : "text-muted hover:text-foreground"
