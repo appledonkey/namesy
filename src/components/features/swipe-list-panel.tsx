@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Star, X, ChevronDown, Trash2, ArrowUpDown, Clock, SortAsc } from "lucide-react";
+import { Heart, Star, X, ChevronDown, Trash2, ArrowUpDown, Clock, SortAsc, MessageSquare, Check } from "lucide-react";
 import { Text } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 import {
   getSwipedNames,
   removeSwipedName,
   updateSwipeAction,
+  updateSwipeNote,
   clearByAction,
   SwipedName,
 } from "@/lib/swipe-preferences";
@@ -109,6 +110,11 @@ export function SwipeListPanel({ onSelectName, refreshKey = 0 }: SwipeListPanelP
   const handleRescue = (id: string) => {
     haptics.save();
     updateSwipeAction(id, "like");
+    setNames(getSwipedNames());
+  };
+
+  const handleUpdateNote = (id: string, note: string) => {
+    updateSwipeNote(id, note);
     setNames(getSwipedNames());
   };
 
@@ -241,6 +247,7 @@ export function SwipeListPanel({ onSelectName, refreshKey = 0 }: SwipeListPanelP
                           onUpgrade={() => handleUpgrade(item.id)}
                           onDowngrade={() => handleDowngrade(item.id)}
                           onRescue={() => handleRescue(item.id)}
+                          onUpdateNote={(note) => handleUpdateNote(item.id, note)}
                         />
                       </motion.div>
                     ))}
@@ -277,83 +284,146 @@ interface SwipeListItemProps {
   onUpgrade: () => void;
   onDowngrade: () => void;
   onRescue: () => void;
+  onUpdateNote: (note: string) => void;
 }
 
-function SwipeListItem({ item, onSelect, onRemove, onUpgrade, onDowngrade, onRescue }: SwipeListItemProps) {
+function SwipeListItem({ item, onSelect, onRemove, onUpgrade, onDowngrade, onRescue, onUpdateNote }: SwipeListItemProps) {
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [noteText, setNoteText] = useState(item.note || "");
+
   const isSuperLiked = item.action === "superlike";
   const isLiked = item.action === "like";
   const isSkipped = item.action === "dislike";
 
+  const handleSaveNote = () => {
+    onUpdateNote(noteText);
+    setIsEditingNote(false);
+  };
+
   return (
-    <div className={`flex items-center gap-2 p-2.5 rounded-xl group transition-colors
+    <div className={`rounded-xl transition-colors
       ${isSuperLiked ? "bg-amber-50 border border-amber-200" : ""}
       ${isLiked ? "bg-success/5 border border-success/20" : ""}
       ${isSkipped ? "bg-secondary/30 border border-transparent" : ""}
     `}>
-      {/* Status indicator */}
-      <div className={`flex-shrink-0 ${
-        isSuperLiked ? "text-amber-500" : isSkipped ? "text-muted" : "text-success"
-      }`}>
-        {isSuperLiked ? (
-          <Star className="w-4 h-4 fill-current" />
-        ) : isSkipped ? (
-          <X className="w-4 h-4" />
-        ) : (
-          <Heart className="w-4 h-4" />
-        )}
-      </div>
+      <div className="flex items-center gap-2 p-2.5">
+        {/* Status indicator */}
+        <div className={`flex-shrink-0 ${
+          isSuperLiked ? "text-amber-500" : isSkipped ? "text-muted" : "text-success"
+        }`}>
+          {isSuperLiked ? (
+            <Star className="w-4 h-4 fill-current" />
+          ) : isSkipped ? (
+            <X className="w-4 h-4" />
+          ) : (
+            <Heart className="w-4 h-4" />
+          )}
+        </div>
 
-      {/* Name and meaning */}
-      <button
-        onClick={onSelect}
-        className={`flex-1 text-left transition-colors ${
-          isSkipped ? "text-muted" : "hover:text-primary"
-        }`}
-      >
-        <span className="font-medium text-sm">{item.name}</span>
-        {item.meanings && item.meanings.length > 0 && (
-          <span className="text-muted font-normal ml-2 text-xs">
-            {item.meanings[0]}
-          </span>
-        )}
-      </button>
-
-      {/* Actions - always visible on mobile */}
-      <div className="flex items-center gap-0.5">
-        {isSkipped ? (
-          <button
-            onClick={onRescue}
-            className="p-1.5 rounded-full hover:bg-success/20 text-success"
-            title="Rescue - Changed your mind? Add to favorites"
-          >
-            <Heart className="w-3.5 h-3.5" />
-          </button>
-        ) : isSuperLiked ? (
-          <button
-            onClick={onDowngrade}
-            className="p-1.5 rounded-full hover:bg-secondary text-muted"
-            title="Move to Liked - Remove from top favorites"
-          >
-            <Heart className="w-3.5 h-3.5" />
-          </button>
-        ) : (
-          <button
-            onClick={onUpgrade}
-            className="p-1.5 rounded-full hover:bg-amber-100 text-amber-500"
-            title="Super Like - Add to top favorites!"
-          >
-            <Star className="w-3.5 h-3.5" />
-          </button>
-        )}
-
+        {/* Name and meaning */}
         <button
-          onClick={onRemove}
-          className="p-1.5 rounded-full hover:bg-error/10 text-error/60 hover:text-error"
-          title="Remove - Delete from list"
+          onClick={onSelect}
+          className={`flex-1 text-left transition-colors ${
+            isSkipped ? "text-muted" : "hover:text-primary"
+          }`}
         >
-          <X className="w-3.5 h-3.5" />
+          <span className="font-medium text-sm">{item.name}</span>
+          {item.meanings && item.meanings.length > 0 && (
+            <span className="text-muted font-normal ml-2 text-xs">
+              {item.meanings[0]}
+            </span>
+          )}
         </button>
+
+        {/* Actions */}
+        <div className="flex items-center gap-0.5">
+          {/* Note button */}
+          {!isSkipped && (
+            <button
+              onClick={() => setIsEditingNote(!isEditingNote)}
+              className={`p-1.5 rounded-full transition-colors ${
+                item.note
+                  ? "text-primary hover:bg-primary/10"
+                  : "text-muted/50 hover:text-muted hover:bg-secondary"
+              }`}
+              title={item.note ? "Edit note" : "Add note"}
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {isSkipped ? (
+            <button
+              onClick={onRescue}
+              className="p-1.5 rounded-full hover:bg-success/20 text-success"
+              title="Rescue - Changed your mind? Add to favorites"
+            >
+              <Heart className="w-3.5 h-3.5" />
+            </button>
+          ) : isSuperLiked ? (
+            <button
+              onClick={onDowngrade}
+              className="p-1.5 rounded-full hover:bg-secondary text-muted"
+              title="Move to Liked - Remove from top favorites"
+            >
+              <Heart className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <button
+              onClick={onUpgrade}
+              className="p-1.5 rounded-full hover:bg-amber-100 text-amber-500"
+              title="Super Like - Add to top favorites!"
+            >
+              <Star className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          <button
+            onClick={onRemove}
+            className="p-1.5 rounded-full hover:bg-error/10 text-error/60 hover:text-error"
+            title="Remove - Delete from list"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
+
+      {/* Note display/edit */}
+      {(item.note || isEditingNote) && !isSkipped && (
+        <div className="px-2.5 pb-2.5 -mt-1">
+          {isEditingNote ? (
+            <div className="flex gap-1.5">
+              <input
+                type="text"
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                placeholder="Add a note (e.g., grandma's name)"
+                className="flex-1 text-xs px-2 py-1.5 rounded-md bg-white border border-border focus:outline-none focus:border-primary"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSaveNote();
+                  if (e.key === "Escape") setIsEditingNote(false);
+                }}
+              />
+              <button
+                onClick={handleSaveNote}
+                className="p-1.5 rounded-md bg-primary text-white hover:bg-primary/90"
+                title="Save note"
+              >
+                <Check className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsEditingNote(true)}
+              className="text-xs text-muted/70 hover:text-muted flex items-center gap-1"
+            >
+              <MessageSquare className="w-3 h-3" />
+              {item.note}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

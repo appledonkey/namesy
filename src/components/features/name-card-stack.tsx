@@ -1,17 +1,61 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from "framer-motion";
-import { Heart, X, Info, Star } from "lucide-react";
+import { Heart, X, Info, Star, TrendingUp, TrendingDown, Sparkles, Gem } from "lucide-react";
 import { haptics } from "@/lib/haptics";
 import { recordSwipe, SwipeAction } from "@/lib/swipe-preferences";
 import type { NameData } from "@/lib/names-data";
+
+// Get trend badge info based on name data
+function getTrendBadge(name: NameData): { label: string; icon: React.ReactNode; className: string } | null {
+  const { currentRank, trend } = name;
+
+  // Rare names (rank > 500 or unranked)
+  if (currentRank > 500 || currentRank <= 0) {
+    return {
+      label: "Rare",
+      icon: <Gem className="w-3 h-3" />,
+      className: "bg-purple-100 text-purple-700 border-purple-200",
+    };
+  }
+
+  // Rising trend
+  if (trend === "rising") {
+    return {
+      label: "Rising",
+      icon: <TrendingUp className="w-3 h-3" />,
+      className: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    };
+  }
+
+  // Falling trend
+  if (trend === "falling") {
+    return {
+      label: "Falling",
+      icon: <TrendingDown className="w-3 h-3" />,
+      className: "bg-orange-100 text-orange-700 border-orange-200",
+    };
+  }
+
+  // Classic/Stable and popular (top 100)
+  if (trend === "stable" && currentRank <= 100) {
+    return {
+      label: "Classic",
+      icon: <Sparkles className="w-3 h-3" />,
+      className: "bg-amber-100 text-amber-700 border-amber-200",
+    };
+  }
+
+  return null;
+}
 
 interface NameCardStackProps {
   names: NameData[];
   onSwipeAction: (name: NameData, action: SwipeAction) => void;
   onDetails: (name: NameData) => void;
   onSelect: (name: string) => void;
+  onProgressChange?: (current: number, total: number) => void;
 }
 
 /**
@@ -27,9 +71,15 @@ export function NameCardStack({
   onSwipeAction,
   onDetails,
   onSelect,
+  onProgressChange,
 }: NameCardStackProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [exitDirection, setExitDirection] = useState<"left" | "right" | "up" | null>(null);
+
+  // Report progress changes
+  useEffect(() => {
+    onProgressChange?.(currentIndex, names.length);
+  }, [currentIndex, names.length, onProgressChange]);
 
   const currentName = names[currentIndex];
   const nextName = names[currentIndex + 1];
@@ -246,11 +296,36 @@ function SwipeCard({ name, onSwipe, onTap }: SwipeCardProps) {
             </p>
           )}
           {name.origins.length > 0 && (
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted mb-2">
               {name.origins.slice(0, 2).join(", ")} origin
             </p>
           )}
-          <p className="text-xs text-muted/60 mt-4">
+
+          {/* Trend badge and rank */}
+          <div className="flex items-center gap-2 mt-1">
+            {(() => {
+              const badge = getTrendBadge(name);
+              if (badge) {
+                return (
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${badge.className}`}
+                    title={`This name is ${badge.label.toLowerCase()}`}
+                  >
+                    {badge.icon}
+                    {badge.label}
+                  </span>
+                );
+              }
+              return null;
+            })()}
+            {name.currentRank > 0 && name.currentRank <= 1000 && (
+              <span className="text-xs text-muted" title="Current popularity rank">
+                #{name.currentRank}
+              </span>
+            )}
+          </div>
+
+          <p className="text-xs text-muted/60 mt-3">
             Tap to select · Swipe to rate
           </p>
         </div>

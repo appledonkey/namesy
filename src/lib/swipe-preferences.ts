@@ -11,6 +11,7 @@ export interface SwipedName {
   origins?: string[];
   meanings?: string[];
   swipedAt: number;
+  note?: string;
 }
 
 const STORAGE_KEY = "babyname-swipes";
@@ -111,6 +112,17 @@ export function updateSwipeAction(id: string, newAction: SwipeAction): void {
   const names = getSwipedNames();
   const updated = names.map((n) =>
     n.id === id ? { ...n, action: newAction, swipedAt: Date.now() } : n
+  );
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+}
+
+/**
+ * Update the note for a swiped name
+ */
+export function updateSwipeNote(id: string, note: string): void {
+  const names = getSwipedNames();
+  const updated = names.map((n) =>
+    n.id === id ? { ...n, note: note.trim() || undefined } : n
   );
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 }

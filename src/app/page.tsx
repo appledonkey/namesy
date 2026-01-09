@@ -9,6 +9,8 @@ import { GenderFilter } from "@/components/features/gender-filter";
 import { NameCardStack } from "@/components/features/name-card-stack";
 import { NameDetails } from "@/components/features/name-details";
 import { SwipeListPanel } from "@/components/features/swipe-list-panel";
+import { NameFiltersPanel, defaultFilters, countActiveFilters, applyNameFilters, type NameFilters } from "@/components/features/name-filters";
+import { SwipeProgress } from "@/components/features/swipe-progress";
 import { getPopularNames, type NameData } from "@/lib/names-data";
 import type { SwipeAction } from "@/lib/swipe-preferences";
 
@@ -30,12 +32,19 @@ export default function Home() {
   const [currentSwipeName, setCurrentSwipeName] = useState<NameData | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [swipeRefreshKey, setSwipeRefreshKey] = useState(0);
+  const [nameFilters, setNameFilters] = useState<NameFilters>(defaultFilters);
+  const [swipeProgress, setSwipeProgress] = useState({ current: 0, total: 0 });
+  const [sessionLikedCount, setSessionLikedCount] = useState(0);
 
   // Get filtered names for swiper
   const swiperNames = useMemo(() => {
     const genderFilter = gender === "all" ? undefined : gender;
-    return getPopularNames(500, genderFilter);
-  }, [gender]);
+    const baseNames = getPopularNames(500, genderFilter);
+    // Apply additional filters
+    return applyNameFilters(baseNames, nameFilters);
+  }, [gender, nameFilters]);
+
+  const activeFilterCount = useMemo(() => countActiveFilters(nameFilters), [nameFilters]);
 
   // Load saved data from localStorage on mount
   useEffect(() => {
@@ -79,11 +88,18 @@ export default function Home() {
       newSaved.add(name.id);
       setSavedNames(newSaved);
       localStorage.setItem("namesy-saved-names", JSON.stringify([...newSaved]));
+      // Track session likes
+      setSessionLikedCount((c) => c + 1);
     }
     setCurrentSwipeName(null);
     setShowDetails(false);
     // Trigger refresh of swipe list panel
     setSwipeRefreshKey((k) => k + 1);
+  };
+
+  // Handle progress updates from card stack
+  const handleProgressChange = (current: number, total: number) => {
+    setSwipeProgress({ current, total });
   };
 
   // Handle showing details
@@ -235,9 +251,14 @@ export default function Home() {
             onRandomMiddleName={handleRandomMiddleName}
           />
 
-          {/* Gender Filter */}
-          <div className="mb-4">
+          {/* Gender Filter and Advanced Filters */}
+          <div className="mb-4 flex items-center justify-center gap-3">
             <GenderFilter value={gender} onChange={setGender} />
+            <NameFiltersPanel
+              filters={nameFilters}
+              onChange={setNameFilters}
+              activeFilterCount={activeFilterCount}
+            />
           </div>
 
           {/* Swiper */}
@@ -247,6 +268,16 @@ export default function Home() {
               onSwipeAction={handleSwipeAction}
               onDetails={handleShowDetails}
               onSelect={handleSelectName}
+              onProgressChange={handleProgressChange}
+            />
+          </div>
+
+          {/* Progress Tracker */}
+          <div className="mb-4">
+            <SwipeProgress
+              current={swipeProgress.current}
+              total={swipeProgress.total}
+              likedCount={sessionLikedCount}
             />
           </div>
 
