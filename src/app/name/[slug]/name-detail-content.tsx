@@ -5,13 +5,15 @@ import Link from "next/link";
 import {
   Heart,
   Volume2,
-  Plus,
+  Copy,
+  Share2,
   MapPin,
   TrendingUp,
   Users,
   AlertTriangle,
   Sparkles,
   ChevronRight,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,7 +46,41 @@ interface NameDetailContentProps {
 
 export function NameDetailContent({ nameData }: NameDetailContentProps) {
   const [isFavorite, setIsFavorite] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const radarData = createRadarData(nameData.scores);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(nameData.name);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `${nameData.name} - Baby Name`,
+      text: `Check out the baby name ${nameData.name}!`,
+      url: typeof window !== "undefined" ? window.location.href : "",
+    };
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        // User cancelled or share failed - fall back to copy
+        if ((err as Error).name !== "AbortError") {
+          await navigator.clipboard.writeText(shareData.url);
+          setLinkCopied(true);
+          setTimeout(() => setLinkCopied(false), 2000);
+        }
+      }
+    } else {
+      // No native share - copy URL
+      await navigator.clipboard.writeText(shareData.url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    }
+  };
 
   const genderLabel = nameData.gender === "M" ? "Boy" : nameData.gender === "F" ? "Girl" : "Neutral";
   const genderClass = nameData.gender === "M"
@@ -114,17 +150,40 @@ export function NameDetailContent({ nameData }: NameDetailContentProps) {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Button
                   onClick={() => setIsFavorite(!isFavorite)}
                   variant={isFavorite ? "primary" : "secondary"}
+                  size="sm"
                 >
-                  <Heart className={`w-4 h-4 mr-2 ${isFavorite ? "fill-current" : ""}`} />
+                  <Heart className={`w-4 h-4 mr-1.5 ${isFavorite ? "fill-current" : ""}`} />
                   {isFavorite ? "Saved" : "Save"}
                 </Button>
-                <Button variant="secondary">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add to List
+                <Button variant="secondary" size="sm" onClick={handleCopy}>
+                  {copied ? (
+                    <>
+                      <Check className="w-4 h-4 mr-1.5 text-green-600" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4 mr-1.5" />
+                      Copy
+                    </>
+                  )}
+                </Button>
+                <Button variant="secondary" size="sm" onClick={handleShare}>
+                  {linkCopied ? (
+                    <>
+                      <Check className="w-4 h-4 mr-1.5 text-green-600" />
+                      Link Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="w-4 h-4 mr-1.5" />
+                      Share
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -285,9 +344,36 @@ export function NameDetailContent({ nameData }: NameDetailContentProps) {
         </div>
       </section>
 
+      {/* Love this name? CTA */}
+      <section className="mt-16 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl p-8 text-center">
+            <Heading as="h3" size="xl" className="mb-3">
+              Love <Italic>{nameData.name}</Italic>?
+            </Heading>
+            <Text muted className="mb-6 max-w-md mx-auto">
+              Save it to your favorites or share it with your partner to see what they think.
+            </Text>
+            <div className="flex justify-center gap-3 flex-wrap">
+              <Button
+                onClick={() => setIsFavorite(!isFavorite)}
+                variant={isFavorite ? "primary" : "secondary"}
+              >
+                <Heart className={`w-4 h-4 mr-2 ${isFavorite ? "fill-current" : ""}`} />
+                {isFavorite ? "Saved!" : "Save to Favorites"}
+              </Button>
+              <Button variant="secondary" onClick={handleShare}>
+                <Share2 className="w-4 h-4 mr-2" />
+                Share with Partner
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Similar Names */}
       {nameData.similarNames.length > 0 && (
-        <section className="mt-16 px-6">
+        <section className="mt-12 px-6">
           <div className="max-w-7xl mx-auto">
             <Heading as="h2" size="xl" className="mb-8">
               Similar <Italic>Names</Italic>
@@ -306,6 +392,54 @@ export function NameDetailContent({ nameData }: NameDetailContentProps) {
           </div>
         </section>
       )}
+
+      {/* Mobile Floating Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border p-3 flex justify-around sm:hidden z-50">
+        <button
+          onClick={() => setIsFavorite(!isFavorite)}
+          className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${
+            isFavorite ? "text-primary" : "text-muted hover:text-foreground"
+          }`}
+        >
+          <Heart className={`w-5 h-5 ${isFavorite ? "fill-current" : ""}`} />
+          <span className="text-xs font-medium">{isFavorite ? "Saved" : "Save"}</span>
+        </button>
+        <button
+          onClick={handleCopy}
+          className="flex flex-col items-center gap-1 px-4 py-2 rounded-lg text-muted hover:text-foreground transition-colors"
+        >
+          {copied ? (
+            <>
+              <Check className="w-5 h-5 text-green-600" />
+              <span className="text-xs font-medium text-green-600">Copied!</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-5 h-5" />
+              <span className="text-xs font-medium">Copy</span>
+            </>
+          )}
+        </button>
+        <button
+          onClick={handleShare}
+          className="flex flex-col items-center gap-1 px-4 py-2 rounded-lg text-muted hover:text-foreground transition-colors"
+        >
+          {linkCopied ? (
+            <>
+              <Check className="w-5 h-5 text-green-600" />
+              <span className="text-xs font-medium text-green-600">Copied!</span>
+            </>
+          ) : (
+            <>
+              <Share2 className="w-5 h-5" />
+              <span className="text-xs font-medium">Share</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Spacer for mobile floating bar */}
+      <div className="h-20 sm:hidden" />
     </div>
   );
 }
