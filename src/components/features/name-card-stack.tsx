@@ -124,8 +124,9 @@ export function NameCardStack({
         {/* Dislike button */}
         <button
           onClick={() => handleSwipe("left")}
-          aria-label="Dislike this name"
-          className="w-14 h-14 rounded-full bg-card border border-border shadow-md flex items-center justify-center text-error"
+          aria-label="Skip this name"
+          title="Skip - Not for me"
+          className="w-14 h-14 rounded-full bg-card border border-border shadow-md flex items-center justify-center text-error hover:scale-110 transition-transform"
         >
           <X className="w-6 h-6" aria-hidden="true" />
         </button>
@@ -134,7 +135,8 @@ export function NameCardStack({
         <button
           onClick={() => handleSwipe("up")}
           aria-label="View name details"
-          className="w-11 h-11 rounded-full bg-card border border-border shadow-md flex items-center justify-center text-muted"
+          title="Details - Learn more about this name"
+          className="w-11 h-11 rounded-full bg-card border border-border shadow-md flex items-center justify-center text-muted hover:scale-110 transition-transform"
         >
           <Info className="w-5 h-5" aria-hidden="true" />
         </button>
@@ -143,7 +145,8 @@ export function NameCardStack({
         <button
           onClick={handleSuperLike}
           aria-label="Super like this name"
-          className="w-12 h-12 rounded-full bg-amber-400 shadow-md flex items-center justify-center text-white"
+          title="Super Like - Add to top favorites!"
+          className="w-12 h-12 rounded-full bg-amber-400 shadow-md flex items-center justify-center text-white hover:scale-110 transition-transform"
         >
           <Star className="w-5 h-5 fill-current" aria-hidden="true" />
         </button>
@@ -152,7 +155,8 @@ export function NameCardStack({
         <button
           onClick={() => handleSwipe("right")}
           aria-label="Like this name"
-          className="w-14 h-14 rounded-full bg-success shadow-md flex items-center justify-center text-white"
+          title="Like - Save to favorites"
+          className="w-14 h-14 rounded-full bg-success shadow-md flex items-center justify-center text-white hover:scale-110 transition-transform"
         >
           <Heart className="w-6 h-6" aria-hidden="true" />
         </button>

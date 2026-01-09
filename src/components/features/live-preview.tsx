@@ -102,7 +102,7 @@ export function LivePreview({
                   : "text-muted hover:text-primary"
                 }
               `}
-              title="Random first name"
+              title="Surprise me! Pick a random first name"
             >
               <Shuffle className="w-5 h-5" />
             </button>
@@ -114,7 +114,7 @@ export function LivePreview({
                   : "text-muted hover:text-foreground"
                 }
               `}
-              title={firstNameLocked ? "Unlock first name" : "Lock first name"}
+              title={firstNameLocked ? "Unlock - Allow swiping to change this name" : "Lock - Keep this name while swiping"}
             >
               {firstNameLocked ? (
                 <Lock className="w-5 h-5" />
@@ -158,7 +158,7 @@ export function LivePreview({
                   : "text-muted hover:text-primary"
                 }
               `}
-              title="Random middle name"
+              title="Surprise me! Pick a random middle name"
             >
               <Shuffle className="w-5 h-5" />
             </button>
@@ -170,7 +170,7 @@ export function LivePreview({
                   : "text-muted hover:text-foreground"
                 }
               `}
-              title={middleNameLocked ? "Unlock middle name" : "Lock middle name"}
+              title={middleNameLocked ? "Unlock - Allow changes to middle name" : "Lock - Keep this middle name"}
             >
               {middleNameLocked ? (
                 <Lock className="w-5 h-5" />

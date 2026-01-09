@@ -188,6 +188,7 @@ export function SwipeListPanel({ onSelectName, refreshKey = 0 }: SwipeListPanelP
                 {/* Sort button */}
                 <button
                   onClick={cycleSortOption}
+                  title="Click to change sort order"
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary/50 text-xs font-medium text-muted hover:bg-secondary transition-colors"
                 >
                   {sortBy === "rating" && <ArrowUpDown className="w-3.5 h-3.5" />}
@@ -202,6 +203,7 @@ export function SwipeListPanel({ onSelectName, refreshKey = 0 }: SwipeListPanelP
                 {skippedCount > 0 && (
                   <button
                     onClick={() => setShowSkipped(!showSkipped)}
+                    title={showSkipped ? "Hide skipped names" : "Show names you passed on"}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors
                       ${showSkipped
                         ? "bg-muted/20 text-foreground"
@@ -322,7 +324,7 @@ function SwipeListItem({ item, onSelect, onRemove, onUpgrade, onDowngrade, onRes
           <button
             onClick={onRescue}
             className="p-1.5 rounded-full hover:bg-success/20 text-success"
-            title="Rescue - move to liked"
+            title="Rescue - Changed your mind? Add to favorites"
           >
             <Heart className="w-3.5 h-3.5" />
           </button>
@@ -330,7 +332,7 @@ function SwipeListItem({ item, onSelect, onRemove, onUpgrade, onDowngrade, onRes
           <button
             onClick={onDowngrade}
             className="p-1.5 rounded-full hover:bg-secondary text-muted"
-            title="Downgrade to liked"
+            title="Move to Liked - Remove from top favorites"
           >
             <Heart className="w-3.5 h-3.5" />
           </button>
@@ -338,7 +340,7 @@ function SwipeListItem({ item, onSelect, onRemove, onUpgrade, onDowngrade, onRes
           <button
             onClick={onUpgrade}
             className="p-1.5 rounded-full hover:bg-amber-100 text-amber-500"
-            title="Upgrade to super like"
+            title="Super Like - Add to top favorites!"
           >
             <Star className="w-3.5 h-3.5" />
           </button>
@@ -347,7 +349,7 @@ function SwipeListItem({ item, onSelect, onRemove, onUpgrade, onDowngrade, onRes
         <button
           onClick={onRemove}
           className="p-1.5 rounded-full hover:bg-error/10 text-error/60 hover:text-error"
-          title="Remove"
+          title="Remove - Delete from list"
         >
           <X className="w-3.5 h-3.5" />
         </button>
