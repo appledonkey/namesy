@@ -20,6 +20,7 @@ export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Main step state
+  const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
   const [gender, setGender] = useState<GenderOption>("all");
   const [page, setPage] = useState(0);
@@ -97,6 +98,15 @@ export default function Home() {
   // Handle changing last name
   const handleChangeLastName = () => {
     setStep("lastname");
+  };
+
+  // Handle selecting a name from cards
+  const handleSelectName = (index: number) => {
+    setSelectedIndex(index);
+    const name = pageNames[index];
+    if (name) {
+      setFirstName(name.name);
+    }
   };
 
   // Don't render until we've checked localStorage
@@ -185,9 +195,10 @@ export default function Home() {
         <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
           {/* Live Preview */}
           <LivePreview
-            firstName={selectedName?.name || ""}
+            firstName={firstName}
             middleName={middleName}
             lastName={lastName}
+            onFirstNameChange={setFirstName}
             onMiddleNameChange={setMiddleName}
           />
 
@@ -201,7 +212,7 @@ export default function Home() {
             <NameCardRow
               names={pageNames}
               selectedIndex={selectedIndex}
-              onSelect={setSelectedIndex}
+              onSelect={handleSelectName}
               page={page}
               totalPages={totalPages}
               onPageChange={setPage}
