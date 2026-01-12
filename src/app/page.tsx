@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardStack } from "@/components/features/card-stack";
 import { SwipeActionBar, KeyboardHints } from "@/components/features/swipe-action-bar";
 import { NamePreview } from "@/components/features/name-preview";
-import { FavoritesDrawer } from "@/components/features/favorites-drawer";
+import { CardCatalogue, CardCatalogueTrigger } from "@/components/features/card-catalogue";
+import { getSwipedNames } from "@/lib/swipe-preferences";
 import { FiltersSheet, defaultFilters, type NameFilters } from "@/components/features/filters-sheet";
 import { NameDetails } from "@/components/features/name-details";
 import { useNamePool } from "@/hooks/use-name-pool";
@@ -28,8 +30,20 @@ export default function Home() {
   const [savedNames, setSavedNames] = useState<Set<string>>(new Set());
   const [currentDetailName, setCurrentDetailName] = useState<NameData | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [showCatalogue, setShowCatalogue] = useState(false);
   const [swipeRefreshKey, setSwipeRefreshKey] = useState(0);
   const [filters, setFilters] = useState<NameFilters>(defaultFilters);
+
+  // Get favorites count for the trigger button (reactive to swipe changes)
+  const { favoritesCount, superLikedCount } = useMemo(() => {
+    const allNames = getSwipedNames();
+    const favs = allNames.filter((n) => n.action === "like" || n.action === "superlike");
+    return {
+      favoritesCount: favs.length,
+      superLikedCount: favs.filter((n) => n.action === "superlike").length,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [swipeRefreshKey]);
 
   // Use the infinite name pool
   const {
@@ -267,15 +281,27 @@ export default function Home() {
 
           {/* Bottom row: Favorites + Filters */}
           <div className="flex items-center justify-center gap-3 pb-4">
-            <FavoritesDrawer
-              onSelectName={handleSelectName}
-              refreshKey={swipeRefreshKey}
+            <CardCatalogueTrigger
+              onClick={() => setShowCatalogue(true)}
+              count={favoritesCount}
+              superLikedCount={superLikedCount}
             />
             <FiltersSheet
               filters={filters}
               onChange={setFilters}
             />
           </div>
+
+          {/* Card Catalogue */}
+          <AnimatePresence>
+            {showCatalogue && (
+              <CardCatalogue
+                onSelectName={handleSelectName}
+                onClose={() => setShowCatalogue(false)}
+                refreshKey={swipeRefreshKey}
+              />
+            )}
+          </AnimatePresence>
 
           {/* Details panel (modal-like) */}
           {showDetails && currentDetailName && (
