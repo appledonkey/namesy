@@ -239,9 +239,9 @@ export default function Home() {
 
       {/* Main: Name discovery area */}
       {step === "main" && (
-        <main className="max-w-lg mx-auto px-4 py-4 flex flex-col min-h-[calc(100vh-60px)]">
-          {/* Card Stack */}
-          <div className="flex-1 flex flex-col">
+        <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
+          {/* Swipe Area */}
+          <section>
             <CardStack
               names={names}
               currentIndex={currentIndex}
@@ -261,10 +261,7 @@ export default function Home() {
 
             {/* Keyboard hints (desktop only) */}
             <KeyboardHints />
-          </div>
-
-          {/* Divider */}
-          <div className="my-4 border-t border-border" />
+          </section>
 
           {/* Name Preview */}
           <NamePreview
@@ -276,11 +273,8 @@ export default function Home() {
             onChangeLastName={handleChangeLastName}
           />
 
-          {/* Divider */}
-          <div className="my-4 border-t border-border" />
-
           {/* Bottom row: Favorites + Filters */}
-          <div className="flex items-center justify-center gap-3 pb-4">
+          <div className="flex items-center justify-center gap-3 pb-2">
             <CardCatalogueTrigger
               onClick={() => setShowCatalogue(true)}
               count={favoritesCount}

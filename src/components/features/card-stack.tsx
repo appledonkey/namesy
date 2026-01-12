@@ -93,7 +93,7 @@ export function CardStack({
   }
 
   return (
-    <div className="relative h-[400px] sm:h-[450px] w-full flex items-center justify-center">
+    <div className="relative h-[360px] sm:h-[400px] w-full flex items-center justify-center overflow-hidden">
       {/* Stack container */}
       <div className="relative w-full h-full flex items-center justify-center">
         {/* Next card (behind) - subtle peek */}

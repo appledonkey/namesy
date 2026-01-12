@@ -154,7 +154,7 @@ export const SwipeCard = forwardRef<SwipeCardRef, SwipeCardProps>(
           transition: { duration: 0.2 },
         }}
         transition={springConfig}
-        className={`absolute w-[90%] max-w-[340px] sm:max-w-[380px] lg:max-w-[400px] aspect-[3/4] rounded-3xl ${
+        className={`absolute w-[85%] max-w-[320px] sm:max-w-[360px] lg:max-w-[380px] aspect-[3/4] rounded-3xl ${
           isTop ? "cursor-grab active:cursor-grabbing" : "pointer-events-none"
         }`}
       >
