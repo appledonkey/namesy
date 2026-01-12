@@ -1,21 +1,21 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LivePreview } from "@/components/features/live-preview";
-import { GenderFilter } from "@/components/features/gender-filter";
-import { NameCardStack } from "@/components/features/name-card-stack";
+import { CardStack } from "@/components/features/card-stack";
+import { SwipeActionBar, KeyboardHints } from "@/components/features/swipe-action-bar";
+import { NamePreview } from "@/components/features/name-preview";
+import { FavoritesDrawer } from "@/components/features/favorites-drawer";
+import { FiltersSheet, defaultFilters, type NameFilters } from "@/components/features/filters-sheet";
 import { NameDetails } from "@/components/features/name-details";
-import { SwipeListPanel } from "@/components/features/swipe-list-panel";
-import { NameFiltersPanel, defaultFilters, countActiveFilters, applyNameFilters, type NameFilters } from "@/components/features/name-filters";
-import { SwipeProgress } from "@/components/features/swipe-progress";
-import { getPopularNames, type NameData } from "@/lib/names-data";
+import { useNamePool } from "@/hooks/use-name-pool";
+import type { NameData } from "@/lib/names-data";
 import type { SwipeAction } from "@/lib/swipe-preferences";
+import { haptics } from "@/lib/haptics";
 
 type Step = "lastname" | "main";
-type GenderOption = "all" | "M" | "F";
 
 export default function Home() {
   const [step, setStep] = useState<Step>("lastname");
@@ -25,26 +25,23 @@ export default function Home() {
   // Main step state
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
-  const [firstNameLocked, setFirstNameLocked] = useState(false);
-  const [middleNameLocked, setMiddleNameLocked] = useState(false);
-  const [gender, setGender] = useState<GenderOption>("all");
   const [savedNames, setSavedNames] = useState<Set<string>>(new Set());
-  const [currentSwipeName, setCurrentSwipeName] = useState<NameData | null>(null);
+  const [currentDetailName, setCurrentDetailName] = useState<NameData | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [swipeRefreshKey, setSwipeRefreshKey] = useState(0);
-  const [nameFilters, setNameFilters] = useState<NameFilters>(defaultFilters);
-  const [swipeProgress, setSwipeProgress] = useState({ current: 0, total: 0 });
-  const [sessionLikedCount, setSessionLikedCount] = useState(0);
+  const [filters, setFilters] = useState<NameFilters>(defaultFilters);
 
-  // Get filtered names for swiper
-  const swiperNames = useMemo(() => {
-    const genderFilter = gender === "all" ? undefined : gender;
-    const baseNames = getPopularNames(500, genderFilter);
-    // Apply additional filters
-    return applyNameFilters(baseNames, nameFilters);
-  }, [gender, nameFilters]);
+  // Use the infinite name pool
+  const {
+    names,
+    currentIndex,
+    advance,
+    reset: resetPool,
+    isExhausted,
+    reshuffle,
+  } = useNamePool({ filters });
 
-  const activeFilterCount = useMemo(() => countActiveFilters(nameFilters), [nameFilters]);
+  const currentName = names[currentIndex];
 
   // Load saved data from localStorage on mount
   useEffect(() => {
@@ -53,7 +50,6 @@ export default function Home() {
       setLastName(savedLastName);
       setStep("main");
     }
-    // Load saved names
     const saved = localStorage.getItem("namesy-saved-names");
     if (saved) {
       setSavedNames(new Set(JSON.parse(saved)));
@@ -76,53 +72,40 @@ export default function Home() {
     }
   };
 
-  // Handle swipe actions
-  const handleSwipeAction = (name: NameData, action: SwipeAction) => {
+  // Handle swipe actions from card stack
+  const handleSwipeComplete = useCallback((name: NameData, action: SwipeAction) => {
     if (action === "like" || action === "superlike") {
-      // Fill first name if not locked
-      if (!firstNameLocked) {
-        setFirstName(name.name);
-      }
-      // Save to favorites
+      setFirstName(name.name);
       const newSaved = new Set(savedNames);
       newSaved.add(name.id);
       setSavedNames(newSaved);
       localStorage.setItem("namesy-saved-names", JSON.stringify([...newSaved]));
-      // Track session likes
-      setSessionLikedCount((c) => c + 1);
     }
-    setCurrentSwipeName(null);
+    setCurrentDetailName(null);
     setShowDetails(false);
-    // Trigger refresh of swipe list panel
     setSwipeRefreshKey((k) => k + 1);
-  };
-
-  // Handle progress updates from card stack
-  const handleProgressChange = (current: number, total: number) => {
-    setSwipeProgress({ current, total });
-  };
+    advance();
+  }, [savedNames, advance]);
 
   // Handle showing details
-  const handleShowDetails = (name: NameData) => {
-    setCurrentSwipeName(name);
+  const handleShowDetails = useCallback((name: NameData) => {
+    setCurrentDetailName(name);
     setShowDetails(true);
-  };
+  }, []);
 
   // Handle selecting a name (tap on card)
-  const handleSelectName = (name: string) => {
-    if (!firstNameLocked) {
-      setFirstName(name);
-    }
-  };
+  const handleSelectName = useCallback((name: string) => {
+    setFirstName(name);
+  }, []);
 
   // Handle saving current name from details
   const handleSaveFromDetails = () => {
-    if (!currentSwipeName) return;
+    if (!currentDetailName) return;
     const newSaved = new Set(savedNames);
-    if (newSaved.has(currentSwipeName.id)) {
-      newSaved.delete(currentSwipeName.id);
+    if (newSaved.has(currentDetailName.id)) {
+      newSaved.delete(currentDetailName.id);
     } else {
-      newSaved.add(currentSwipeName.id);
+      newSaved.add(currentDetailName.id);
     }
     setSavedNames(newSaved);
     localStorage.setItem("namesy-saved-names", JSON.stringify([...newSaved]));
@@ -133,24 +116,31 @@ export default function Home() {
     setStep("lastname");
   };
 
-  // Toggle lock states
-  const toggleFirstNameLock = () => setFirstNameLocked(!firstNameLocked);
-  const toggleMiddleNameLock = () => setMiddleNameLocked(!middleNameLocked);
+  // Action bar handlers
+  const handleSkip = useCallback(() => {
+    if (!currentName) return;
+    haptics.swipe();
+    // recordSwipe handled in CardStack
+    handleSwipeComplete(currentName, "dislike");
+  }, [currentName, handleSwipeComplete]);
 
-  // Random name handlers
-  const handleRandomFirstName = () => {
-    if (swiperNames.length > 0) {
-      const randomIndex = Math.floor(Math.random() * swiperNames.length);
-      setFirstName(swiperNames[randomIndex].name);
-    }
-  };
+  const handleLike = useCallback(() => {
+    if (!currentName) return;
+    haptics.save();
+    handleSwipeComplete(currentName, "like");
+  }, [currentName, handleSwipeComplete]);
 
-  const handleRandomMiddleName = () => {
-    if (swiperNames.length > 0) {
-      const randomIndex = Math.floor(Math.random() * swiperNames.length);
-      setMiddleName(swiperNames[randomIndex].name);
-    }
-  };
+  const handleSuperLike = useCallback(() => {
+    if (!currentName) return;
+    haptics.save();
+    handleSwipeComplete(currentName, "superlike");
+  }, [currentName, handleSwipeComplete]);
+
+  const handleInfo = useCallback(() => {
+    if (!currentName) return;
+    haptics.tap();
+    handleShowDetails(currentName);
+  }, [currentName, handleShowDetails]);
 
   // Don't render until we've checked localStorage
   if (!isLoaded) {
@@ -194,10 +184,10 @@ export default function Home() {
           <div className="text-center space-y-8">
             <div className="space-y-3">
               <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-foreground">
-                What's your last name?
+                What&apos;s your last name?
               </h1>
               <p className="text-muted text-base sm:text-lg">
-                We'll find first names that sound great with it.
+                We&apos;ll find first names that sound great with it.
               </p>
             </div>
 
@@ -235,80 +225,108 @@ export default function Home() {
 
       {/* Main: Name discovery area */}
       {step === "main" && (
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
-          {/* Live Preview */}
-          <LivePreview
+        <main className="max-w-lg mx-auto px-4 py-4 flex flex-col min-h-[calc(100vh-60px)]">
+          {/* Card Stack */}
+          <div className="flex-1 flex flex-col">
+            <CardStack
+              names={names}
+              currentIndex={currentIndex}
+              onSwipeComplete={handleSwipeComplete}
+              onShowDetails={handleShowDetails}
+              onSelectName={handleSelectName}
+            />
+
+            {/* Action Bar */}
+            <SwipeActionBar
+              onSkip={handleSkip}
+              onInfo={handleInfo}
+              onSuperLike={handleSuperLike}
+              onLike={handleLike}
+              disabled={isExhausted}
+            />
+
+            {/* Keyboard hints (desktop only) */}
+            <KeyboardHints />
+          </div>
+
+          {/* Divider */}
+          <div className="my-4 border-t border-border" />
+
+          {/* Name Preview */}
+          <NamePreview
             firstName={firstName}
             middleName={middleName}
             lastName={lastName}
-            firstNameLocked={firstNameLocked}
-            middleNameLocked={middleNameLocked}
-            onFirstNameChange={setFirstName}
+            onFirstNameSelect={setFirstName}
             onMiddleNameChange={setMiddleName}
-            onFirstNameLockToggle={toggleFirstNameLock}
-            onMiddleNameLockToggle={toggleMiddleNameLock}
-            onRandomFirstName={handleRandomFirstName}
-            onRandomMiddleName={handleRandomMiddleName}
+            onChangeLastName={handleChangeLastName}
           />
 
-          {/* Gender Filter and Advanced Filters */}
-          <div className="mb-4 flex items-center justify-center gap-3">
-            <GenderFilter value={gender} onChange={setGender} />
-            <NameFiltersPanel
-              filters={nameFilters}
-              onChange={setNameFilters}
-              activeFilterCount={activeFilterCount}
-            />
-          </div>
+          {/* Divider */}
+          <div className="my-4 border-t border-border" />
 
-          {/* Swiper */}
-          <div className="mb-4">
-            <NameCardStack
-              names={swiperNames}
-              onSwipeAction={handleSwipeAction}
-              onDetails={handleShowDetails}
-              onSelect={handleSelectName}
-              onProgressChange={handleProgressChange}
-            />
-          </div>
-
-          {/* Progress Tracker */}
-          <div className="mb-4">
-            <SwipeProgress
-              current={swipeProgress.current}
-              total={swipeProgress.total}
-              likedCount={sessionLikedCount}
-            />
-          </div>
-
-          {/* Swipe History Panel */}
-          <div className="mb-4">
-            <SwipeListPanel
+          {/* Bottom row: Favorites + Filters */}
+          <div className="flex items-center justify-center gap-3 pb-4">
+            <FavoritesDrawer
               onSelectName={handleSelectName}
               refreshKey={swipeRefreshKey}
             />
+            <FiltersSheet
+              filters={filters}
+              onChange={setFilters}
+            />
           </div>
 
-          {/* Details panel (shown when info is tapped) */}
-          {showDetails && currentSwipeName && (
-            <div className="mb-4">
-              <NameDetails
-                name={currentSwipeName}
-                isSaved={savedNames.has(currentSwipeName.id)}
-                onSave={handleSaveFromDetails}
-              />
+          {/* Details panel (modal-like) */}
+          {showDetails && currentDetailName && (
+            <div className="fixed inset-0 bg-black/50 z-30 flex items-end sm:items-center justify-center p-4">
+              <div className="bg-card rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-y-auto">
+                <div className="p-4 border-b border-border flex justify-between items-center">
+                  <h3 className="font-semibold">Name Details</h3>
+                  <button
+                    onClick={() => setShowDetails(false)}
+                    className="p-2 hover:bg-secondary rounded-lg transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+                <div className="p-4">
+                  <NameDetails
+                    name={currentDetailName}
+                    isSaved={savedNames.has(currentDetailName.id)}
+                    onSave={handleSaveFromDetails}
+                  />
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Change last name link */}
-          <div className="text-center mt-4">
-            <button
-              onClick={handleChangeLastName}
-              className="text-muted hover:text-foreground text-sm underline underline-offset-4 transition-colors"
-            >
-              Change last name ({lastName})
-            </button>
-          </div>
+          {/* Exhausted state handler */}
+          {isExhausted && (
+            <div className="fixed inset-0 bg-black/50 z-30 flex items-center justify-center p-4">
+              <div className="bg-card rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+                <div className="text-5xl mb-4">🎉</div>
+                <h3 className="text-xl font-semibold mb-2">You&apos;ve seen them all!</h3>
+                <p className="text-muted text-sm mb-6">
+                  You&apos;ve reviewed all available names. Want to see them again or try different filters?
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={reshuffle}
+                    className="flex-1 py-3 bg-secondary text-foreground rounded-xl font-medium hover:bg-secondary/80 transition-colors"
+                  >
+                    Start Over
+                  </button>
+                  <button
+                    onClick={() => setFilters(defaultFilters)}
+                    className="flex-1 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors"
+                  >
+                    Reset Filters
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       )}
     </div>
