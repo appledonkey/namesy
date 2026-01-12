@@ -1,21 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CardStack } from "@/components/features/card-stack";
-import { SwipeActionBar, KeyboardHints } from "@/components/features/swipe-action-bar";
-import { NamePreview } from "@/components/features/name-preview";
-import { CardCatalogue, CardCatalogueTrigger } from "@/components/features/card-catalogue";
-import { getSwipedNames } from "@/lib/swipe-preferences";
-import { FiltersSheet, defaultFilters, type NameFilters } from "@/components/features/filters-sheet";
-import { NameDetails } from "@/components/features/name-details";
-import { useNamePool } from "@/hooks/use-name-pool";
-import type { NameData } from "@/lib/names-data";
-import type { SwipeAction } from "@/lib/swipe-preferences";
-import { haptics } from "@/lib/haptics";
 
 type Step = "lastname" | "main";
 
@@ -24,49 +12,12 @@ export default function Home() {
   const [lastName, setLastName] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Main step state
-  const [firstName, setFirstName] = useState("");
-  const [middleName, setMiddleName] = useState("");
-  const [savedNames, setSavedNames] = useState<Set<string>>(new Set());
-  const [currentDetailName, setCurrentDetailName] = useState<NameData | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
-  const [showCatalogue, setShowCatalogue] = useState(false);
-  const [swipeRefreshKey, setSwipeRefreshKey] = useState(0);
-  const [filters, setFilters] = useState<NameFilters>(defaultFilters);
-
-  // Get favorites count for the trigger button (reactive to swipe changes)
-  const { favoritesCount, superLikedCount } = useMemo(() => {
-    const allNames = getSwipedNames();
-    const favs = allNames.filter((n) => n.action === "like" || n.action === "superlike");
-    return {
-      favoritesCount: favs.length,
-      superLikedCount: favs.filter((n) => n.action === "superlike").length,
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [swipeRefreshKey]);
-
-  // Use the infinite name pool
-  const {
-    names,
-    currentIndex,
-    advance,
-    reset: resetPool,
-    isExhausted,
-    reshuffle,
-  } = useNamePool({ filters });
-
-  const currentName = names[currentIndex];
-
   // Load saved data from localStorage on mount
   useEffect(() => {
     const savedLastName = localStorage.getItem("namesy-lastname");
     if (savedLastName) {
       setLastName(savedLastName);
       setStep("main");
-    }
-    const saved = localStorage.getItem("namesy-saved-names");
-    if (saved) {
-      setSavedNames(new Set(JSON.parse(saved)));
     }
     setIsLoaded(true);
   }, []);
@@ -85,76 +36,6 @@ export default function Home() {
       handleContinue();
     }
   };
-
-  // Handle swipe actions from card stack
-  const handleSwipeComplete = useCallback((name: NameData, action: SwipeAction) => {
-    if (action === "like" || action === "superlike") {
-      setFirstName(name.name);
-      const newSaved = new Set(savedNames);
-      newSaved.add(name.id);
-      setSavedNames(newSaved);
-      localStorage.setItem("namesy-saved-names", JSON.stringify([...newSaved]));
-    }
-    setCurrentDetailName(null);
-    setShowDetails(false);
-    setSwipeRefreshKey((k) => k + 1);
-    advance();
-  }, [savedNames, advance]);
-
-  // Handle showing details
-  const handleShowDetails = useCallback((name: NameData) => {
-    setCurrentDetailName(name);
-    setShowDetails(true);
-  }, []);
-
-  // Handle selecting a name (tap on card)
-  const handleSelectName = useCallback((name: string) => {
-    setFirstName(name);
-  }, []);
-
-  // Handle saving current name from details
-  const handleSaveFromDetails = () => {
-    if (!currentDetailName) return;
-    const newSaved = new Set(savedNames);
-    if (newSaved.has(currentDetailName.id)) {
-      newSaved.delete(currentDetailName.id);
-    } else {
-      newSaved.add(currentDetailName.id);
-    }
-    setSavedNames(newSaved);
-    localStorage.setItem("namesy-saved-names", JSON.stringify([...newSaved]));
-  };
-
-  // Handle changing last name
-  const handleChangeLastName = () => {
-    setStep("lastname");
-  };
-
-  // Action bar handlers
-  const handleSkip = useCallback(() => {
-    if (!currentName) return;
-    haptics.swipe();
-    // recordSwipe handled in CardStack
-    handleSwipeComplete(currentName, "dislike");
-  }, [currentName, handleSwipeComplete]);
-
-  const handleLike = useCallback(() => {
-    if (!currentName) return;
-    haptics.save();
-    handleSwipeComplete(currentName, "like");
-  }, [currentName, handleSwipeComplete]);
-
-  const handleSuperLike = useCallback(() => {
-    if (!currentName) return;
-    haptics.save();
-    handleSwipeComplete(currentName, "superlike");
-  }, [currentName, handleSwipeComplete]);
-
-  const handleInfo = useCallback(() => {
-    if (!currentName) return;
-    haptics.tap();
-    handleShowDetails(currentName);
-  }, [currentName, handleShowDetails]);
 
   // Don't render until we've checked localStorage
   if (!isLoaded) {
@@ -237,116 +118,9 @@ export default function Home() {
         </main>
       )}
 
-      {/* Main: Name discovery area */}
+      {/* Main: Empty for now */}
       {step === "main" && (
-        <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
-          {/* Swipe Area */}
-          <section>
-            <CardStack
-              names={names}
-              currentIndex={currentIndex}
-              onSwipeComplete={handleSwipeComplete}
-              onShowDetails={handleShowDetails}
-              onSelectName={handleSelectName}
-            />
-
-            {/* Action Bar */}
-            <SwipeActionBar
-              onSkip={handleSkip}
-              onInfo={handleInfo}
-              onSuperLike={handleSuperLike}
-              onLike={handleLike}
-              disabled={isExhausted}
-            />
-
-            {/* Keyboard hints (desktop only) */}
-            <KeyboardHints />
-          </section>
-
-          {/* Name Preview */}
-          <NamePreview
-            firstName={firstName}
-            middleName={middleName}
-            lastName={lastName}
-            onFirstNameSelect={setFirstName}
-            onMiddleNameChange={setMiddleName}
-            onChangeLastName={handleChangeLastName}
-          />
-
-          {/* Bottom row: Favorites + Filters */}
-          <div className="flex items-center justify-center gap-3 pb-2">
-            <CardCatalogueTrigger
-              onClick={() => setShowCatalogue(true)}
-              count={favoritesCount}
-              superLikedCount={superLikedCount}
-            />
-            <FiltersSheet
-              filters={filters}
-              onChange={setFilters}
-            />
-          </div>
-
-          {/* Card Catalogue */}
-          <AnimatePresence>
-            {showCatalogue && (
-              <CardCatalogue
-                onSelectName={handleSelectName}
-                onClose={() => setShowCatalogue(false)}
-                refreshKey={swipeRefreshKey}
-              />
-            )}
-          </AnimatePresence>
-
-          {/* Details panel (modal-like) */}
-          {showDetails && currentDetailName && (
-            <div className="fixed inset-0 bg-black/50 z-30 flex items-end sm:items-center justify-center p-4">
-              <div className="bg-card rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-y-auto">
-                <div className="p-4 border-b border-border flex justify-between items-center">
-                  <h3 className="font-semibold">Name Details</h3>
-                  <button
-                    onClick={() => setShowDetails(false)}
-                    className="p-2 hover:bg-secondary rounded-lg transition-colors"
-                  >
-                    Close
-                  </button>
-                </div>
-                <div className="p-4">
-                  <NameDetails
-                    name={currentDetailName}
-                    isSaved={savedNames.has(currentDetailName.id)}
-                    onSave={handleSaveFromDetails}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Exhausted state handler */}
-          {isExhausted && (
-            <div className="fixed inset-0 bg-black/50 z-30 flex items-center justify-center p-4">
-              <div className="bg-card rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
-                <div className="text-5xl mb-4">🎉</div>
-                <h3 className="text-xl font-semibold mb-2">You&apos;ve seen them all!</h3>
-                <p className="text-muted text-sm mb-6">
-                  You&apos;ve reviewed all available names. Want to see them again or try different filters?
-                </p>
-                <div className="flex gap-3">
-                  <button
-                    onClick={reshuffle}
-                    className="flex-1 py-3 bg-secondary text-foreground rounded-xl font-medium hover:bg-secondary/80 transition-colors"
-                  >
-                    Start Over
-                  </button>
-                  <button
-                    onClick={() => setFilters(defaultFilters)}
-                    className="flex-1 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors"
-                  >
-                    Reset Filters
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+        <main className="max-w-lg mx-auto px-4 py-6">
         </main>
       )}
     </div>
