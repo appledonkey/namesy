@@ -12,6 +12,10 @@ export default function Home() {
   const [lastName, setLastName] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Name preview state
+  const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
+
   // Load saved data from localStorage on mount
   useEffect(() => {
     const savedLastName = localStorage.getItem("namesy-lastname");
@@ -118,9 +122,44 @@ export default function Home() {
         </main>
       )}
 
-      {/* Main: Empty for now */}
+      {/* Main */}
       {step === "main" && (
-        <main className="max-w-lg mx-auto px-4 py-6">
+        <main className="max-w-4xl mx-auto px-6 py-12">
+          {/* Name Preview */}
+          <div className="bg-card rounded-2xl border border-border p-8 text-center">
+            <p className="text-sm text-muted mb-4">Your baby's name</p>
+            <h2 className="text-4xl font-heading font-semibold text-foreground tracking-tight">
+              {firstName || <span className="text-muted/40">First</span>}{" "}
+              {middleName && <span>{middleName} </span>}
+              {lastName}
+            </h2>
+            <div className="flex items-center justify-center gap-4 mt-6">
+              <button
+                onClick={() => setStep("lastname")}
+                className="text-sm text-muted hover:text-foreground transition-colors"
+              >
+                Change last name
+              </button>
+              {middleName ? (
+                <button
+                  onClick={() => setMiddleName("")}
+                  className="text-sm text-muted hover:text-foreground transition-colors"
+                >
+                  Remove middle name
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    const name = prompt("Enter middle name:");
+                    if (name) setMiddleName(name.trim());
+                  }}
+                  className="text-sm text-muted hover:text-foreground transition-colors"
+                >
+                  + Add middle name
+                </button>
+              )}
+            </div>
+          </div>
         </main>
       )}
     </div>
