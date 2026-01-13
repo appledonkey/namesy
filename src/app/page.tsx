@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { ArrowRight, ChevronDown, AlertTriangle, Lock, Unlock, Shuffle } from "lucide-react";
+import { ArrowRight, ChevronDown, AlertTriangle, Lock, Unlock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLikedNames } from "@/lib/swipe-preferences";
 import { Button } from "@/components/ui/button";
-import { TinderStack, TinderStackRef } from "@/components/features/tinder-stack";
+import { TinderStack } from "@/components/features/tinder-stack";
 
 type Step = "lastname" | "gender" | "main";
 type GenderFilter = "boy" | "girl" | "all";
@@ -51,9 +51,6 @@ export default function Home() {
   const [firstNameLocked, setFirstNameLocked] = useState(false);
   const [lockedFirstName, setLockedFirstName] = useState<string | null>(null);
   const [middleNameLocked, setMiddleNameLocked] = useState(false);
-
-  // Ref for TinderStack to call randomize
-  const tinderStackRef = useRef<TinderStackRef>(null);
 
   // Get liked names for middle name dropdown
   const likedNames = useMemo(() => {
@@ -101,11 +98,6 @@ export default function Home() {
   // Lock/unlock middle name
   const toggleMiddleNameLock = () => {
     setMiddleNameLocked(!middleNameLocked);
-  };
-
-  // Randomize - jump to random card
-  const handleRandomize = () => {
-    tinderStackRef.current?.jumpToRandom();
   };
 
   // Load saved data from localStorage on mount
@@ -313,17 +305,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-card rounded-2xl border border-border p-6 mb-8"
           >
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <p className="text-sm text-muted">Previewing</p>
-              {/* Randomize button */}
-              <button
-                onClick={handleRandomize}
-                className="p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-secondary/50 transition-colors"
-                title="Jump to random name"
-              >
-                <Shuffle className="w-4 h-4" />
-              </button>
-            </div>
+            <p className="text-sm text-muted mb-3 text-center">Previewing</p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               {/* First Name with Lock */}
               <div className="flex items-center gap-2">
@@ -541,7 +523,6 @@ export default function Home() {
 
           {/* Tinder Stack */}
           <TinderStack
-            ref={tinderStackRef}
             genderFilter={genderFilter}
             onNameSelect={handleNameSelect}
             onCurrentNameChange={handleCurrentNameChange}

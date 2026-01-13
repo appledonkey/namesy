@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useEffect, forwardRef, useImperativeHandle } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { TinderCard } from "./tinder-card";
-import { X, Heart } from "lucide-react";
+import { X, Heart, Shuffle } from "lucide-react";
 import { getAllNames, type NameData } from "@/lib/names-data";
 import { recordSwipe } from "@/lib/swipe-preferences";
 
@@ -37,15 +37,18 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
   const [names, setNames] = useState<NameData[]>([]);
   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
 
+  // Jump to random card
+  const jumpToRandom = useCallback(() => {
+    if (names.length > 0) {
+      const randomIndex = Math.floor(Math.random() * names.length);
+      setCurrentIndex(randomIndex);
+    }
+  }, [names]);
+
   // Expose jumpToRandom via ref
   useImperativeHandle(ref, () => ({
-    jumpToRandom: () => {
-      if (names.length > 0) {
-        const randomIndex = Math.floor(Math.random() * names.length);
-        setCurrentIndex(randomIndex);
-      }
-    },
-  }), [names]);
+    jumpToRandom,
+  }), [jumpToRandom]);
 
   // Load and filter names
   useEffect(() => {
@@ -172,7 +175,7 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-center gap-8 mt-8">
+      <div className="flex items-center justify-center gap-6 mt-8">
         {/* Skip Button */}
         <motion.button
           onClick={handleSkip}
@@ -182,6 +185,17 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
             shadow-lg hover:shadow-xl hover:border-red-400 transition-all duration-200 group"
         >
           <X className="w-8 h-8 text-red-400 group-hover:text-red-500 transition-colors" />
+        </motion.button>
+
+        {/* Random Button */}
+        <motion.button
+          onClick={jumpToRandom}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="w-12 h-12 rounded-full bg-white border-2 border-purple-200 flex items-center justify-center
+            shadow-lg hover:shadow-xl hover:border-purple-400 transition-all duration-200 group"
+        >
+          <Shuffle className="w-5 h-5 text-purple-400 group-hover:text-purple-500 transition-colors" />
         </motion.button>
 
         {/* Like Button */}
