@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
-import { ArrowRight, ChevronDown, AlertTriangle } from "lucide-react";
+import { ArrowRight, ChevronDown, AlertTriangle, Lock, Unlock, Shuffle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLikedNames } from "@/lib/swipe-preferences";
 import { Button } from "@/components/ui/button";
-import { TinderStack } from "@/components/features/tinder-stack";
+import { TinderStack, TinderStackRef } from "@/components/features/tinder-stack";
 
 type Step = "lastname" | "gender" | "main";
 type GenderFilter = "boy" | "girl" | "all";
@@ -47,6 +47,14 @@ export default function Home() {
   const [showMiddleDropdown, setShowMiddleDropdown] = useState(false);
   const [likedNamesKey, setLikedNamesKey] = useState(0);
 
+  // Lock states
+  const [firstNameLocked, setFirstNameLocked] = useState(false);
+  const [lockedFirstName, setLockedFirstName] = useState<string | null>(null);
+  const [middleNameLocked, setMiddleNameLocked] = useState(false);
+
+  // Ref for TinderStack to call randomize
+  const tinderStackRef = useRef<TinderStackRef>(null);
+
   // Get liked names for middle name dropdown
   const likedNames = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -54,10 +62,13 @@ export default function Home() {
     return getLikedNames();
   }, [likedNamesKey]);
 
+  // Get the displayed first name (locked or current)
+  const displayedFirstName = firstNameLocked ? lockedFirstName : currentPreviewName;
+
   // Compute initials
   const previewInitials = useMemo(() => {
-    return getInitials(currentPreviewName || "", middleName, lastName);
-  }, [currentPreviewName, middleName, lastName]);
+    return getInitials(displayedFirstName || "", middleName, lastName);
+  }, [displayedFirstName, middleName, lastName]);
 
   const savedInitials = useMemo(() => {
     return getInitials(savedFirstName || "", middleName, lastName);
@@ -65,12 +76,37 @@ export default function Home() {
 
   // Check for bad initials
   const hasBadPreviewInitials = useMemo(() => {
-    return isBadInitials(currentPreviewName || "", middleName, lastName);
-  }, [currentPreviewName, middleName, lastName]);
+    return isBadInitials(displayedFirstName || "", middleName, lastName);
+  }, [displayedFirstName, middleName, lastName]);
 
   const hasBadSavedInitials = useMemo(() => {
     return isBadInitials(savedFirstName || "", middleName, lastName);
   }, [savedFirstName, middleName, lastName]);
+
+  // Lock/unlock first name
+  const toggleFirstNameLock = () => {
+    if (firstNameLocked) {
+      // Unlock
+      setFirstNameLocked(false);
+      setLockedFirstName(null);
+    } else {
+      // Lock current name
+      if (currentPreviewName) {
+        setFirstNameLocked(true);
+        setLockedFirstName(currentPreviewName);
+      }
+    }
+  };
+
+  // Lock/unlock middle name
+  const toggleMiddleNameLock = () => {
+    setMiddleNameLocked(!middleNameLocked);
+  };
+
+  // Randomize - jump to random card
+  const handleRandomize = () => {
+    tinderStackRef.current?.jumpToRandom();
+  };
 
   // Load saved data from localStorage on mount
   useEffect(() => {
@@ -277,38 +313,66 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-card rounded-2xl border border-border p-6 mb-8"
           >
-            <p className="text-sm text-muted mb-3 text-center">Previewing</p>
-            <div className="flex items-center justify-center gap-4 flex-wrap">
-              {/* First Name - Shows current card name */}
-              <motion.span
-                key={currentPreviewName}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`text-3xl font-heading font-semibold tracking-tight text-center min-w-32
-                  ${currentPreviewName ? "text-foreground" : "text-muted/40"}`}
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <p className="text-sm text-muted">Previewing</p>
+              {/* Randomize button */}
+              <button
+                onClick={handleRandomize}
+                className="p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-secondary/50 transition-colors"
+                title="Jump to random name"
               >
-                {currentPreviewName || "First"}
-              </motion.span>
+                <Shuffle className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              {/* First Name with Lock */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleFirstNameLock}
+                  disabled={!displayedFirstName}
+                  className={`p-1.5 rounded-lg transition-all duration-200 ${
+                    firstNameLocked
+                      ? "text-primary bg-primary/10 hover:bg-primary/20"
+                      : "text-muted hover:text-foreground hover:bg-secondary/50"
+                  } disabled:opacity-30 disabled:cursor-not-allowed`}
+                  title={firstNameLocked ? "Unlock first name" : "Lock first name"}
+                >
+                  {firstNameLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                </button>
+                <motion.span
+                  key={displayedFirstName}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`text-3xl font-heading font-semibold tracking-tight text-center min-w-28
+                    ${displayedFirstName ? "text-foreground" : "text-muted/40"}
+                    ${firstNameLocked ? "text-primary" : ""}`}
+                >
+                  {displayedFirstName || "First"}
+                </motion.span>
+              </div>
 
-              {/* Middle Name - Dual Mode Input */}
-              <div className="relative">
+              {/* Middle Name - Dual Mode Input with Lock */}
+              <div className="relative flex items-center gap-2">
                 <div className="relative flex items-center">
                   <input
                     type="text"
                     value={middleName}
-                    onChange={(e) => setMiddleName(e.target.value)}
-                    onFocus={() => setShowMiddleDropdown(true)}
+                    onChange={(e) => !middleNameLocked && setMiddleName(e.target.value)}
+                    onFocus={() => !middleNameLocked && setShowMiddleDropdown(true)}
                     placeholder="Middle"
                     autoCapitalize="words"
                     autoComplete="off"
+                    disabled={middleNameLocked}
                     className={`text-3xl font-heading font-semibold tracking-tight text-center
-                      bg-transparent border-b-2 transition-all duration-200 w-36 py-1
+                      bg-transparent border-b-2 transition-all duration-200 w-32 py-1
                       placeholder:text-muted/40 focus:outline-none
-                      ${middleName
-                        ? "text-foreground border-transparent hover:border-border focus:border-primary"
-                        : "text-foreground border-transparent hover:border-border focus:border-primary"}`}
+                      ${middleNameLocked
+                        ? "text-primary border-transparent cursor-not-allowed"
+                        : middleName
+                          ? "text-foreground border-transparent hover:border-border focus:border-primary"
+                          : "text-foreground border-transparent hover:border-border focus:border-primary"}`}
                   />
-                  {likedNames.length > 0 && (
+                  {likedNames.length > 0 && !middleNameLocked && (
                     <button
                       onClick={() => setShowMiddleDropdown(!showMiddleDropdown)}
                       className="absolute right-0 p-1 text-muted hover:text-foreground transition-colors"
@@ -317,6 +381,18 @@ export default function Home() {
                     </button>
                   )}
                 </div>
+                <button
+                  onClick={toggleMiddleNameLock}
+                  disabled={!middleName}
+                  className={`p-1.5 rounded-lg transition-all duration-200 ${
+                    middleNameLocked
+                      ? "text-primary bg-primary/10 hover:bg-primary/20"
+                      : "text-muted hover:text-foreground hover:bg-secondary/50"
+                  } disabled:opacity-30 disabled:cursor-not-allowed`}
+                  title={middleNameLocked ? "Unlock middle name" : "Lock middle name"}
+                >
+                  {middleNameLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                </button>
 
                 <AnimatePresence>
                   {showMiddleDropdown && likedNames.length > 0 && (
@@ -465,6 +541,7 @@ export default function Home() {
 
           {/* Tinder Stack */}
           <TinderStack
+            ref={tinderStackRef}
             genderFilter={genderFilter}
             onNameSelect={handleNameSelect}
             onCurrentNameChange={handleCurrentNameChange}

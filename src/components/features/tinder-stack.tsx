@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, forwardRef, useImperativeHandle } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { TinderCard } from "./tinder-card";
 import { X, Heart } from "lucide-react";
@@ -15,6 +15,10 @@ interface TinderStackProps {
   onCurrentNameChange: (name: string | null) => void;
 }
 
+export interface TinderStackRef {
+  jumpToRandom: () => void;
+}
+
 // Fisher-Yates shuffle
 function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
@@ -25,10 +29,23 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-export function TinderStack({ genderFilter, onNameSelect, onCurrentNameChange }: TinderStackProps) {
+export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function TinderStack(
+  { genderFilter, onNameSelect, onCurrentNameChange },
+  ref
+) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [names, setNames] = useState<NameData[]>([]);
   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
+
+  // Expose jumpToRandom via ref
+  useImperativeHandle(ref, () => ({
+    jumpToRandom: () => {
+      if (names.length > 0) {
+        const randomIndex = Math.floor(Math.random() * names.length);
+        setCurrentIndex(randomIndex);
+      }
+    },
+  }), [names]);
 
   // Load and filter names
   useEffect(() => {
@@ -186,4 +203,4 @@ export function TinderStack({ genderFilter, onNameSelect, onCurrentNameChange }:
       </p>
     </div>
   );
-}
+});
