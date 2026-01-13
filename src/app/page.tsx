@@ -11,6 +11,7 @@ import { TinderStack } from "@/components/features/tinder-stack";
 import { DailyDiscovery } from "@/components/features/daily-discovery";
 import { NameFilters, defaultFilters, type NameFiltersState } from "@/components/features/name-filters";
 import { SiblingMatcher } from "@/components/features/sibling-matcher";
+import { NamesManager } from "@/components/features/names-manager";
 
 type Step = "lastname" | "gender" | "main";
 type GenderFilter = "boy" | "girl" | "all";
@@ -54,6 +55,7 @@ export default function Home() {
   const [siblingName, setSiblingName] = useState("");
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [showNamesManager, setShowNamesManager] = useState(false);
 
   // Get available origins for filter
   const availableOrigins = useMemo(() => getAllOrigins(), []);
@@ -269,33 +271,43 @@ export default function Home() {
 
       {/* Main: Swipe Interface */}
       {step === "main" && (
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
-          {/* Daily Discovery */}
-          <DailyDiscovery
-            onAddToFavorites={() => setLikedNamesKey((k) => k + 1)}
-          />
+        <main className="px-4 py-6">
+          {/* Centered content column */}
+          <div className="max-w-sm mx-auto">
+            {/* Daily Discovery */}
+            <DailyDiscovery
+              onAddToFavorites={() => setLikedNamesKey((k) => k + 1)}
+            />
 
-          {/* Filters Toggle */}
-          <div className="mb-6">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-colors ${
-                showFilters || filters !== defaultFilters
-                  ? "bg-primary/10 text-primary border border-primary/20"
-                  : "bg-secondary hover:bg-secondary/80 text-muted"
-              }`}
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              <span className="text-sm font-heading">
-                {showFilters ? "Hide Filters" : "Filters"}
-              </span>
-              {filteredCount !== null && (
-                <span className="text-xs bg-secondary px-2 py-0.5 rounded-full">
-                  {filteredCount} names
-                </span>
-              )}
-            </button>
+            {/* Top bar: Filters + Liked count */}
+            <div className="flex items-center justify-between mb-6">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-colors ${
+                  showFilters || filters !== defaultFilters
+                    ? "bg-primary/10 text-primary border border-primary/20"
+                    : "bg-secondary hover:bg-secondary/80 text-muted"
+                }`}
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                <span className="text-sm font-heading">Filters</span>
+                {filteredCount !== null && (
+                  <span className="text-xs bg-secondary px-2 py-0.5 rounded-full">
+                    {filteredCount}
+                  </span>
+                )}
+              </button>
 
+              <button
+                onClick={() => setShowNamesManager(true)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary hover:bg-secondary/80 text-muted transition-colors"
+              >
+                <Heart className="w-4 h-4 text-green-500" />
+                <span className="text-sm font-heading">{likedNames.length} liked</span>
+              </button>
+            </div>
+
+            {/* Filters panel */}
             <AnimatePresence>
               {showFilters && (
                 <motion.div
@@ -303,19 +315,16 @@ export default function Home() {
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
+                  className="overflow-hidden mb-6"
                 >
-                  <div className="pt-4">
-                    <NameFilters
-                      filters={filters}
-                      onChange={setFilters}
-                      availableOrigins={availableOrigins}
-                    />
-                  </div>
+                  <NameFilters
+                    filters={filters}
+                    onChange={setFilters}
+                    availableOrigins={availableOrigins}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
 
           {/* Name Preview - Compact */}
           <div className="mb-6">
@@ -439,20 +448,20 @@ export default function Home() {
           />
 
           {/* Sibling Matcher */}
-          <div className="mt-8 max-w-md mx-auto">
+          <div className="mt-8">
             <SiblingMatcher
               siblingName={siblingName}
               onSiblingChange={setSiblingName}
             />
           </div>
+          </div>{/* End centered content column */}
 
-          {/* Stats */}
-          <div className="mt-6 flex items-center justify-center gap-4 text-sm text-muted">
-            <div className="flex items-center gap-1.5">
-              <Heart className="w-4 h-4 text-green-500" />
-              <span>{likedNames.length} liked</span>
-            </div>
-          </div>
+          {/* Names Manager Panel */}
+          <NamesManager
+            isOpen={showNamesManager}
+            onClose={() => setShowNamesManager(false)}
+            onListChange={() => setLikedNamesKey((k) => k + 1)}
+          />
         </main>
       )}
     </div>
