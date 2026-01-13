@@ -262,7 +262,7 @@ export default function Home() {
               >
                 <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center
                   group-hover:bg-blue-200 group-hover:scale-110 transition-all duration-200">
-                  <span className="text-3xl">👦</span>
+                  <span className="text-3xl text-blue-500 font-heading">B</span>
                 </div>
                 <span className="font-heading font-medium text-foreground">Boy</span>
               </button>
@@ -275,7 +275,7 @@ export default function Home() {
               >
                 <div className="w-16 h-16 rounded-full bg-pink-100 flex items-center justify-center
                   group-hover:bg-pink-200 group-hover:scale-110 transition-all duration-200">
-                  <span className="text-3xl">👧</span>
+                  <span className="text-3xl text-pink-500 font-heading">G</span>
                 </div>
                 <span className="font-heading font-medium text-foreground">Girl</span>
               </button>
@@ -288,7 +288,7 @@ export default function Home() {
               >
                 <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center
                   group-hover:bg-purple-100 group-hover:scale-110 transition-all duration-200">
-                  <span className="text-3xl">✨</span>
+                  <span className="text-3xl text-purple-500 font-heading">?</span>
                 </div>
                 <span className="font-heading font-medium text-foreground text-sm">Don&apos;t know yet</span>
               </button>

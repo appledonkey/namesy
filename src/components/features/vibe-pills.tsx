@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { type NameVibe } from "@/lib/names-data";
 
 interface VibePillsProps {
@@ -8,17 +7,17 @@ interface VibePillsProps {
   onChange: (vibes: NameVibe[]) => void;
 }
 
-const VIBES: { id: NameVibe; label: string; emoji: string }[] = [
-  { id: "classic", label: "Classic", emoji: "🏛️" },
-  { id: "modern", label: "Modern", emoji: "✨" },
-  { id: "nature", label: "Nature", emoji: "🌿" },
-  { id: "strong", label: "Strong", emoji: "💪" },
-  { id: "gentle", label: "Gentle", emoji: "🕊️" },
-  { id: "unique", label: "Unique", emoji: "💎" },
+const VIBES: { id: NameVibe; label: string }[] = [
+  { id: "classic", label: "Classic" },
+  { id: "modern", label: "Modern" },
+  { id: "nature", label: "Nature" },
+  { id: "strong", label: "Strong" },
+  { id: "gentle", label: "Gentle" },
+  { id: "unique", label: "Unique" },
 ];
 
 /**
- * VibePills - Horizontal scrolling filter bar for name vibes
+ * VibePills - Clean toggle button filters for name vibes
  */
 export function VibePills({ selectedVibes, onChange }: VibePillsProps) {
   const toggleVibe = (vibe: NameVibe) => {
@@ -33,53 +32,44 @@ export function VibePills({ selectedVibes, onChange }: VibePillsProps) {
     onChange([]);
   };
 
+  const allSelected = selectedVibes.length === 0;
+
   return (
-    <div className="w-full overflow-hidden">
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-1">
-        {/* All pill */}
-        <motion.button
-          whileTap={{ scale: 0.95 }}
+    <div className="w-full">
+      <p className="text-xs text-muted font-heading uppercase tracking-wider mb-3">
+        Filter by style
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {/* All button */}
+        <button
           onClick={clearAll}
-          className={`flex-shrink-0 px-4 py-2 rounded-full font-heading text-sm transition-all ${
-            selectedVibes.length === 0
-              ? "bg-primary text-white shadow-md"
-              : "bg-secondary text-muted hover:bg-secondary/80"
+          className={`px-4 py-2 rounded-lg font-heading text-sm border transition-all duration-200 ${
+            allSelected
+              ? "bg-foreground text-background border-foreground"
+              : "bg-transparent text-muted border-border hover:border-foreground hover:text-foreground"
           }`}
         >
           All
-        </motion.button>
+        </button>
 
-        {/* Vibe pills */}
+        {/* Vibe toggles */}
         {VIBES.map((vibe) => {
           const isSelected = selectedVibes.includes(vibe.id);
           return (
-            <motion.button
+            <button
               key={vibe.id}
-              whileTap={{ scale: 0.95 }}
               onClick={() => toggleVibe(vibe.id)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full font-heading text-sm transition-all flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-lg font-heading text-sm border transition-all duration-200 ${
                 isSelected
-                  ? "bg-primary text-white shadow-md"
-                  : "bg-secondary text-foreground hover:bg-secondary/80"
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-transparent text-muted border-border hover:border-foreground hover:text-foreground"
               }`}
             >
-              <span className="text-base">{vibe.emoji}</span>
-              <span>{vibe.label}</span>
-            </motion.button>
+              {vibe.label}
+            </button>
           );
         })}
       </div>
-
-      {/* Active filter indicator */}
-      {selectedVibes.length > 0 && (
-        <motion.p
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-xs text-muted font-heading mt-1 px-1"
-        >
-          Showing {selectedVibes.map((v) => VIBES.find((x) => x.id === v)?.label).join(", ")} names
-        </motion.p>
-      )}
     </div>
   );
 }

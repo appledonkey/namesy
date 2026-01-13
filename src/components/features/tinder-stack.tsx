@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useEffect, forwardRef, useImperativeHandle } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { TinderCard } from "./tinder-card";
-import { X, Heart, Shuffle } from "lucide-react";
+import { X, Heart, Shuffle, CheckCircle } from "lucide-react";
 import { getAllNames, filterByVibes, type NameData, type NameVibe } from "@/lib/names-data";
 import { filterCompatibleNames } from "@/lib/name-compatibility";
 import { recordSwipe } from "@/lib/swipe-preferences";
@@ -141,9 +141,9 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="text-6xl mb-6"
+          className="mb-6"
         >
-          🎉
+          <CheckCircle className="w-16 h-16 text-green-500" />
         </motion.div>
         <h3 className="text-2xl font-heading font-semibold mb-2">You&apos;ve seen them all!</h3>
         <p className="text-muted mb-6">Check your favorites or refresh to start over</p>
