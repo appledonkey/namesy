@@ -58518,3 +58518,98 @@ export function getPopularNames(limit: number = 100, gender?: "M" | "F" | "N"): 
 export function getAllNames(): NameData[] {
   return namesData;
 }
+
+// Vibe types
+export type NameVibe = "classic" | "modern" | "nature" | "strong" | "gentle" | "unique";
+
+// Nature-related words for vibe detection
+const NATURE_WORDS = /flower|tree|moon|sun|star|river|rose|lily|ivy|ocean|sky|meadow|forest|rain|snow|dawn|aurora|willow|violet|daisy|fern|brook|lake|wind|storm|leaf|bloom|garden|pearl|coral|jade|ruby|stone|bear|wolf|lion|eagle|dove|wren|robin|sparrow|phoenix|dragon/i;
+
+// Strong consonant sounds at start
+const STRONG_STARTS = /^[KJGBDTMVR]/i;
+
+// Soft/gentle sounds at start
+const GENTLE_STARTS = /^[AEIOULSWMN]/i;
+
+// Classic origin languages
+const CLASSIC_ORIGINS = ["Latin", "Greek", "Hebrew", "Biblical", "Roman"];
+
+/**
+ * Generate vibes for a name based on its characteristics
+ */
+export function generateVibes(name: NameData): NameVibe[] {
+  const vibes: NameVibe[] = [];
+
+  // Classic: Traditional origins (Latin, Greek, Hebrew)
+  if (name.origins.some(o => CLASSIC_ORIGINS.some(c => o.toLowerCase().includes(c.toLowerCase())))) {
+    vibes.push("classic");
+  }
+
+  // Nature: Meanings contain nature words
+  if (name.meanings.some(m => NATURE_WORDS.test(m)) || NATURE_WORDS.test(name.name)) {
+    vibes.push("nature");
+  }
+
+  // Strong: Short names with hard consonant starts
+  if (name.syllables <= 2 && STRONG_STARTS.test(name.name)) {
+    vibes.push("strong");
+  }
+
+  // Gentle: Soft sounds, often longer names
+  if (GENTLE_STARTS.test(name.name) && (name.syllables >= 3 || /[aeiou]$/i.test(name.name))) {
+    vibes.push("gentle");
+  }
+
+  // Modern: Rising trend and not super popular
+  if (name.trend === "rising" || (name.currentRank > 500 && name.currentRank < 2000)) {
+    vibes.push("modern");
+  }
+
+  // Unique: Very rare names
+  if (name.currentRank > 1500 || name.currentRank === 0) {
+    vibes.push("unique");
+  }
+
+  // Ensure at least one vibe
+  if (vibes.length === 0) {
+    vibes.push("classic"); // Default fallback
+  }
+
+  return vibes;
+}
+
+/**
+ * Get vibes for a name by name string
+ */
+export function getNameVibes(nameStr: string): NameVibe[] {
+  const name = getNameByName(nameStr);
+  return name ? generateVibes(name) : [];
+}
+
+/**
+ * Filter names by vibes (any match)
+ */
+export function filterByVibes(names: NameData[], vibes: NameVibe[]): NameData[] {
+  if (vibes.length === 0) return names;
+  return names.filter(name => {
+    const nameVibes = generateVibes(name);
+    return vibes.some(v => nameVibes.includes(v));
+  });
+}
+
+/**
+ * Get the daily discovery name (deterministic based on date)
+ */
+export function getDailyName(): NameData {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = now.getTime() - start.getTime();
+  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  // Use day of year to select a name deterministically
+  // Add year to cycle through different names each year
+  const seed = dayOfYear + (now.getFullYear() * 366);
+  const index = seed % namesData.length;
+
+  return namesData[index];
+}

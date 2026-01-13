@@ -4,13 +4,16 @@ import { useState, useCallback, useMemo, useEffect, forwardRef, useImperativeHan
 import { AnimatePresence, motion } from "framer-motion";
 import { TinderCard } from "./tinder-card";
 import { X, Heart, Shuffle } from "lucide-react";
-import { getAllNames, type NameData } from "@/lib/names-data";
+import { getAllNames, filterByVibes, type NameData, type NameVibe } from "@/lib/names-data";
+import { filterCompatibleNames } from "@/lib/name-compatibility";
 import { recordSwipe } from "@/lib/swipe-preferences";
 
 type GenderFilter = "boy" | "girl" | "all";
 
 interface TinderStackProps {
   genderFilter: GenderFilter;
+  vibes?: NameVibe[];
+  siblingName?: string;
   onNameSelect: (name: string) => void;
   onCurrentNameChange: (name: string | null) => void;
 }
@@ -30,7 +33,7 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function TinderStack(
-  { genderFilter, onNameSelect, onCurrentNameChange },
+  { genderFilter, vibes = [], siblingName = "", onNameSelect, onCurrentNameChange },
   ref
 ) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -52,19 +55,29 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
 
   // Load and filter names
   useEffect(() => {
-    let allNames = getAllNames();
+    let filteredNames = getAllNames();
 
     // Filter by gender
     if (genderFilter === "boy") {
-      allNames = allNames.filter((n) => n.gender === "M" || n.gender === "N");
+      filteredNames = filteredNames.filter((n) => n.gender === "M" || n.gender === "N");
     } else if (genderFilter === "girl") {
-      allNames = allNames.filter((n) => n.gender === "F" || n.gender === "N");
+      filteredNames = filteredNames.filter((n) => n.gender === "F" || n.gender === "N");
+    }
+
+    // Filter by vibes
+    if (vibes.length > 0) {
+      filteredNames = filterByVibes(filteredNames, vibes);
+    }
+
+    // Filter by sibling compatibility
+    if (siblingName.trim()) {
+      filteredNames = filterCompatibleNames(filteredNames, siblingName);
     }
 
     // Shuffle
-    setNames(shuffleArray(allNames));
+    setNames(shuffleArray(filteredNames));
     setCurrentIndex(0);
-  }, [genderFilter]);
+  }, [genderFilter, vibes, siblingName]);
 
   // Get visible cards (current + 2 behind)
   const visibleCards = useMemo(() => {

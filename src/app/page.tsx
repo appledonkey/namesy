@@ -2,11 +2,15 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { ArrowRight, ChevronDown, AlertTriangle, Lock, Unlock } from "lucide-react";
+import { ArrowRight, ChevronDown, AlertTriangle, Lock, Unlock, Heart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLikedNames } from "@/lib/swipe-preferences";
+import { type NameVibe } from "@/lib/names-data";
 import { Button } from "@/components/ui/button";
 import { TinderStack } from "@/components/features/tinder-stack";
+import { DailyDiscovery } from "@/components/features/daily-discovery";
+import { VibePills } from "@/components/features/vibe-pills";
+import { SiblingMatcher } from "@/components/features/sibling-matcher";
 
 type Step = "lastname" | "gender" | "main";
 type GenderFilter = "boy" | "girl" | "all";
@@ -51,6 +55,10 @@ export default function Home() {
   const [firstNameLocked, setFirstNameLocked] = useState(false);
   const [lockedFirstName, setLockedFirstName] = useState<string | null>(null);
   const [middleNameLocked, setMiddleNameLocked] = useState(false);
+
+  // Filter states
+  const [selectedVibes, setSelectedVibes] = useState<NameVibe[]>([]);
+  const [siblingName, setSiblingName] = useState("");
 
   // Get liked names for middle name dropdown
   const likedNames = useMemo(() => {
@@ -298,7 +306,20 @@ export default function Home() {
 
       {/* Main: Swipe Interface */}
       {step === "main" && (
-        <main className="max-w-4xl mx-auto px-6 py-8">
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
+          {/* Daily Discovery */}
+          <DailyDiscovery
+            onAddToFavorites={() => setLikedNamesKey((k) => k + 1)}
+          />
+
+          {/* Vibe Pills */}
+          <div className="mb-6">
+            <VibePills
+              selectedVibes={selectedVibes}
+              onChange={setSelectedVibes}
+            />
+          </div>
+
           {/* Name Preview */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -524,9 +545,27 @@ export default function Home() {
           {/* Tinder Stack */}
           <TinderStack
             genderFilter={genderFilter}
+            vibes={selectedVibes}
+            siblingName={siblingName}
             onNameSelect={handleNameSelect}
             onCurrentNameChange={handleCurrentNameChange}
           />
+
+          {/* Sibling Matcher */}
+          <div className="mt-8 max-w-md mx-auto">
+            <SiblingMatcher
+              siblingName={siblingName}
+              onSiblingChange={setSiblingName}
+            />
+          </div>
+
+          {/* Stats */}
+          <div className="mt-6 flex items-center justify-center gap-4 text-sm text-muted">
+            <div className="flex items-center gap-1.5">
+              <Heart className="w-4 h-4 text-green-500" />
+              <span>{likedNames.length} liked</span>
+            </div>
+          </div>
         </main>
       )}
     </div>

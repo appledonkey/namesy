@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Plus, Edit2, X } from "lucide-react";
+import { ChevronDown, Plus, Edit2, X, Check, AlertTriangle } from "lucide-react";
 import { getLikedNames, type SwipedName } from "@/lib/swipe-preferences";
+import { analyzeNameFlow, type FlowAnalysis } from "@/lib/name-flow";
 
 interface NamePreviewProps {
   firstName: string;
@@ -31,6 +32,12 @@ export function NamePreview({
 
   const favorites = getLikedNames();
 
+  // Analyze name flow
+  const flowAnalysis = useMemo<FlowAnalysis | null>(() => {
+    if (!firstName || !lastName) return null;
+    return analyzeNameFlow(firstName, lastName, middleName || undefined);
+  }, [firstName, middleName, lastName]);
+
   const handleFirstNameSelect = (name: string) => {
     onFirstNameSelect(name);
     setShowFirstDropdown(false);
@@ -55,6 +62,34 @@ export function NamePreview({
         <p className="text-2xl sm:text-3xl font-heading font-semibold text-foreground tracking-tight">
           {displayName}
         </p>
+
+        {/* Flow analysis feedback */}
+        {flowAnalysis && (
+          <motion.div
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-2 flex items-center justify-center gap-1.5"
+          >
+            {flowAnalysis.rating === "excellent" || flowAnalysis.rating === "good" ? (
+              <>
+                <Check className="w-4 h-4 text-green-500" />
+                <span className="text-sm text-green-600 font-heading">
+                  {flowAnalysis.rating === "excellent" ? "Flows beautifully" : "Flows well"}
+                </span>
+              </>
+            ) : flowAnalysis.rating === "fair" ? (
+              <>
+                <Check className="w-4 h-4 text-amber-500" />
+                <span className="text-sm text-amber-600 font-heading">Flows okay</span>
+              </>
+            ) : (
+              <>
+                <AlertTriangle className="w-4 h-4 text-orange-500" />
+                <span className="text-sm text-orange-600 font-heading">Consider alternatives</span>
+              </>
+            )}
+          </motion.div>
+        )}
       </div>
 
       {/* Edit controls */}
