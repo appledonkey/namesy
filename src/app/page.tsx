@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { ArrowRight, ChevronDown, AlertTriangle, Lock, Unlock, Heart } from "lucide-react";
+import { ArrowRight, ChevronDown, AlertTriangle, Heart, SlidersHorizontal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLikedNames } from "@/lib/swipe-preferences";
-import { type NameVibe } from "@/lib/names-data";
+import { getAllOrigins } from "@/lib/names-data";
 import { Button } from "@/components/ui/button";
 import { TinderStack } from "@/components/features/tinder-stack";
 import { DailyDiscovery } from "@/components/features/daily-discovery";
-import { VibePills } from "@/components/features/vibe-pills";
+import { NameFilters, defaultFilters, type NameFiltersState } from "@/components/features/name-filters";
 import { SiblingMatcher } from "@/components/features/sibling-matcher";
 
 type Step = "lastname" | "gender" | "main";
@@ -45,20 +45,18 @@ export default function Home() {
 
   // Name preview state
   const [currentPreviewName, setCurrentPreviewName] = useState<string | null>(null);
-  const [savedFirstName, setSavedFirstName] = useState<string | null>(null);
   const [middleName, setMiddleName] = useState("");
-  const [justSaved, setJustSaved] = useState(false);
   const [showMiddleDropdown, setShowMiddleDropdown] = useState(false);
   const [likedNamesKey, setLikedNamesKey] = useState(0);
 
-  // Lock states
-  const [firstNameLocked, setFirstNameLocked] = useState(false);
-  const [lockedFirstName, setLockedFirstName] = useState<string | null>(null);
-  const [middleNameLocked, setMiddleNameLocked] = useState(false);
-
   // Filter states
-  const [selectedVibes, setSelectedVibes] = useState<NameVibe[]>([]);
+  const [filters, setFilters] = useState<NameFiltersState>(defaultFilters);
   const [siblingName, setSiblingName] = useState("");
+  const [filteredCount, setFilteredCount] = useState<number | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Get available origins for filter
+  const availableOrigins = useMemo(() => getAllOrigins(), []);
 
   // Get liked names for middle name dropdown
   const likedNames = useMemo(() => {
@@ -67,46 +65,14 @@ export default function Home() {
     return getLikedNames();
   }, [likedNamesKey]);
 
-  // Get the displayed first name (locked or current)
-  const displayedFirstName = firstNameLocked ? lockedFirstName : currentPreviewName;
-
-  // Compute initials
+  // Compute initials for bad initials check
   const previewInitials = useMemo(() => {
-    return getInitials(displayedFirstName || "", middleName, lastName);
-  }, [displayedFirstName, middleName, lastName]);
+    return getInitials(currentPreviewName || "", middleName, lastName);
+  }, [currentPreviewName, middleName, lastName]);
 
-  const savedInitials = useMemo(() => {
-    return getInitials(savedFirstName || "", middleName, lastName);
-  }, [savedFirstName, middleName, lastName]);
-
-  // Check for bad initials
   const hasBadPreviewInitials = useMemo(() => {
-    return isBadInitials(displayedFirstName || "", middleName, lastName);
-  }, [displayedFirstName, middleName, lastName]);
-
-  const hasBadSavedInitials = useMemo(() => {
-    return isBadInitials(savedFirstName || "", middleName, lastName);
-  }, [savedFirstName, middleName, lastName]);
-
-  // Lock/unlock first name
-  const toggleFirstNameLock = () => {
-    if (firstNameLocked) {
-      // Unlock
-      setFirstNameLocked(false);
-      setLockedFirstName(null);
-    } else {
-      // Lock current name
-      if (currentPreviewName) {
-        setFirstNameLocked(true);
-        setLockedFirstName(currentPreviewName);
-      }
-    }
-  };
-
-  // Lock/unlock middle name
-  const toggleMiddleNameLock = () => {
-    setMiddleNameLocked(!middleNameLocked);
-  };
+    return isBadInitials(currentPreviewName || "", middleName, lastName);
+  }, [currentPreviewName, middleName, lastName]);
 
   // Load saved data from localStorage on mount
   useEffect(() => {
@@ -147,11 +113,8 @@ export default function Home() {
   };
 
   // Handle name selection from swipe (like)
-  const handleNameSelect = (name: string) => {
-    setSavedFirstName(name);
-    setJustSaved(true);
+  const handleNameSelect = () => {
     setLikedNamesKey(k => k + 1); // Refresh liked names dropdown
-    setTimeout(() => setJustSaved(false), 600);
   };
 
   // Handle current card change
@@ -312,91 +275,89 @@ export default function Home() {
             onAddToFavorites={() => setLikedNamesKey((k) => k + 1)}
           />
 
-          {/* Vibe Pills */}
+          {/* Filters Toggle */}
           <div className="mb-6">
-            <VibePills
-              selectedVibes={selectedVibes}
-              onChange={setSelectedVibes}
-            />
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-colors ${
+                showFilters || filters !== defaultFilters
+                  ? "bg-primary/10 text-primary border border-primary/20"
+                  : "bg-secondary hover:bg-secondary/80 text-muted"
+              }`}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              <span className="text-sm font-heading">
+                {showFilters ? "Hide Filters" : "Filters"}
+              </span>
+              {filteredCount !== null && (
+                <span className="text-xs bg-secondary px-2 py-0.5 rounded-full">
+                  {filteredCount} names
+                </span>
+              )}
+            </button>
+
+            <AnimatePresence>
+              {showFilters && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="pt-4">
+                    <NameFilters
+                      filters={filters}
+                      onChange={setFilters}
+                      availableOrigins={availableOrigins}
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* Name Preview */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-card rounded-2xl border border-border p-6 mb-8"
-          >
-            <p className="text-sm text-muted mb-3 text-center">Previewing</p>
-            <div className="flex items-center justify-center gap-3 flex-wrap">
-              {/* First Name with Lock */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={toggleFirstNameLock}
-                  disabled={!displayedFirstName}
-                  className={`p-1.5 rounded-lg transition-all duration-200 ${
-                    firstNameLocked
-                      ? "text-primary bg-primary/10 hover:bg-primary/20"
-                      : "text-muted hover:text-foreground hover:bg-secondary/50"
-                  } disabled:opacity-30 disabled:cursor-not-allowed`}
-                  title={firstNameLocked ? "Unlock first name" : "Lock first name"}
-                >
-                  {firstNameLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-                </button>
-                <motion.span
-                  key={displayedFirstName}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`text-3xl font-heading font-semibold tracking-tight text-center min-w-28
-                    ${displayedFirstName ? "text-foreground" : "text-muted/40"}
-                    ${firstNameLocked ? "text-primary" : ""}`}
-                >
-                  {displayedFirstName || "First"}
-                </motion.span>
-              </div>
+          {/* Name Preview - Compact */}
+          <div className="mb-6">
+            {/* Full Name Display */}
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              {/* First Name (from current card) */}
+              <motion.span
+                key={currentPreviewName}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`text-2xl sm:text-3xl font-heading font-semibold tracking-tight ${
+                  currentPreviewName ? "text-foreground" : "text-muted/40"
+                }`}
+              >
+                {currentPreviewName || "First"}
+              </motion.span>
 
-              {/* Middle Name - Dual Mode Input with Lock */}
-              <div className="relative flex items-center gap-2">
-                <div className="relative flex items-center">
-                  <input
-                    type="text"
-                    value={middleName}
-                    onChange={(e) => !middleNameLocked && setMiddleName(e.target.value)}
-                    onFocus={() => !middleNameLocked && setShowMiddleDropdown(true)}
-                    placeholder="Middle"
-                    autoCapitalize="words"
-                    autoComplete="off"
-                    disabled={middleNameLocked}
-                    className={`text-3xl font-heading font-semibold tracking-tight text-center
-                      bg-transparent border-b-2 transition-all duration-200 w-32 py-1
-                      placeholder:text-muted/40 focus:outline-none
-                      ${middleNameLocked
-                        ? "text-primary border-transparent cursor-not-allowed"
-                        : middleName
-                          ? "text-foreground border-transparent hover:border-border focus:border-primary"
-                          : "text-foreground border-transparent hover:border-border focus:border-primary"}`}
-                  />
-                  {likedNames.length > 0 && !middleNameLocked && (
-                    <button
-                      onClick={() => setShowMiddleDropdown(!showMiddleDropdown)}
-                      className="absolute right-0 p-1 text-muted hover:text-foreground transition-colors"
-                    >
-                      <ChevronDown className={`w-4 h-4 transition-transform ${showMiddleDropdown ? "rotate-180" : ""}`} />
-                    </button>
-                  )}
-                </div>
-                <button
-                  onClick={toggleMiddleNameLock}
-                  disabled={!middleName}
-                  className={`p-1.5 rounded-lg transition-all duration-200 ${
-                    middleNameLocked
-                      ? "text-primary bg-primary/10 hover:bg-primary/20"
-                      : "text-muted hover:text-foreground hover:bg-secondary/50"
-                  } disabled:opacity-30 disabled:cursor-not-allowed`}
-                  title={middleNameLocked ? "Unlock middle name" : "Lock middle name"}
-                >
-                  {middleNameLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-                </button>
+              {/* Middle Name Input */}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={middleName}
+                  onChange={(e) => setMiddleName(e.target.value)}
+                  onFocus={() => setShowMiddleDropdown(true)}
+                  placeholder="Middle"
+                  autoCapitalize="words"
+                  autoComplete="off"
+                  className="text-2xl sm:text-3xl font-heading font-semibold tracking-tight text-center
+                    bg-transparent border-b-2 border-dashed border-border/50 transition-all w-28 sm:w-32
+                    placeholder:text-muted/40 focus:outline-none focus:border-primary
+                    hover:border-border text-foreground"
+                />
+                {likedNames.length > 0 && (
+                  <button
+                    onClick={() => setShowMiddleDropdown(!showMiddleDropdown)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 p-1 text-muted hover:text-foreground transition-colors"
+                  >
+                    <ChevronDown className={`w-4 h-4 transition-transform ${showMiddleDropdown ? "rotate-180" : ""}`} />
+                  </button>
+                )}
 
+                {/* Dropdown */}
                 <AnimatePresence>
                   {showMiddleDropdown && likedNames.length > 0 && (
                     <>
@@ -405,20 +366,13 @@ export default function Home() {
                         onClick={() => setShowMiddleDropdown(false)}
                       />
                       <motion.div
-                        initial={{ opacity: 0, y: 4, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 4 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-52 bg-white border border-border rounded-2xl shadow-lg z-50 overflow-hidden"
+                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden"
                       >
-                        {/* Header */}
-                        <div className="px-4 py-2.5 border-b border-border bg-secondary/30">
-                          <p className="text-xs font-heading font-medium text-muted uppercase tracking-wider">
-                            Pick from favorites
-                          </p>
-                        </div>
-
-                        <div className="max-h-48 overflow-y-auto py-1">
+                        <div className="max-h-40 overflow-y-auto py-1">
                           {likedNames.map((item) => (
                             <button
                               key={item.id}
@@ -426,32 +380,26 @@ export default function Home() {
                                 setMiddleName(item.name);
                                 setShowMiddleDropdown(false);
                               }}
-                              className={`w-full px-4 py-2.5 text-left font-heading transition-colors flex items-center justify-between
-                                ${item.name === middleName
+                              className={`w-full px-3 py-2 text-left font-heading text-sm transition-colors ${
+                                item.name === middleName
                                   ? "bg-primary/10 text-primary"
-                                  : "text-foreground hover:bg-secondary/50"}`}
+                                  : "text-foreground hover:bg-secondary/50"
+                              }`}
                             >
-                              <span className="font-medium">{item.name}</span>
-                              {item.name === middleName && (
-                                <span className="text-xs text-primary">Selected</span>
-                              )}
+                              {item.name}
                             </button>
                           ))}
                         </div>
-
-                        {/* Clear option */}
                         {middleName && (
-                          <div className="border-t border-border">
-                            <button
-                              onClick={() => {
-                                setMiddleName("");
-                                setShowMiddleDropdown(false);
-                              }}
-                              className="w-full px-4 py-2.5 text-left text-sm font-heading text-muted hover:text-foreground hover:bg-secondary/50 transition-colors"
-                            >
-                              Clear middle name
-                            </button>
-                          </div>
+                          <button
+                            onClick={() => {
+                              setMiddleName("");
+                              setShowMiddleDropdown(false);
+                            }}
+                            className="w-full px-3 py-2 text-left text-xs font-heading text-muted hover:text-foreground border-t border-border transition-colors"
+                          >
+                            Clear
+                          </button>
                         )}
                       </motion.div>
                     </>
@@ -459,96 +407,35 @@ export default function Home() {
                 </AnimatePresence>
               </div>
 
-              {/* Last Name (static) */}
-              <span className="text-3xl font-heading font-semibold text-foreground tracking-tight">
+              {/* Last Name */}
+              <span className="text-2xl sm:text-3xl font-heading font-semibold text-foreground tracking-tight">
                 {lastName}
               </span>
             </div>
 
-            {/* Initials Display */}
-            {(currentPreviewName || middleName) && (
+            {/* Initials - only show if problematic */}
+            {hasBadPreviewInitials && currentPreviewName && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-center justify-center gap-2 mt-3"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="flex items-center justify-center gap-1.5 mt-2 text-amber-600"
               >
-                <span className={`text-lg font-heading font-medium tracking-widest ${hasBadPreviewInitials ? "text-amber-600" : "text-muted"}`}>
-                  {previewInitials}
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span className="text-xs font-medium">
+                  Initials {previewInitials} might be awkward
                 </span>
-                {hasBadPreviewInitials && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="flex items-center gap-1 text-amber-600"
-                  >
-                    <AlertTriangle className="w-4 h-4" />
-                    <span className="text-xs font-medium">Careful with these initials!</span>
-                  </motion.div>
-                )}
               </motion.div>
             )}
-
-            {/* Saved name indicator */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center mt-4"
-            >
-              {savedFirstName ? (
-                <div>
-                  <motion.p
-                    key={savedFirstName}
-                    initial={{ scale: 1.2, color: "#22c55e" }}
-                    animate={{ scale: 1, color: "#6b7280" }}
-                    transition={{ duration: 0.5 }}
-                    className={`text-sm ${justSaved ? "text-green-500 font-medium" : "text-muted"}`}
-                  >
-                    {justSaved ? "Saved! " : "Saved: "}
-                    <span className="font-medium text-foreground">
-                      {savedFirstName} {middleName ? `${middleName} ` : ""}{lastName}
-                    </span>
-                    <span className="ml-1 text-muted">({savedInitials})</span>
-                    {justSaved && " ✓"}
-                  </motion.p>
-                  {hasBadSavedInitials && (
-                    <p className="text-xs text-amber-600 mt-1 flex items-center justify-center gap-1">
-                      <AlertTriangle className="w-3 h-3" />
-                      These initials might be problematic
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-muted">Swipe right to save a name</p>
-              )}
-            </motion.div>
-
-            <div className="flex items-center justify-center gap-4 mt-3">
-              <button
-                onClick={() => {
-                  localStorage.removeItem("namesy-gender");
-                  setStep("gender");
-                }}
-                className="text-xs text-muted hover:text-foreground transition-colors"
-              >
-                Change gender
-              </button>
-              <span className="text-muted">·</span>
-              <button
-                onClick={() => setStep("lastname")}
-                className="text-xs text-muted hover:text-foreground transition-colors"
-              >
-                Change last name
-              </button>
-            </div>
-          </motion.div>
+          </div>
 
           {/* Tinder Stack */}
           <TinderStack
             genderFilter={genderFilter}
-            vibes={selectedVibes}
+            filters={filters}
             siblingName={siblingName}
             onNameSelect={handleNameSelect}
             onCurrentNameChange={handleCurrentNameChange}
+            onFilteredCountChange={setFilteredCount}
           />
 
           {/* Sibling Matcher */}

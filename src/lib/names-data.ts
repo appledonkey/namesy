@@ -58613,3 +58613,58 @@ export function getDailyName(): NameData {
 
   return namesData[index];
 }
+
+/**
+ * Filter names by length (syllables)
+ */
+export function filterByLength(names: NameData[], length: "any" | "short" | "medium" | "long"): NameData[] {
+  if (length === "any") return names;
+  return names.filter(name => {
+    if (length === "short") return name.syllables <= 2;
+    if (length === "medium") return name.syllables === 3;
+    if (length === "long") return name.syllables >= 4;
+    return true;
+  });
+}
+
+/**
+ * Filter names by popularity (currentRank)
+ */
+export function filterByPopularity(names: NameData[], popularity: "any" | "popular" | "uncommon" | "rare"): NameData[] {
+  if (popularity === "any") return names;
+  return names.filter(name => {
+    if (popularity === "popular") return name.currentRank > 0 && name.currentRank <= 200;
+    if (popularity === "uncommon") return name.currentRank > 200 && name.currentRank <= 1000;
+    if (popularity === "rare") return name.currentRank > 1000 || name.currentRank === 0;
+    return true;
+  });
+}
+
+/**
+ * Filter names by starting letter
+ */
+export function filterByStartingLetter(names: NameData[], letter: string | null): NameData[] {
+  if (!letter) return names;
+  return names.filter(name => name.name[0].toUpperCase() === letter.toUpperCase());
+}
+
+/**
+ * Filter names by origins (any match)
+ */
+export function filterByOrigins(names: NameData[], origins: string[]): NameData[] {
+  if (origins.length === 0) return names;
+  return names.filter(name =>
+    name.origins.some(o => origins.some(fo => o.toLowerCase().includes(fo.toLowerCase())))
+  );
+}
+
+/**
+ * Get all unique origins from the dataset
+ */
+export function getAllOrigins(): string[] {
+  const originsSet = new Set<string>();
+  namesData.forEach(name => {
+    name.origins.forEach(origin => originsSet.add(origin));
+  });
+  return Array.from(originsSet).sort();
+}

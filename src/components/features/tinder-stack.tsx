@@ -4,18 +4,28 @@ import { useState, useCallback, useMemo, useEffect, forwardRef, useImperativeHan
 import { AnimatePresence, motion } from "framer-motion";
 import { TinderCard } from "./tinder-card";
 import { X, Heart, Shuffle, CheckCircle } from "lucide-react";
-import { getAllNames, filterByVibes, type NameData, type NameVibe } from "@/lib/names-data";
+import {
+  getAllNames,
+  filterByVibes,
+  filterByLength,
+  filterByPopularity,
+  filterByStartingLetter,
+  filterByOrigins,
+  type NameData,
+} from "@/lib/names-data";
 import { filterCompatibleNames } from "@/lib/name-compatibility";
 import { recordSwipe } from "@/lib/swipe-preferences";
+import { type NameFiltersState } from "./name-filters";
 
 type GenderFilter = "boy" | "girl" | "all";
 
 interface TinderStackProps {
   genderFilter: GenderFilter;
-  vibes?: NameVibe[];
+  filters: NameFiltersState;
   siblingName?: string;
   onNameSelect: (name: string) => void;
   onCurrentNameChange: (name: string | null) => void;
+  onFilteredCountChange?: (count: number) => void;
 }
 
 export interface TinderStackRef {
@@ -33,7 +43,7 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function TinderStack(
-  { genderFilter, vibes = [], siblingName = "", onNameSelect, onCurrentNameChange },
+  { genderFilter, filters, siblingName = "", onNameSelect, onCurrentNameChange, onFilteredCountChange },
   ref
 ) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -64,20 +74,27 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
       filteredNames = filteredNames.filter((n) => n.gender === "F" || n.gender === "N");
     }
 
-    // Filter by vibes
-    if (vibes.length > 0) {
-      filteredNames = filterByVibes(filteredNames, vibes);
+    // Apply all filters
+    if (filters.vibes.length > 0) {
+      filteredNames = filterByVibes(filteredNames, filters.vibes);
     }
+    filteredNames = filterByLength(filteredNames, filters.length);
+    filteredNames = filterByPopularity(filteredNames, filters.popularity);
+    filteredNames = filterByStartingLetter(filteredNames, filters.startingLetter);
+    filteredNames = filterByOrigins(filteredNames, filters.origins);
 
     // Filter by sibling compatibility
     if (siblingName.trim()) {
       filteredNames = filterCompatibleNames(filteredNames, siblingName);
     }
 
+    // Report filtered count
+    onFilteredCountChange?.(filteredNames.length);
+
     // Shuffle
     setNames(shuffleArray(filteredNames));
     setCurrentIndex(0);
-  }, [genderFilter, vibes, siblingName]);
+  }, [genderFilter, filters, siblingName, onFilteredCountChange]);
 
   // Get visible cards (current + 2 behind)
   const visibleCards = useMemo(() => {
