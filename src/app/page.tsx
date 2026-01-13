@@ -12,10 +12,6 @@ export default function Home() {
   const [lastName, setLastName] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Name preview state
-  const [firstName, setFirstName] = useState("");
-  const [middleName, setMiddleName] = useState("");
-
   // Load saved data from localStorage on mount
   useEffect(() => {
     const savedLastName = localStorage.getItem("namesy-lastname");
@@ -122,43 +118,9 @@ export default function Home() {
         </main>
       )}
 
-      {/* Main */}
+      {/* Main: Empty for now */}
       {step === "main" && (
         <main className="max-w-4xl mx-auto px-6 py-12">
-          {/* Name Preview */}
-          <div className="bg-card rounded-2xl border border-border p-8">
-            <p className="text-sm text-muted mb-4 text-center">Your baby's name</p>
-            <div className="flex items-center justify-center gap-3">
-              {/* First Name */}
-              <input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="First"
-                className="text-4xl font-heading font-semibold text-foreground tracking-tight bg-transparent border-b-2 border-transparent hover:border-border focus:border-primary focus:outline-none transition-colors text-center w-48 placeholder:text-muted/40"
-              />
-              {/* Middle Name */}
-              <input
-                type="text"
-                value={middleName}
-                onChange={(e) => setMiddleName(e.target.value)}
-                placeholder="Middle"
-                className="text-4xl font-heading font-semibold text-foreground tracking-tight bg-transparent border-b-2 border-transparent hover:border-border focus:border-primary focus:outline-none transition-colors text-center w-48 placeholder:text-muted/40"
-              />
-              {/* Last Name (static) */}
-              <span className="text-4xl font-heading font-semibold text-foreground tracking-tight">
-                {lastName}
-              </span>
-            </div>
-            <div className="text-center mt-6">
-              <button
-                onClick={() => setStep("lastname")}
-                className="text-sm text-muted hover:text-foreground transition-colors"
-              >
-                Change last name
-              </button>
-            </div>
-          </div>
         </main>
       )}
     </div>
