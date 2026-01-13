@@ -119,7 +119,7 @@ export function TinderStack({ genderFilter, onNameSelect, onCurrentNameChange }:
             setNames(shuffleArray(names));
             setCurrentIndex(0);
           }}
-          className="px-6 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors"
+          className="px-6 py-3 bg-primary text-white rounded-xl font-heading font-medium hover:bg-primary/90 transition-colors"
         >
           Start Over
         </button>
@@ -145,7 +145,7 @@ export function TinderStack({ genderFilter, onNameSelect, onCurrentNameChange }:
                 style={{
                   scale: 1 - stackIndex * 0.05,
                   y: stackIndex * 12,
-                  opacity: 1 - stackIndex * 0.2,
+                  opacity: 1,
                   zIndex: 3 - stackIndex,
                 }}
               />

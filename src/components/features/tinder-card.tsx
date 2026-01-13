@@ -3,24 +3,18 @@
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import type { NameData } from "@/lib/names-data";
 
-// Gender-based color schemes
+// Gender-based color schemes - white background with colored borders
 const genderColors = {
   M: {
-    border: "border-blue-300",
-    bg: "bg-gradient-to-br from-blue-50 to-blue-100/50",
-    tint: "rgba(59, 130, 246, 0.08)",
+    border: "border-blue-400",
     accent: "#3b82f6",
   },
   F: {
-    border: "border-pink-300",
-    bg: "bg-gradient-to-br from-pink-50 to-pink-100/50",
-    tint: "rgba(236, 72, 153, 0.08)",
+    border: "border-pink-400",
     accent: "#ec4899",
   },
   N: {
-    border: "border-gray-300",
-    bg: "bg-gradient-to-br from-gray-50 to-gray-100/50",
-    tint: "rgba(107, 114, 128, 0.05)",
+    border: "border-gray-400",
     accent: "#6b7280",
   },
 };
@@ -106,7 +100,7 @@ export function TinderCard({ name, onSwipe, isTop = true, style }: TinderCardPro
       }}
       transition={springConfig}
       whileHover={isTop ? { scale: 1.02, y: -4 } : undefined}
-      className={`absolute w-[340px] aspect-[3/4] rounded-3xl border-2 ${colors.border} ${colors.bg}
+      className={`absolute w-[340px] aspect-[3/4] rounded-3xl border-2 ${colors.border} bg-white
         shadow-xl cursor-grab active:cursor-grabbing overflow-hidden`}
     >
       {/* Like overlay tint */}
@@ -125,7 +119,7 @@ export function TinderCard({ name, onSwipe, isTop = true, style }: TinderCardPro
       <motion.div
         style={{ opacity: likeOpacity }}
         className="absolute top-8 left-8 px-6 py-2 border-4 border-green-500 rounded-xl
-          text-green-500 font-bold text-2xl rotate-[-12deg] z-20"
+          text-green-500 font-heading font-bold text-2xl rotate-[-12deg] z-20"
       >
         LIKE
       </motion.div>
@@ -134,7 +128,7 @@ export function TinderCard({ name, onSwipe, isTop = true, style }: TinderCardPro
       <motion.div
         style={{ opacity: nopeOpacity }}
         className="absolute top-8 right-8 px-6 py-2 border-4 border-red-500 rounded-xl
-          text-red-500 font-bold text-2xl rotate-[12deg] z-20"
+          text-red-500 font-heading font-bold text-2xl rotate-[12deg] z-20"
       >
         NOPE
       </motion.div>
@@ -148,14 +142,14 @@ export function TinderCard({ name, onSwipe, isTop = true, style }: TinderCardPro
 
         {/* Meaning */}
         {name.meanings.length > 0 && (
-          <p className="text-lg text-foreground/70 mb-2 italic">
+          <p className="text-lg font-heading text-foreground/70 mb-2 italic">
             &ldquo;{name.meanings[0]}&rdquo;
           </p>
         )}
 
         {/* Origin */}
         {name.origins.length > 0 && (
-          <p className="text-sm text-muted mb-6">
+          <p className="text-sm font-heading text-muted mb-6">
             {name.origins.slice(0, 2).join(" & ")} origin
           </p>
         )}
@@ -163,7 +157,7 @@ export function TinderCard({ name, onSwipe, isTop = true, style }: TinderCardPro
         {/* Rank */}
         {name.currentRank > 0 && name.currentRank <= 1000 && (
           <div className="mt-auto">
-            <span className="text-sm text-muted">
+            <span className="text-sm font-heading text-muted">
               #{name.currentRank} most popular
             </span>
           </div>
