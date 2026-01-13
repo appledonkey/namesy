@@ -34,7 +34,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         className={`
           inline-flex items-center justify-center
-          rounded-full font-medium uppercase tracking-widest
+          rounded-full font-heading font-medium uppercase tracking-widest
           transition-all duration-300 ease-out
           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
           disabled:pointer-events-none disabled:opacity-50

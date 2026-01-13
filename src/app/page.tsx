@@ -185,7 +185,7 @@ export default function Home() {
                 autoCorrect="off"
                 spellCheck="false"
                 className="w-full text-center text-xl sm:text-2xl py-4 px-6 bg-card border-2 border-border rounded-xl
-                  placeholder:text-muted/50 text-foreground
+                  placeholder:text-muted/50 text-foreground font-heading
                   focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
                   transition-all duration-200"
               />
@@ -228,7 +228,7 @@ export default function Home() {
                   group-hover:bg-blue-200 group-hover:scale-110 transition-all duration-200">
                   <span className="text-3xl">👦</span>
                 </div>
-                <span className="font-medium text-foreground">Boy</span>
+                <span className="font-heading font-medium text-foreground">Boy</span>
               </button>
 
               {/* Girl */}
@@ -241,7 +241,7 @@ export default function Home() {
                   group-hover:bg-pink-200 group-hover:scale-110 transition-all duration-200">
                   <span className="text-3xl">👧</span>
                 </div>
-                <span className="font-medium text-foreground">Girl</span>
+                <span className="font-heading font-medium text-foreground">Girl</span>
               </button>
 
               {/* Don't Know */}
@@ -254,7 +254,7 @@ export default function Home() {
                   group-hover:bg-purple-100 group-hover:scale-110 transition-all duration-200">
                   <span className="text-3xl">✨</span>
                 </div>
-                <span className="font-medium text-foreground text-sm">Don&apos;t know yet</span>
+                <span className="font-heading font-medium text-foreground text-sm">Don&apos;t know yet</span>
               </button>
             </div>
 
@@ -369,7 +369,7 @@ export default function Home() {
                 animate={{ opacity: 1 }}
                 className="flex items-center justify-center gap-2 mt-3"
               >
-                <span className={`text-lg font-medium tracking-widest ${hasBadPreviewInitials ? "text-amber-600" : "text-muted"}`}>
+                <span className={`text-lg font-heading font-medium tracking-widest ${hasBadPreviewInitials ? "text-amber-600" : "text-muted"}`}>
                   {previewInitials}
                 </span>
                 {hasBadPreviewInitials && (
