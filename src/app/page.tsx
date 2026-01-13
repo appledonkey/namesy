@@ -1,14 +1,37 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowRight, ChevronDown, AlertTriangle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { getLikedNames } from "@/lib/swipe-preferences";
 import { Button } from "@/components/ui/button";
 import { TinderStack } from "@/components/features/tinder-stack";
 
 type Step = "lastname" | "gender" | "main";
 type GenderFilter = "boy" | "girl" | "all";
+
+// Bad initials to warn about
+const BAD_INITIALS = new Set([
+  "ASS", "FAT", "PIG", "DIE", "DUM", "FUK", "FUC", "SEX", "STD", "HIV",
+  "KKK", "WTF", "SOB", "PMS", "BRA", "TIT", "VAG", "GAY", "FAG", "HO",
+  "POO", "PEE", "BUM", "COW", "HAG", "HOE", "SUK", "SUC", "CUM", "NUT",
+]);
+
+// Get initials from names
+function getInitials(first: string, middle: string, last: string): string {
+  const parts = [first, middle, last].filter(Boolean);
+  return parts.map(p => p.charAt(0).toUpperCase()).join(".");
+}
+
+// Check if initials are problematic
+function isBadInitials(first: string, middle: string, last: string): boolean {
+  const initials = [first, middle, last]
+    .filter(Boolean)
+    .map(p => p.charAt(0).toUpperCase())
+    .join("");
+  return BAD_INITIALS.has(initials);
+}
 
 export default function Home() {
   const [step, setStep] = useState<Step>("lastname");
@@ -21,6 +44,33 @@ export default function Home() {
   const [savedFirstName, setSavedFirstName] = useState<string | null>(null);
   const [middleName, setMiddleName] = useState("");
   const [justSaved, setJustSaved] = useState(false);
+  const [showMiddleDropdown, setShowMiddleDropdown] = useState(false);
+  const [likedNamesKey, setLikedNamesKey] = useState(0);
+
+  // Get liked names for middle name dropdown
+  const likedNames = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _ = likedNamesKey; // Trigger re-compute when key changes
+    return getLikedNames();
+  }, [likedNamesKey]);
+
+  // Compute initials
+  const previewInitials = useMemo(() => {
+    return getInitials(currentPreviewName || "", middleName, lastName);
+  }, [currentPreviewName, middleName, lastName]);
+
+  const savedInitials = useMemo(() => {
+    return getInitials(savedFirstName || "", middleName, lastName);
+  }, [savedFirstName, middleName, lastName]);
+
+  // Check for bad initials
+  const hasBadPreviewInitials = useMemo(() => {
+    return isBadInitials(currentPreviewName || "", middleName, lastName);
+  }, [currentPreviewName, middleName, lastName]);
+
+  const hasBadSavedInitials = useMemo(() => {
+    return isBadInitials(savedFirstName || "", middleName, lastName);
+  }, [savedFirstName, middleName, lastName]);
 
   // Load saved data from localStorage on mount
   useEffect(() => {
@@ -64,6 +114,7 @@ export default function Home() {
   const handleNameSelect = (name: string) => {
     setSavedFirstName(name);
     setJustSaved(true);
+    setLikedNamesKey(k => k + 1); // Refresh liked names dropdown
     setTimeout(() => setJustSaved(false), 600);
   };
 
@@ -227,32 +278,112 @@ export default function Home() {
             className="bg-card rounded-2xl border border-border p-6 mb-8"
           >
             <p className="text-sm text-muted mb-3 text-center">Previewing</p>
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-center gap-4 flex-wrap">
               {/* First Name - Shows current card name */}
               <motion.span
                 key={currentPreviewName}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`text-3xl font-heading font-semibold tracking-tight text-center min-w-40
+                className={`text-3xl font-heading font-semibold tracking-tight text-center min-w-32
                   ${currentPreviewName ? "text-foreground" : "text-muted/40"}`}
               >
                 {currentPreviewName || "First"}
               </motion.span>
-              {/* Middle Name */}
-              <input
-                type="text"
-                value={middleName}
-                onChange={(e) => setMiddleName(e.target.value)}
-                placeholder="Middle"
-                className="text-3xl font-heading font-semibold text-foreground tracking-tight bg-transparent
-                  border-b-2 border-transparent hover:border-border focus:border-primary focus:outline-none
-                  transition-colors text-center w-40 placeholder:text-muted/40"
-              />
+
+              {/* Middle Name Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowMiddleDropdown(!showMiddleDropdown)}
+                  className={`text-3xl font-heading font-semibold tracking-tight flex items-center gap-2
+                    border-b-2 transition-colors px-2 py-1
+                    ${middleName
+                      ? "text-foreground border-transparent hover:border-border"
+                      : "text-muted/40 border-transparent hover:border-border"}`}
+                >
+                  {middleName || "Middle"}
+                  <ChevronDown className={`w-5 h-5 text-muted transition-transform ${showMiddleDropdown ? "rotate-180" : ""}`} />
+                </button>
+
+                <AnimatePresence>
+                  {showMiddleDropdown && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowMiddleDropdown(false)}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden"
+                      >
+                        <div className="max-h-56 overflow-y-auto py-1">
+                          {/* Clear option */}
+                          <button
+                            onClick={() => {
+                              setMiddleName("");
+                              setShowMiddleDropdown(false);
+                            }}
+                            className="w-full px-4 py-2.5 text-left text-sm text-muted hover:bg-secondary transition-colors"
+                          >
+                            No middle name
+                          </button>
+                          <div className="border-t border-border my-1" />
+
+                          {likedNames.length === 0 ? (
+                            <div className="px-4 py-3 text-xs text-muted text-center">
+                              Like names to use as middle names
+                            </div>
+                          ) : (
+                            likedNames.map((item) => (
+                              <button
+                                key={item.id}
+                                onClick={() => {
+                                  setMiddleName(item.name);
+                                  setShowMiddleDropdown(false);
+                                }}
+                                className={`w-full px-4 py-2.5 text-left text-sm hover:bg-secondary transition-colors
+                                  ${item.name === middleName ? "bg-primary/10 text-primary font-medium" : "text-foreground"}`}
+                              >
+                                {item.name}
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+
               {/* Last Name (static) */}
               <span className="text-3xl font-heading font-semibold text-foreground tracking-tight">
                 {lastName}
               </span>
             </div>
+
+            {/* Initials Display */}
+            {(currentPreviewName || middleName) && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center justify-center gap-2 mt-3"
+              >
+                <span className={`text-lg font-medium tracking-widest ${hasBadPreviewInitials ? "text-amber-600" : "text-muted"}`}>
+                  {previewInitials}
+                </span>
+                {hasBadPreviewInitials && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="flex items-center gap-1 text-amber-600"
+                  >
+                    <AlertTriangle className="w-4 h-4" />
+                    <span className="text-xs font-medium">Careful with these initials!</span>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
 
             {/* Saved name indicator */}
             <motion.div
@@ -261,19 +392,28 @@ export default function Home() {
               className="text-center mt-4"
             >
               {savedFirstName ? (
-                <motion.p
-                  key={savedFirstName}
-                  initial={{ scale: 1.2, color: "#22c55e" }}
-                  animate={{ scale: 1, color: "#6b7280" }}
-                  transition={{ duration: 0.5 }}
-                  className={`text-sm ${justSaved ? "text-green-500 font-medium" : "text-muted"}`}
-                >
-                  {justSaved ? "Saved! " : "Saved: "}
-                  <span className="font-medium text-foreground">
-                    {savedFirstName} {middleName ? `${middleName} ` : ""}{lastName}
-                  </span>
-                  {justSaved && " ✓"}
-                </motion.p>
+                <div>
+                  <motion.p
+                    key={savedFirstName}
+                    initial={{ scale: 1.2, color: "#22c55e" }}
+                    animate={{ scale: 1, color: "#6b7280" }}
+                    transition={{ duration: 0.5 }}
+                    className={`text-sm ${justSaved ? "text-green-500 font-medium" : "text-muted"}`}
+                  >
+                    {justSaved ? "Saved! " : "Saved: "}
+                    <span className="font-medium text-foreground">
+                      {savedFirstName} {middleName ? `${middleName} ` : ""}{lastName}
+                    </span>
+                    <span className="ml-1 text-muted">({savedInitials})</span>
+                    {justSaved && " ✓"}
+                  </motion.p>
+                  {hasBadSavedInitials && (
+                    <p className="text-xs text-amber-600 mt-1 flex items-center justify-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      These initials might be problematic
+                    </p>
+                  )}
+                </div>
               ) : (
                 <p className="text-sm text-muted">Swipe right to save a name</p>
               )}
