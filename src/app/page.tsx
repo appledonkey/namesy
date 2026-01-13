@@ -17,8 +17,10 @@ export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Name preview state
-  const [firstName, setFirstName] = useState("");
+  const [currentPreviewName, setCurrentPreviewName] = useState<string | null>(null);
+  const [savedFirstName, setSavedFirstName] = useState<string | null>(null);
   const [middleName, setMiddleName] = useState("");
+  const [justSaved, setJustSaved] = useState(false);
 
   // Load saved data from localStorage on mount
   useEffect(() => {
@@ -58,9 +60,16 @@ export default function Home() {
     }
   };
 
-  // Handle name selection from swipe
+  // Handle name selection from swipe (like)
   const handleNameSelect = (name: string) => {
-    setFirstName(name);
+    setSavedFirstName(name);
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 600);
+  };
+
+  // Handle current card change
+  const handleCurrentNameChange = (name: string | null) => {
+    setCurrentPreviewName(name);
   };
 
   // Don't render until we've checked localStorage
@@ -217,18 +226,18 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-card rounded-2xl border border-border p-6 mb-8"
           >
-            <p className="text-sm text-muted mb-3 text-center">Your baby&apos;s name</p>
+            <p className="text-sm text-muted mb-3 text-center">Previewing</p>
             <div className="flex items-center justify-center gap-4">
-              {/* First Name */}
-              <input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="First"
-                className="text-3xl font-heading font-semibold text-foreground tracking-tight bg-transparent
-                  border-b-2 border-transparent hover:border-border focus:border-primary focus:outline-none
-                  transition-colors text-center w-40 placeholder:text-muted/40"
-              />
+              {/* First Name - Shows current card name */}
+              <motion.span
+                key={currentPreviewName}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`text-3xl font-heading font-semibold tracking-tight text-center min-w-40
+                  ${currentPreviewName ? "text-foreground" : "text-muted/40"}`}
+              >
+                {currentPreviewName || "First"}
+              </motion.span>
               {/* Middle Name */}
               <input
                 type="text"
@@ -244,19 +253,46 @@ export default function Home() {
                 {lastName}
               </span>
             </div>
-            <div className="text-center mt-4">
+
+            {/* Saved name indicator */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center mt-4"
+            >
+              {savedFirstName ? (
+                <motion.p
+                  key={savedFirstName}
+                  initial={{ scale: 1.2, color: "#22c55e" }}
+                  animate={{ scale: 1, color: "#6b7280" }}
+                  transition={{ duration: 0.5 }}
+                  className={`text-sm ${justSaved ? "text-green-500 font-medium" : "text-muted"}`}
+                >
+                  {justSaved ? "Saved! " : "Saved: "}
+                  <span className="font-medium text-foreground">
+                    {savedFirstName} {middleName ? `${middleName} ` : ""}{lastName}
+                  </span>
+                  {justSaved && " ✓"}
+                </motion.p>
+              ) : (
+                <p className="text-sm text-muted">Swipe right to save a name</p>
+              )}
+            </motion.div>
+
+            <div className="flex items-center justify-center gap-4 mt-3">
               <button
                 onClick={() => {
                   localStorage.removeItem("namesy-gender");
                   setStep("gender");
                 }}
-                className="text-sm text-muted hover:text-foreground transition-colors mr-4"
+                className="text-xs text-muted hover:text-foreground transition-colors"
               >
                 Change gender
               </button>
+              <span className="text-muted">·</span>
               <button
                 onClick={() => setStep("lastname")}
-                className="text-sm text-muted hover:text-foreground transition-colors"
+                className="text-xs text-muted hover:text-foreground transition-colors"
               >
                 Change last name
               </button>
@@ -264,7 +300,11 @@ export default function Home() {
           </motion.div>
 
           {/* Tinder Stack */}
-          <TinderStack genderFilter={genderFilter} onNameSelect={handleNameSelect} />
+          <TinderStack
+            genderFilter={genderFilter}
+            onNameSelect={handleNameSelect}
+            onCurrentNameChange={handleCurrentNameChange}
+          />
         </main>
       )}
     </div>

@@ -12,6 +12,7 @@ type GenderFilter = "boy" | "girl" | "all";
 interface TinderStackProps {
   genderFilter: GenderFilter;
   onNameSelect: (name: string) => void;
+  onCurrentNameChange: (name: string | null) => void;
 }
 
 // Fisher-Yates shuffle
@@ -24,7 +25,7 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-export function TinderStack({ genderFilter, onNameSelect }: TinderStackProps) {
+export function TinderStack({ genderFilter, onNameSelect, onCurrentNameChange }: TinderStackProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [names, setNames] = useState<NameData[]>([]);
   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
@@ -49,6 +50,12 @@ export function TinderStack({ genderFilter, onNameSelect }: TinderStackProps) {
   const visibleCards = useMemo(() => {
     return names.slice(currentIndex, currentIndex + 3);
   }, [names, currentIndex]);
+
+  // Notify parent of current card name
+  useEffect(() => {
+    const currentName = names[currentIndex];
+    onCurrentNameChange(currentName?.name ?? null);
+  }, [names, currentIndex, onCurrentNameChange]);
 
   const handleSwipe = useCallback((direction: "left" | "right") => {
     const currentName = names[currentIndex];
