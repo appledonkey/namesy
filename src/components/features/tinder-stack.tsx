@@ -96,7 +96,7 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
     setTimeout(() => {
       setCurrentIndex((i) => i + 1);
       setExitDirection(null);
-    }, 200);
+    }, 300);
   }, [names, currentIndex, onNameSelect]);
 
   // Button handlers
@@ -162,6 +162,7 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
                 name={name}
                 onSwipe={handleSwipe}
                 isTop={isTop}
+                forceExit={isTop ? exitDirection : null}
                 style={{
                   scale: 1 - stackIndex * 0.05,
                   y: stackIndex * 12,

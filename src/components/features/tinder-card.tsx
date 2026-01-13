@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import type { NameData } from "@/lib/names-data";
 
@@ -32,22 +33,32 @@ function getUniquenessPercentile(rank: number): number {
   return Math.round((1 - rank / 2500) * 100);
 }
 
-const springConfig = { type: "spring" as const, stiffness: 260, damping: 26 };
+const springConfig = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 interface TinderCardProps {
   name: NameData;
   onSwipe: (direction: "left" | "right") => void;
   isTop?: boolean;
+  forceExit?: "left" | "right" | null;
   style?: { scale?: number; y?: number; opacity?: number; zIndex?: number };
 }
 
-export function TinderCard({ name, onSwipe, isTop = true, style }: TinderCardProps) {
+export function TinderCard({ name, onSwipe, isTop = true, forceExit, style }: TinderCardProps) {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-300, 300], [-10, 10]);
   const likeOpacity = useTransform(x, [0, 100], [0, 1]);
   const nopeOpacity = useTransform(x, [-100, 0], [1, 0]);
   const likeTint = useTransform(x, [0, 150], [0, 0.8]);
   const nopeTint = useTransform(x, [-150, 0], [0.8, 0]);
+
+  // Animate card off-screen when button is pressed
+  useEffect(() => {
+    if (forceExit === "right") {
+      x.set(400);
+    } else if (forceExit === "left") {
+      x.set(-400);
+    }
+  }, [forceExit, x]);
 
   const gender = genderConfig[name.gender];
   const shadow = shadowConfig[name.gender];
@@ -67,17 +78,13 @@ export function TinderCard({ name, onSwipe, isTop = true, style }: TinderCardPro
       style={{
         x,
         rotate,
-        scale: style?.scale ?? 1,
-        y: style?.y ?? 0,
-        opacity: style?.opacity ?? 1,
         zIndex: style?.zIndex ?? 1,
-        boxShadow: shadow.base,
       }}
       drag={isTop ? "x" : false}
       dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.85}
+      dragElastic={0.6}
       onDragEnd={isTop ? handleDragEnd : undefined}
-      initial={{ scale: 0.96, opacity: 0, y: 16 }}
+      initial={isTop ? { scale: 0.96, opacity: 0, y: 16 } : false}
       animate={{
         scale: style?.scale ?? 1,
         opacity: style?.opacity ?? 1,
@@ -85,10 +92,10 @@ export function TinderCard({ name, onSwipe, isTop = true, style }: TinderCardPro
         boxShadow: shadow.base,
       }}
       exit={{
-        x: x.get() > 0 ? 350 : -350,
+        x: x.get() > 0 ? 400 : -400,
         opacity: 0,
-        rotate: x.get() > 0 ? 15 : -15,
-        transition: { duration: 0.35, ease: "easeOut" },
+        rotate: x.get() > 0 ? 20 : -20,
+        transition: { duration: 0.3, ease: [0.32, 0, 0.67, 0] },
       }}
       transition={springConfig}
       whileHover={
