@@ -13,7 +13,6 @@ import {
   filterByOrigins,
   type NameData,
 } from "@/lib/names-data";
-import { filterCompatibleNames } from "@/lib/name-compatibility";
 import { recordSwipe } from "@/lib/swipe-preferences";
 import { type NameFiltersState } from "./name-filters";
 
@@ -22,7 +21,6 @@ type GenderFilter = "boy" | "girl" | "all";
 interface TinderStackProps {
   genderFilter: GenderFilter;
   filters: NameFiltersState;
-  siblingName?: string;
   onNameSelect: (name: string) => void;
   onCurrentNameChange: (name: string | null) => void;
   onFilteredCountChange?: (count: number) => void;
@@ -43,7 +41,7 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function TinderStack(
-  { genderFilter, filters, siblingName = "", onNameSelect, onCurrentNameChange, onFilteredCountChange },
+  { genderFilter, filters, onNameSelect, onCurrentNameChange, onFilteredCountChange },
   ref
 ) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -83,18 +81,13 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
     filteredNames = filterByStartingLetter(filteredNames, filters.startingLetter);
     filteredNames = filterByOrigins(filteredNames, filters.origins);
 
-    // Filter by sibling compatibility
-    if (siblingName.trim()) {
-      filteredNames = filterCompatibleNames(filteredNames, siblingName);
-    }
-
     // Report filtered count
     onFilteredCountChange?.(filteredNames.length);
 
     // Shuffle
     setNames(shuffleArray(filteredNames));
     setCurrentIndex(0);
-  }, [genderFilter, filters, siblingName, onFilteredCountChange]);
+  }, [genderFilter, filters, onFilteredCountChange]);
 
   // Get visible cards (current + 2 behind)
   const visibleCards = useMemo(() => {

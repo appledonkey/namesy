@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { TinderStack } from "@/components/features/tinder-stack";
 import { DailyDiscovery } from "@/components/features/daily-discovery";
 import { NameFilters, defaultFilters, type NameFiltersState } from "@/components/features/name-filters";
-import { SiblingMatcher } from "@/components/features/sibling-matcher";
 import { NamesManager } from "@/components/features/names-manager";
 
 type Step = "lastname" | "gender" | "main";
@@ -52,7 +51,6 @@ export default function Home() {
 
   // Filter states
   const [filters, setFilters] = useState<NameFiltersState>(defaultFilters);
-  const [siblingName, setSiblingName] = useState("");
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showNamesManager, setShowNamesManager] = useState(false);
@@ -441,19 +439,10 @@ export default function Home() {
           <TinderStack
             genderFilter={genderFilter}
             filters={filters}
-            siblingName={siblingName}
             onNameSelect={handleNameSelect}
             onCurrentNameChange={handleCurrentNameChange}
             onFilteredCountChange={setFilteredCount}
           />
-
-          {/* Sibling Matcher */}
-          <div className="mt-8">
-            <SiblingMatcher
-              siblingName={siblingName}
-              onSiblingChange={setSiblingName}
-            />
-          </div>
           </div>{/* End centered content column */}
 
           {/* Names Manager Panel */}
