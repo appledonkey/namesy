@@ -290,66 +290,90 @@ export default function Home() {
                 {currentPreviewName || "First"}
               </motion.span>
 
-              {/* Middle Name Dropdown */}
+              {/* Middle Name - Dual Mode Input */}
               <div className="relative">
-                <button
-                  onClick={() => setShowMiddleDropdown(!showMiddleDropdown)}
-                  className={`text-3xl font-heading font-semibold tracking-tight flex items-center gap-2
-                    border-b-2 transition-colors px-2 py-1
-                    ${middleName
-                      ? "text-foreground border-transparent hover:border-border"
-                      : "text-muted/40 border-transparent hover:border-border"}`}
-                >
-                  {middleName || "Middle"}
-                  <ChevronDown className={`w-5 h-5 text-muted transition-transform ${showMiddleDropdown ? "rotate-180" : ""}`} />
-                </button>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    value={middleName}
+                    onChange={(e) => setMiddleName(e.target.value)}
+                    onFocus={() => setShowMiddleDropdown(true)}
+                    placeholder="Middle"
+                    autoCapitalize="words"
+                    autoComplete="off"
+                    className={`text-3xl font-heading font-semibold tracking-tight text-center
+                      bg-transparent border-b-2 transition-all duration-200 w-36 py-1
+                      placeholder:text-muted/40 focus:outline-none
+                      ${middleName
+                        ? "text-foreground border-transparent hover:border-border focus:border-primary"
+                        : "text-foreground border-transparent hover:border-border focus:border-primary"}`}
+                  />
+                  {likedNames.length > 0 && (
+                    <button
+                      onClick={() => setShowMiddleDropdown(!showMiddleDropdown)}
+                      className="absolute right-0 p-1 text-muted hover:text-foreground transition-colors"
+                    >
+                      <ChevronDown className={`w-4 h-4 transition-transform ${showMiddleDropdown ? "rotate-180" : ""}`} />
+                    </button>
+                  )}
+                </div>
 
                 <AnimatePresence>
-                  {showMiddleDropdown && (
+                  {showMiddleDropdown && likedNames.length > 0 && (
                     <>
                       <div
                         className="fixed inset-0 z-40"
                         onClick={() => setShowMiddleDropdown(false)}
                       />
                       <motion.div
-                        initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                        initial={{ opacity: 0, y: 4, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden"
+                        exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-52 bg-white border border-border rounded-2xl shadow-lg z-50 overflow-hidden"
                       >
-                        <div className="max-h-56 overflow-y-auto py-1">
-                          {/* Clear option */}
-                          <button
-                            onClick={() => {
-                              setMiddleName("");
-                              setShowMiddleDropdown(false);
-                            }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-muted hover:bg-secondary transition-colors"
-                          >
-                            No middle name
-                          </button>
-                          <div className="border-t border-border my-1" />
-
-                          {likedNames.length === 0 ? (
-                            <div className="px-4 py-3 text-xs text-muted text-center">
-                              Like names to use as middle names
-                            </div>
-                          ) : (
-                            likedNames.map((item) => (
-                              <button
-                                key={item.id}
-                                onClick={() => {
-                                  setMiddleName(item.name);
-                                  setShowMiddleDropdown(false);
-                                }}
-                                className={`w-full px-4 py-2.5 text-left text-sm hover:bg-secondary transition-colors
-                                  ${item.name === middleName ? "bg-primary/10 text-primary font-medium" : "text-foreground"}`}
-                              >
-                                {item.name}
-                              </button>
-                            ))
-                          )}
+                        {/* Header */}
+                        <div className="px-4 py-2.5 border-b border-border bg-secondary/30">
+                          <p className="text-xs font-heading font-medium text-muted uppercase tracking-wider">
+                            Pick from favorites
+                          </p>
                         </div>
+
+                        <div className="max-h-48 overflow-y-auto py-1">
+                          {likedNames.map((item) => (
+                            <button
+                              key={item.id}
+                              onClick={() => {
+                                setMiddleName(item.name);
+                                setShowMiddleDropdown(false);
+                              }}
+                              className={`w-full px-4 py-2.5 text-left font-heading transition-colors flex items-center justify-between
+                                ${item.name === middleName
+                                  ? "bg-primary/10 text-primary"
+                                  : "text-foreground hover:bg-secondary/50"}`}
+                            >
+                              <span className="font-medium">{item.name}</span>
+                              {item.name === middleName && (
+                                <span className="text-xs text-primary">Selected</span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Clear option */}
+                        {middleName && (
+                          <div className="border-t border-border">
+                            <button
+                              onClick={() => {
+                                setMiddleName("");
+                                setShowMiddleDropdown(false);
+                              }}
+                              className="w-full px-4 py-2.5 text-left text-sm font-heading text-muted hover:text-foreground hover:bg-secondary/50 transition-colors"
+                            >
+                              Clear middle name
+                            </button>
+                          </div>
+                        )}
                       </motion.div>
                     </>
                   )}
