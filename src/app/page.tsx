@@ -3,38 +3,64 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { TinderStack } from "@/components/features/tinder-stack";
 
-type Step = "lastname" | "main";
+type Step = "lastname" | "gender" | "main";
+type GenderFilter = "boy" | "girl" | "all";
 
 export default function Home() {
   const [step, setStep] = useState<Step>("lastname");
   const [lastName, setLastName] = useState("");
+  const [genderFilter, setGenderFilter] = useState<GenderFilter>("all");
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // Name preview state
+  const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
 
   // Load saved data from localStorage on mount
   useEffect(() => {
     const savedLastName = localStorage.getItem("namesy-lastname");
+    const savedGender = localStorage.getItem("namesy-gender") as GenderFilter | null;
     if (savedLastName) {
       setLastName(savedLastName);
-      setStep("main");
+      if (savedGender) {
+        setGenderFilter(savedGender);
+        setStep("main");
+      } else {
+        setStep("gender");
+      }
     }
     setIsLoaded(true);
   }, []);
 
-  // Save last name to localStorage
-  const handleContinue = () => {
+  // Save last name and go to gender step
+  const handleLastNameContinue = () => {
     if (lastName.trim()) {
       localStorage.setItem("namesy-lastname", lastName.trim());
-      setStep("main");
+      setStep("gender");
     }
   };
 
-  // Handle Enter key
+  // Save gender and go to main
+  const handleGenderSelect = (gender: GenderFilter) => {
+    setGenderFilter(gender);
+    localStorage.setItem("namesy-gender", gender);
+    setStep("main");
+  };
+
+  // Handle Enter key for last name
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && lastName.trim()) {
-      handleContinue();
+      handleLastNameContinue();
     }
+  };
+
+  // Handle name selection from swipe
+  const handleNameSelect = (name: string) => {
+    setFirstName(name);
   };
 
   // Don't render until we've checked localStorage
@@ -105,7 +131,7 @@ export default function Home() {
               />
 
               <Button
-                onClick={handleContinue}
+                onClick={handleLastNameContinue}
                 disabled={!lastName.trim()}
                 size="lg"
                 className="w-full py-6 text-lg"
@@ -118,9 +144,127 @@ export default function Home() {
         </main>
       )}
 
-      {/* Main: Empty for now */}
+      {/* Step 2: Gender Selection */}
+      {step === "gender" && (
+        <main className="max-w-lg mx-auto px-6 py-16 sm:py-24">
+          <div className="text-center space-y-8">
+            <div className="space-y-3">
+              <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-foreground">
+                Are you having a...
+              </h1>
+              <p className="text-muted text-base sm:text-lg">
+                This helps us show you the right names.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              {/* Boy */}
+              <button
+                onClick={() => handleGenderSelect("boy")}
+                className="group flex flex-col items-center gap-3 p-6 bg-card border-2 border-border rounded-2xl
+                  hover:border-blue-400 hover:bg-blue-50 transition-all duration-200"
+              >
+                <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center
+                  group-hover:bg-blue-200 group-hover:scale-110 transition-all duration-200">
+                  <span className="text-3xl">👦</span>
+                </div>
+                <span className="font-medium text-foreground">Boy</span>
+              </button>
+
+              {/* Girl */}
+              <button
+                onClick={() => handleGenderSelect("girl")}
+                className="group flex flex-col items-center gap-3 p-6 bg-card border-2 border-border rounded-2xl
+                  hover:border-pink-400 hover:bg-pink-50 transition-all duration-200"
+              >
+                <div className="w-16 h-16 rounded-full bg-pink-100 flex items-center justify-center
+                  group-hover:bg-pink-200 group-hover:scale-110 transition-all duration-200">
+                  <span className="text-3xl">👧</span>
+                </div>
+                <span className="font-medium text-foreground">Girl</span>
+              </button>
+
+              {/* Don't Know */}
+              <button
+                onClick={() => handleGenderSelect("all")}
+                className="group flex flex-col items-center gap-3 p-6 bg-card border-2 border-border rounded-2xl
+                  hover:border-purple-400 hover:bg-purple-50 transition-all duration-200"
+              >
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center
+                  group-hover:bg-purple-100 group-hover:scale-110 transition-all duration-200">
+                  <span className="text-3xl">✨</span>
+                </div>
+                <span className="font-medium text-foreground text-sm">Don&apos;t know yet</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setStep("lastname")}
+              className="text-sm text-muted hover:text-foreground transition-colors"
+            >
+              ← Back to last name
+            </button>
+          </div>
+        </main>
+      )}
+
+      {/* Main: Swipe Interface */}
       {step === "main" && (
-        <main className="max-w-4xl mx-auto px-6 py-12">
+        <main className="max-w-4xl mx-auto px-6 py-8">
+          {/* Name Preview */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-2xl border border-border p-6 mb-8"
+          >
+            <p className="text-sm text-muted mb-3 text-center">Your baby&apos;s name</p>
+            <div className="flex items-center justify-center gap-4">
+              {/* First Name */}
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="First"
+                className="text-3xl font-heading font-semibold text-foreground tracking-tight bg-transparent
+                  border-b-2 border-transparent hover:border-border focus:border-primary focus:outline-none
+                  transition-colors text-center w-40 placeholder:text-muted/40"
+              />
+              {/* Middle Name */}
+              <input
+                type="text"
+                value={middleName}
+                onChange={(e) => setMiddleName(e.target.value)}
+                placeholder="Middle"
+                className="text-3xl font-heading font-semibold text-foreground tracking-tight bg-transparent
+                  border-b-2 border-transparent hover:border-border focus:border-primary focus:outline-none
+                  transition-colors text-center w-40 placeholder:text-muted/40"
+              />
+              {/* Last Name (static) */}
+              <span className="text-3xl font-heading font-semibold text-foreground tracking-tight">
+                {lastName}
+              </span>
+            </div>
+            <div className="text-center mt-4">
+              <button
+                onClick={() => {
+                  localStorage.removeItem("namesy-gender");
+                  setStep("gender");
+                }}
+                className="text-sm text-muted hover:text-foreground transition-colors mr-4"
+              >
+                Change gender
+              </button>
+              <button
+                onClick={() => setStep("lastname")}
+                className="text-sm text-muted hover:text-foreground transition-colors"
+              >
+                Change last name
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Tinder Stack */}
+          <TinderStack genderFilter={genderFilter} onNameSelect={handleNameSelect} />
         </main>
       )}
     </div>
