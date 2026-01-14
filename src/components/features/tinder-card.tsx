@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import type { NameData } from "@/lib/names-data";
 
@@ -44,12 +45,17 @@ interface TinderCardProps {
 }
 
 export function TinderCard({ name, onSwipe, isTop = true, forceExit, style }: TinderCardProps) {
+  const router = useRouter();
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-300, 300], [-10, 10]);
   const likeOpacity = useTransform(x, [0, 100], [0, 1]);
   const nopeOpacity = useTransform(x, [-100, 0], [1, 0]);
   const likeTint = useTransform(x, [0, 150], [0, 0.8]);
   const nopeTint = useTransform(x, [-150, 0], [0.8, 0]);
+
+  // Track if card was dragged (to distinguish tap vs drag)
+  const wasDragged = useRef(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
 
   // Animate card off-screen when button is pressed
   useEffect(() => {
@@ -64,12 +70,33 @@ export function TinderCard({ name, onSwipe, isTop = true, forceExit, style }: Ti
   const shadow = shadowConfig[name.gender];
   const uniqueness = getUniquenessPercentile(name.currentRank);
 
+  const handleDragStart = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    dragStartPos.current = { x: info.point.x, y: info.point.y };
+    wasDragged.current = false;
+  };
+
+  const handleDrag = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    // Mark as dragged if moved more than 10px
+    const dx = Math.abs(info.point.x - dragStartPos.current.x);
+    const dy = Math.abs(info.point.y - dragStartPos.current.y);
+    if (dx > 10 || dy > 10) {
+      wasDragged.current = true;
+    }
+  };
+
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const threshold = 120;
     if (info.offset.x > threshold || info.velocity.x > 500) {
       onSwipe("right");
     } else if (info.offset.x < -threshold || info.velocity.x < -500) {
       onSwipe("left");
+    }
+  };
+
+  const handleTap = () => {
+    // Only navigate if it wasn't a drag
+    if (!wasDragged.current && isTop) {
+      router.push(`/name/${name.normalizedName || name.name.toLowerCase()}`);
     }
   };
 
@@ -83,7 +110,10 @@ export function TinderCard({ name, onSwipe, isTop = true, forceExit, style }: Ti
       drag={isTop ? "x" : false}
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.6}
+      onDragStart={isTop ? handleDragStart : undefined}
+      onDrag={isTop ? handleDrag : undefined}
       onDragEnd={isTop ? handleDragEnd : undefined}
+      onTap={handleTap}
       initial={isTop ? { scale: 0.96, opacity: 0, y: 16 } : false}
       animate={{
         scale: style?.scale ?? 1,
@@ -208,6 +238,13 @@ export function TinderCard({ name, onSwipe, isTop = true, forceExit, style }: Ti
             More unique than {uniqueness}%
           </p>
         </div>
+
+        {/* Tap hint */}
+        {isTop && (
+          <p className="text-xs text-muted/60 text-center mt-3 font-heading">
+            Tap for details
+          </p>
+        )}
       </div>
     </motion.div>
   );

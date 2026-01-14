@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { ArrowRight, ChevronDown, AlertTriangle, Heart, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, ChevronDown, AlertTriangle, Heart, SlidersHorizontal, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLikedNames } from "@/lib/swipe-preferences";
 import { getAllOrigins } from "@/lib/names-data";
@@ -13,6 +13,17 @@ import { NameFilters, defaultFilters, type NameFiltersState } from "@/components
 import { NamesManager } from "@/components/features/names-manager";
 
 type Step = "lastname" | "gender" | "main";
+
+// Check if filters have been modified from defaults
+function hasActiveFilters(filters: NameFiltersState): boolean {
+  return (
+    filters.vibes.length > 0 ||
+    filters.length !== defaultFilters.length ||
+    filters.popularity !== defaultFilters.popularity ||
+    filters.startingLetter !== defaultFilters.startingLetter ||
+    filters.origins.length > 0
+  );
+}
 type GenderFilter = "boy" | "girl" | "all";
 
 // Bad initials to warn about
@@ -279,22 +290,38 @@ export default function Home() {
 
             {/* Top bar: Filters + Liked count */}
             <div className="flex items-center justify-between mb-6">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-colors ${
-                  showFilters || filters !== defaultFilters
-                    ? "bg-primary/10 text-primary border border-primary/20"
-                    : "bg-secondary hover:bg-secondary/80 text-muted"
-                }`}
-              >
-                <SlidersHorizontal className="w-4 h-4" />
-                <span className="text-sm font-heading">Filters</span>
-                {filteredCount !== null && (
-                  <span className="text-xs bg-secondary px-2 py-0.5 rounded-full">
-                    {filteredCount}
-                  </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-colors ${
+                    showFilters || hasActiveFilters(filters)
+                      ? "bg-primary/10 text-primary border border-primary/20"
+                      : "bg-secondary hover:bg-secondary/80 text-muted"
+                  }`}
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                  <span className="text-sm font-heading">Filters</span>
+                  {filteredCount !== null && (
+                    <span className="text-xs bg-secondary px-2 py-0.5 rounded-full">
+                      {filteredCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Clear filters button */}
+                {hasActiveFilters(filters) && (
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    onClick={() => setFilters(defaultFilters)}
+                    className="flex items-center gap-1 px-2.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span className="text-xs font-heading font-medium">Clear</span>
+                  </motion.button>
                 )}
-              </button>
+              </div>
 
               <button
                 onClick={() => setShowNamesManager(true)}
