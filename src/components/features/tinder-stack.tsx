@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useEffect, forwardRef, useImperativeHandle } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { TinderCard } from "./tinder-card";
-import { X, Heart, Shuffle, CheckCircle, Undo2 } from "lucide-react";
+import { X, Heart, Shuffle, CheckCircle } from "lucide-react";
 import {
   getAllNames,
   filterByVibes,
@@ -40,13 +40,6 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-// Track last action for undo
-interface LastAction {
-  name: NameData;
-  direction: "left" | "right";
-  index: number;
-}
-
 export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function TinderStack(
   { genderFilter, filters, onNameSelect, onCurrentNameChange, onFilteredCountChange },
   ref
@@ -54,15 +47,12 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
   const [currentIndex, setCurrentIndex] = useState(0);
   const [names, setNames] = useState<NameData[]>([]);
   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
-  const [lastAction, setLastAction] = useState<LastAction | null>(null);
-  const [isUndoing, setIsUndoing] = useState(false);
 
   // Jump to random card
   const jumpToRandom = useCallback(() => {
     if (names.length > 0) {
       const randomIndex = Math.floor(Math.random() * names.length);
       setCurrentIndex(randomIndex);
-      setLastAction(null); // Clear undo after jump
     }
   }, [names]);
 
@@ -97,7 +87,6 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
     // Shuffle
     setNames(shuffleArray(filteredNames));
     setCurrentIndex(0);
-    setLastAction(null);
   }, [genderFilter, filters, onFilteredCountChange]);
 
   // Get visible cards (current + 2 behind)
@@ -114,13 +103,6 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
   const handleSwipe = useCallback((direction: "left" | "right") => {
     const currentName = names[currentIndex];
     if (!currentName) return;
-
-    // Save for undo
-    setLastAction({
-      name: currentName,
-      direction,
-      index: currentIndex,
-    });
 
     setExitDirection(direction);
 
@@ -140,31 +122,6 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
     }, 300);
   }, [names, currentIndex, onNameSelect]);
 
-  // Undo last swipe
-  const handleUndo = useCallback(() => {
-    if (!lastAction || isUndoing) return;
-
-    setIsUndoing(true);
-
-    // Reverse the swipe action in storage
-    // Re-record with opposite action or just go back
-    recordSwipe(
-      lastAction.name.name,
-      lastAction.direction === "right" ? "dislike" : "like",
-      lastAction.name.origins,
-      lastAction.name.meanings
-    );
-
-    // Go back to previous index
-    setCurrentIndex(lastAction.index);
-    setLastAction(null);
-
-    // Reset undo state after animation
-    setTimeout(() => {
-      setIsUndoing(false);
-    }, 300);
-  }, [lastAction, isUndoing]);
-
   // Button handlers
   const handleSkip = () => handleSwipe("left");
   const handleLike = () => handleSwipe("right");
@@ -174,15 +131,11 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") handleSkip();
       if (e.key === "ArrowRight") handleLike();
-      if ((e.key === "z" || e.key === "Z") && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        handleUndo();
-      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleSkip, handleLike, handleUndo]);
+  }, [handleSkip, handleLike]);
 
   if (names.length === 0) {
     return (
@@ -208,7 +161,6 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
           onClick={() => {
             setNames(shuffleArray(names));
             setCurrentIndex(0);
-            setLastAction(null);
           }}
           className="px-6 py-3 bg-primary text-white rounded-xl font-heading font-medium hover:bg-primary/90 transition-colors"
         >
@@ -247,34 +199,16 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-center gap-4 mt-8">
+      <div className="flex items-center justify-center gap-6 mt-8">
         {/* Skip Button */}
         <motion.button
           onClick={handleSkip}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="w-14 h-14 rounded-full bg-white border-2 border-red-200 flex items-center justify-center
+          className="w-16 h-16 rounded-full bg-white border-2 border-red-200 flex items-center justify-center
             shadow-lg hover:shadow-xl hover:border-red-400 transition-all duration-200 group"
         >
-          <X className="w-7 h-7 text-red-400 group-hover:text-red-500 transition-colors" />
-        </motion.button>
-
-        {/* Undo Button */}
-        <motion.button
-          onClick={handleUndo}
-          disabled={!lastAction || isUndoing}
-          whileHover={lastAction ? { scale: 1.1 } : undefined}
-          whileTap={lastAction ? { scale: 0.9 } : undefined}
-          className={`w-11 h-11 rounded-full bg-white border-2 flex items-center justify-center
-            shadow-lg transition-all duration-200 group ${
-              lastAction
-                ? "border-amber-200 hover:shadow-xl hover:border-amber-400"
-                : "border-gray-100 opacity-40 cursor-not-allowed"
-            }`}
-        >
-          <Undo2 className={`w-5 h-5 transition-colors ${
-            lastAction ? "text-amber-400 group-hover:text-amber-500" : "text-gray-300"
-          }`} />
+          <X className="w-8 h-8 text-red-400 group-hover:text-red-500 transition-colors" />
         </motion.button>
 
         {/* Random Button */}
@@ -282,7 +216,7 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
           onClick={jumpToRandom}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="w-11 h-11 rounded-full bg-white border-2 border-purple-200 flex items-center justify-center
+          className="w-12 h-12 rounded-full bg-white border-2 border-purple-200 flex items-center justify-center
             shadow-lg hover:shadow-xl hover:border-purple-400 transition-all duration-200 group"
         >
           <Shuffle className="w-5 h-5 text-purple-400 group-hover:text-purple-500 transition-colors" />
@@ -293,29 +227,17 @@ export const TinderStack = forwardRef<TinderStackRef, TinderStackProps>(function
           onClick={handleLike}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="w-14 h-14 rounded-full bg-white border-2 border-green-200 flex items-center justify-center
+          className="w-16 h-16 rounded-full bg-white border-2 border-green-200 flex items-center justify-center
             shadow-lg hover:shadow-xl hover:border-green-400 transition-all duration-200 group"
         >
-          <Heart className="w-7 h-7 text-green-400 group-hover:text-green-500 group-hover:fill-green-500 transition-colors" />
+          <Heart className="w-8 h-8 text-green-400 group-hover:text-green-500 group-hover:fill-green-500 transition-colors" />
         </motion.button>
       </div>
 
-      {/* Progress Counter */}
-      <p className="text-sm text-muted mt-4 font-heading">
-        {currentIndex + 1} / {names.length} names
-      </p>
-
       {/* Keyboard hint */}
-      <p className="text-xs text-muted/60 mt-2">
-        <kbd className="px-1.5 py-0.5 bg-secondary rounded text-xs">←</kbd> skip
-        {" · "}
-        <kbd className="px-1.5 py-0.5 bg-secondary rounded text-xs">→</kbd> like
-        {lastAction && (
-          <>
-            {" · "}
-            <kbd className="px-1.5 py-0.5 bg-secondary rounded text-xs">⌘Z</kbd> undo
-          </>
-        )}
+      <p className="text-sm text-muted mt-6">
+        Use <kbd className="px-2 py-1 bg-secondary rounded text-xs">←</kbd> to skip,{" "}
+        <kbd className="px-2 py-1 bg-secondary rounded text-xs">→</kbd> to like
       </p>
     </div>
   );
