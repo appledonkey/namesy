@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heading, Text, Italic, Label } from "@/components/ui/typography";
 import { NavBar } from "@/components/ui/navbar";
+import { TabBar } from "@/components/ui/tab-bar";
 import {
   countSyllables,
   hasAlliteration,
@@ -73,8 +74,9 @@ export default function BuilderPage() {
   }, [slots]);
 
   return (
-    <div className="min-h-screen pb-16">
+    <div className="min-h-screen pb-24 md:pb-16">
       <NavBar />
+      <TabBar />
 
       {/* Header */}
       <div className="pt-8 pb-12 px-6">

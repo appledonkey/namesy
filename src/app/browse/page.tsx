@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Heading, Text, Label, Italic } from "@/components/ui/typography";
 import { NavBar } from "@/components/ui/navbar";
+import { TabBar } from "@/components/ui/tab-bar";
 import { NameCard, NameCardSkeleton } from "@/components/features/name-card";
 
 type Gender = "all" | "M" | "F" | "N";
@@ -31,42 +32,63 @@ export default function BrowsePage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
 
-  // Fetch names from API
-  useEffect(() => {
-    const fetchNames = async () => {
-      setIsLoading(true);
-      try {
-        const params = new URLSearchParams({
-          limit: "24",
-          page: page.toString(),
-          ...(searchQuery && { q: searchQuery }),
-          ...(selectedGender !== "all" && { gender: selectedGender }),
-        });
+  // Track previous filter values to detect changes and reset page
+  const prevFiltersRef = useRef({ searchQuery, selectedGender });
+  const pageRef = useRef(page);
+  pageRef.current = page;
 
-        const res = await fetch(`/api/names?${params}`);
-        const data = await res.json();
+  // Fetch names function
+  const fetchNames = useCallback(async (pageNum: number, append: boolean) => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams({
+        limit: "24",
+        page: pageNum.toString(),
+        ...(searchQuery && { q: searchQuery }),
+        ...(selectedGender !== "all" && { gender: selectedGender }),
+      });
 
-        if (page === 1) {
-          setNames(data.names || []);
-        } else {
-          setNames((prev) => [...prev, ...(data.names || [])]);
-        }
-        setTotal(data.total || 0);
-      } catch (error) {
-        console.error("Failed to fetch names:", error);
+      const res = await fetch(`/api/names?${params}`);
+      const data = await res.json();
+
+      if (append) {
+        setNames((prev) => [...prev, ...(data.names || [])]);
+      } else {
+        setNames(data.names || []);
       }
-      setIsLoading(false);
-    };
+      setTotal(data.total || 0);
+    } catch (error) {
+      console.error("Failed to fetch names:", error);
+    }
+    setIsLoading(false);
+  }, [searchQuery, selectedGender]);
+
+  // Fetch when filters change (always reset to page 1)
+  useEffect(() => {
+    const filtersChanged =
+      prevFiltersRef.current.searchQuery !== searchQuery ||
+      prevFiltersRef.current.selectedGender !== selectedGender;
+
+    prevFiltersRef.current = { searchQuery, selectedGender };
 
     // Debounce search
-    const timer = setTimeout(fetchNames, searchQuery ? 300 : 0);
-    return () => clearTimeout(timer);
-  }, [searchQuery, selectedGender, page]);
+    const timer = setTimeout(() => {
+      if (filtersChanged) {
+        setPage(1);
+      }
+      fetchNames(filtersChanged ? 1 : pageRef.current, false);
+    }, searchQuery ? 300 : 0);
 
-  // Reset page when filters change
-  useEffect(() => {
-    setPage(1);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, selectedGender]);
+
+  // Fetch when page changes (for "load more")
+  useEffect(() => {
+    if (page > 1) {
+      fetchNames(page, true);
+    }
+  }, [page, fetchNames]);
 
   const toggleFavorite = (name: string) => {
     setFavorites((prev) => {
@@ -85,8 +107,9 @@ export default function BrowsePage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-20 md:pb-0">
       <NavBar />
+      <TabBar />
 
       {/* Header */}
       <div className="pt-8 pb-12 px-6">

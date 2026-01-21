@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Heart } from "lucide-react";
 import { Button } from "./button";
 
 interface NavLink {
@@ -10,8 +11,9 @@ interface NavLink {
 }
 
 const navLinks: NavLink[] = [
-  { href: "/browse", label: "Browse Names" },
-  { href: "/builder", label: "Name Builder" },
+  { href: "/browse", label: "Browse" },
+  { href: "/builder", label: "Builder" },
+  { href: "/favorites", label: "Favorites" },
 ];
 
 interface NavBarProps {
