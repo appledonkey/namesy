@@ -19,6 +19,14 @@
   --warning: #E5B85C;              /* Warm amber */
   --error: #D97373;                /* Soft coral red */
 
+  /* Partner Colors - From Icon */
+  --partner1: #F5A89A;             /* Coral/Peach */
+  --partner1-light: #FDDCD6;
+  --partner1-dark: #E8938A;
+  --partner2: #9DD5C0;             /* Mint/Seafoam */
+  --partner2-light: #C5E8DA;
+  --partner2-dark: #7DB88F;
+
   /* Shadows - Soft and warm */
   --shadow-sm: 0 2px 8px -2px rgba(74, 67, 64, 0.10), 0 1px 4px rgba(74, 67, 64, 0.06);
   --shadow-md: 0 4px 16px -4px rgba(74, 67, 64, 0.12), 0 2px 8px rgba(74, 67, 64, 0.08);
@@ -43,6 +51,12 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-error: var(--error);
+  --color-partner1: var(--partner1);
+  --color-partner1-light: var(--partner1-light);
+  --color-partner1-dark: var(--partner1-dark);
+  --color-partner2: var(--partner2);
+  --color-partner2-light: var(--partner2-light);
+  --color-partner2-dark: var(--partner2-dark);
 
   /* Typography - Fonts defined in layout */
   /* Using --font-family-* prefix for Tailwind v4 font utilities */
