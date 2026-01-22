@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Star, X, ChevronDown, Trash2, ArrowUpDown, Clock, SortAsc, MessageSquare, Check } from "lucide-react";
 import { Text } from "@/components/ui/typography";
@@ -28,38 +28,43 @@ interface SwipeListPanelProps {
  */
 export function SwipeListPanel({ onSelectName, refreshKey = 0 }: SwipeListPanelProps) {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [names, setNames] = useState<SwipedName[]>([]);
+  const [names, setNames] = useState<SwipedName[]>(() => {
+    if (typeof window !== "undefined") {
+      return getSwipedNames();
+    }
+    return [];
+  });
   const [sortBy, setSortBy] = useState<SortOption>("rating");
   const [showSkipped, setShowSkipped] = useState(false);
 
-  // Load names from storage
-  useEffect(() => {
-    const loadNames = () => {
-      setNames(getSwipedNames());
-    };
-
-    loadNames();
-    window.addEventListener("storage", loadNames);
-    return () => window.removeEventListener("storage", loadNames);
+  // Reload function
+  const reloadNames = useCallback(() => {
+    setNames(getSwipedNames());
   }, []);
+
+  // Listen for storage events
+  useEffect(() => {
+    window.addEventListener("storage", reloadNames);
+    return () => window.removeEventListener("storage", reloadNames);
+  }, [reloadNames]);
 
   // Refresh when expanded
   useEffect(() => {
     if (isExpanded) {
-      setNames(getSwipedNames());
+      reloadNames();
     }
-  }, [isExpanded]);
+  }, [isExpanded, reloadNames]);
 
   // Refresh when refreshKey changes
   useEffect(() => {
     if (refreshKey > 0) {
-      setNames(getSwipedNames());
+      reloadNames();
     }
-  }, [refreshKey]);
+  }, [refreshKey, reloadNames]);
 
   // Filter and sort names
   const displayNames = useMemo(() => {
-    let filtered = names.filter((n) => {
+    const filtered = names.filter((n) => {
       if (n.action === "dislike") return showSkipped;
       return true; // Always show liked and super-liked
     });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { namesData, type NameData } from "@/lib/names-data";
+import { namesData } from "@/lib/names-data";
 
 // Fisher-Yates shuffle
 function shuffle<T>(array: T[]): T[] {

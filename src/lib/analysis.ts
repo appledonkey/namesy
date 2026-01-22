@@ -59,7 +59,7 @@ export function countSyllables(word: string): number {
  * Optimized for English name patterns - ~95%+ accuracy on common last names
  */
 function countSyllablesAlgorithm(word: string): number {
-  let lower = word.toLowerCase().trim().replace(/'/g, "");
+  const lower = word.toLowerCase().trim().replace(/'/g, "");
   if (lower.length === 0) return 0;
 
   // Very short words

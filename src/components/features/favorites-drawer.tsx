@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Star, X, ChevronUp, MessageSquare, Check, Trash2 } from "lucide-react";
 import {
@@ -24,26 +24,31 @@ interface FavoritesDrawerProps {
  */
 export function FavoritesDrawer({ onSelectName, refreshKey = 0 }: FavoritesDrawerProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [names, setNames] = useState<SwipedName[]>([]);
+  const [names, setNames] = useState<SwipedName[]>(() => {
+    if (typeof window !== "undefined") {
+      return getSwipedNames();
+    }
+    return [];
+  });
 
-  // Load names
-  useEffect(() => {
+  // Reload function
+  const reloadNames = useCallback(() => {
     setNames(getSwipedNames());
   }, []);
 
   // Refresh when key changes
   useEffect(() => {
     if (refreshKey > 0) {
-      setNames(getSwipedNames());
+      reloadNames();
     }
-  }, [refreshKey]);
+  }, [refreshKey, reloadNames]);
 
   // Refresh on expand
   useEffect(() => {
     if (isExpanded) {
-      setNames(getSwipedNames());
+      reloadNames();
     }
-  }, [isExpanded]);
+  }, [isExpanded, reloadNames]);
 
   const favorites = names.filter((n) => n.action === "like" || n.action === "superlike");
   const superlikedCount = names.filter((n) => n.action === "superlike").length;

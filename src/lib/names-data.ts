@@ -58511,7 +58511,7 @@ export function searchNames(query: string, options?: { gender?: "M" | "F" | "N";
 }
 
 export function getPopularNames(limit: number = 100, gender?: "M" | "F" | "N"): NameData[] {
-  let filtered = gender ? namesData.filter(n => n.gender === gender) : namesData;
+  const filtered = gender ? namesData.filter(n => n.gender === gender) : namesData;
   return filtered.sort((a, b) => a.currentRank - b.currentRank).slice(0, limit);
 }
 

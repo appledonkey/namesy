@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Star, X, ArrowUpDown, SortAsc, Clock } from "lucide-react";
 import {
@@ -38,20 +38,25 @@ const cardVariants = {
  * CardCatalogue - Visual grid of favorited names
  */
 export function CardCatalogue({ onSelectName, onClose, refreshKey = 0 }: CardCatalogueProps) {
-  const [names, setNames] = useState<SwipedName[]>([]);
+  const [names, setNames] = useState<SwipedName[]>(() => {
+    if (typeof window !== "undefined") {
+      return getSwipedNames();
+    }
+    return [];
+  });
   const [sortBy, setSortBy] = useState<SortOption>("rating");
 
-  // Load names
-  useEffect(() => {
+  // Reload function
+  const reloadNames = useCallback(() => {
     setNames(getSwipedNames());
   }, []);
 
   // Refresh when key changes
   useEffect(() => {
     if (refreshKey > 0) {
-      setNames(getSwipedNames());
+      reloadNames();
     }
-  }, [refreshKey]);
+  }, [refreshKey, reloadNames]);
 
   // Get favorites only
   const favorites = useMemo(() => {
@@ -60,7 +65,7 @@ export function CardCatalogue({ onSelectName, onClose, refreshKey = 0 }: CardCat
 
   // Sort and group
   const { superLiked, liked } = useMemo(() => {
-    let sorted = [...favorites];
+    const sorted = [...favorites];
 
     // Sort within groups
     switch (sortBy) {

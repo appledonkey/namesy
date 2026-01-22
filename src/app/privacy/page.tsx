@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Namesy",
@@ -85,12 +86,12 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <div className="mt-12 pt-6 border-t border-border">
-          <a
+          <Link
             href="/"
             className="text-primary hover:underline text-sm"
           >
             &larr; Back to Namesy
-          </a>
+          </Link>
         </div>
       </article>
     </main>
