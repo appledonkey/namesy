@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { Heart, X, Layers, TrendingUp, TrendingDown, Minus, Settings } from "lucide-react";
-import { namesData, type NameData } from "@/lib/names-data";
+import { namesData, type NameData } from "@/lib/names";
 import { haptics } from "@/lib/haptics";
 import {
   getAppState,
@@ -328,12 +328,12 @@ export default function Home() {
                     <div className="flex-1">
                       <p className="font-heading text-xl">{m.name}</p>
                       <p className="text-sm text-muted">
-                        {m.origins[0]} · {m.meanings[0]}
+                        {m.origin} · {m.meaning}
                       </p>
                     </div>
                     <div className={`flex items-center gap-1 text-sm ${getTrendColor(m.trend)}`}>
                       {getTrendIcon(m.trend)}
-                      <span>#{m.currentRank || "?"}</span>
+                      <span>{m.popularity}</span>
                     </div>
                   </li>
                 ))}
@@ -451,12 +451,12 @@ function FlipCard({ name, isFlipped, onTap, onSwipe, getTrendIcon, getTrendColor
 
           {/* Origin */}
           <p className="text-xs uppercase tracking-widest text-muted mb-3">
-            {name.origins[0] || "Unknown"}
+            {name.origin}
           </p>
 
           {/* Meaning */}
           <p className="text-base italic text-foreground/70 font-heading">
-            &ldquo;{name.meanings[0] || "Beautiful name"}&rdquo;
+            &ldquo;{name.meaning}&rdquo;
           </p>
 
           {/* Tap hint */}
@@ -473,16 +473,14 @@ function FlipCard({ name, isFlipped, onTap, onSwipe, getTrendIcon, getTrendColor
           {/* Header */}
           <div className="text-center border-b border-border pb-4 mb-4">
             <h2 className="font-heading text-3xl font-light text-foreground">{name.name}</h2>
-            {name.phonetic && (
-              <p className="text-sm text-muted mt-1">{name.phonetic}</p>
-            )}
+            <p className="text-sm text-muted mt-1">{name.origin}</p>
           </div>
 
           {/* Stats */}
           <div className="flex justify-around mb-4 pb-4 border-b border-border">
             <div className="text-center">
-              <p className="text-[10px] uppercase tracking-widest text-muted">Rank</p>
-              <p className="text-lg font-medium">#{name.currentRank || "?"}</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted">Popularity</p>
+              <p className="text-lg font-medium">{name.popularity}</p>
             </div>
             <div className="text-center">
               <p className="text-[10px] uppercase tracking-widest text-muted">Trend</p>
@@ -510,17 +508,31 @@ function FlipCard({ name, isFlipped, onTap, onSwipe, getTrendIcon, getTrendColor
             </div>
           )}
 
-          {/* Famous namesakes */}
-          {name.famousNamesakes && name.famousNamesakes.length > 0 && (
+          {/* Famous people */}
+          {name.famousPeople.length > 0 && (
             <div className="mb-4">
-              <p className="text-[10px] uppercase tracking-widest text-muted mb-2">Famous Namesakes</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted mb-2">Famous People</p>
               <ul className="space-y-1">
-                {name.famousNamesakes.slice(0, 3).map((n, i) => (
+                {name.famousPeople.slice(0, 3).map((person, i) => (
                   <li key={i} className="text-sm text-foreground/80">
-                    {n.name}
+                    {person}
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {/* Vibe tags */}
+          {name.vibe.length > 0 && (
+            <div className="mb-4">
+              <p className="text-[10px] uppercase tracking-widest text-muted mb-2">Vibe</p>
+              <div className="flex flex-wrap gap-2">
+                {name.vibe.map((v) => (
+                  <span key={v} className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+                    {v}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 
