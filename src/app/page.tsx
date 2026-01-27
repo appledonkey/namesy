@@ -1,76 +1,147 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { Heart, X, Layers, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Heart, X, Layers, TrendingUp, TrendingDown, Minus, Settings } from "lucide-react";
 import { namesData, type NameData } from "@/lib/names-data";
 import { haptics } from "@/lib/haptics";
+import {
+  getAppState,
+  addLike,
+  advanceIndex,
+  shuffleWithSeed,
+  type AppState,
+} from "@/lib/partner-storage";
+import { Onboarding } from "@/components/features/onboarding";
+import { SettingsSheet } from "@/components/features/settings-sheet";
 
 type Screen = "swipe" | "matches";
 type Partner = 1 | 2;
 
-interface PartnerState {
-  likes: string[];
-  currentIndex: number;
-}
-
-// Shuffle array deterministically
-function shuffleArray<T>(array: T[], seed: number): T[] {
-  const shuffled = [...array];
-  let m = shuffled.length;
-  while (m) {
-    const i = Math.floor(seededRandom(seed + m) * m--);
-    [shuffled[m], shuffled[i]] = [shuffled[i], shuffled[m]];
-  }
-  return shuffled;
-}
-
-function seededRandom(seed: number): number {
-  const x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
-}
-
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("swipe");
   const [activePartner, setActivePartner] = useState<Partner>(1);
-  const [partner1, setPartner1] = useState<PartnerState>({ likes: [], currentIndex: 0 });
-  const [partner2, setPartner2] = useState<PartnerState>({ likes: [], currentIndex: 0 });
-  const [matches, setMatches] = useState<NameData[]>([]);
+  const [appState, setAppState] = useState<AppState | null>(null);
   const [showMatch, setShowMatch] = useState<NameData | null>(null);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
-  // Shuffled name pool (same order for both partners)
-  const namePool = useMemo(() => shuffleArray(namesData.slice(0, 100), 42), []);
+  // Load state from localStorage on mount
+  useEffect(() => {
+    const state = getAppState();
+    setAppState(state);
+    setIsLoaded(true);
+  }, []);
 
-  const currentState = activePartner === 1 ? partner1 : partner2;
-  const setCurrentState = activePartner === 1 ? setPartner1 : setPartner2;
-  const otherState = activePartner === 1 ? partner2 : partner1;
-  const currentName = namePool[currentState.currentIndex];
-  const isFinished = currentState.currentIndex >= namePool.length;
+  // Handle onboarding completion
+  const handleOnboardingComplete = useCallback((newState: AppState) => {
+    setAppState(newState);
+  }, []);
 
-  const handleSwipe = (direction: "left" | "right") => {
-    if (isFinished || isFlipped) return;
+  // Shuffled name pool (same order for both partners, using persistent seed)
+  // Filtered by user's gender preference from onboarding
+  const namePool = useMemo(() => {
+    if (!appState) return [];
 
-    haptics.swipe();
-
-    if (direction === "right") {
-      const newLikes = [...currentState.likes, currentName.name];
-      setCurrentState({ ...currentState, likes: newLikes, currentIndex: currentState.currentIndex + 1 });
-
-      // Check for match
-      if (otherState.likes.includes(currentName.name)) {
-        setMatches((prev) => [...prev, currentName]);
-        setShowMatch(currentName);
-        haptics.save();
-        setTimeout(() => setShowMatch(null), 1800);
-      }
-    } else {
-      setCurrentState({ ...currentState, currentIndex: currentState.currentIndex + 1 });
+    // Filter by gender preference
+    let filtered = namesData;
+    if (appState.genderFilter && appState.genderFilter !== "all") {
+      filtered = namesData.filter((n) => n.gender === appState.genderFilter);
     }
 
-    setIsFlipped(false);
-  };
+    return shuffleWithSeed(filtered, appState.shuffleSeed);
+  }, [appState?.shuffleSeed, appState?.genderFilter]);
+
+  // Get matches as NameData objects
+  const matchedNames = useMemo(() => {
+    if (!appState) return [];
+    return appState.matches
+      .map((id) => namesData.find((n) => n.id === id))
+      .filter((n): n is NameData => n !== undefined);
+  }, [appState?.matches]);
+
+  const currentState = appState
+    ? activePartner === 1
+      ? appState.partner1
+      : appState.partner2
+    : null;
+  const otherState = appState
+    ? activePartner === 1
+      ? appState.partner2
+      : appState.partner1
+    : null;
+  const currentName = currentState ? namePool[currentState.currentIndex] : null;
+  const isFinished = currentState ? currentState.currentIndex >= namePool.length : false;
+
+  const handleSwipe = useCallback(
+    (direction: "left" | "right") => {
+      if (isFinished || isFlipped || !currentName || !appState) return;
+
+      haptics.swipe();
+
+      if (direction === "right") {
+        // Add like and check for match
+        const { state: newState, isMatch } = addLike(activePartner, currentName.id);
+        setAppState(newState);
+
+        if (isMatch) {
+          setShowMatch(currentName);
+          haptics.save();
+          setTimeout(() => setShowMatch(null), 1800);
+        }
+
+        // Advance index
+        const advancedState = advanceIndex(activePartner);
+        setAppState(advancedState);
+      } else {
+        // Just advance index for left swipe
+        const newState = advanceIndex(activePartner);
+        setAppState(newState);
+      }
+
+      setIsFlipped(false);
+    },
+    [isFinished, isFlipped, currentName, appState, activePartner]
+  );
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      switch (e.key) {
+        case "ArrowLeft":
+          e.preventDefault();
+          handleSwipe("left");
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          handleSwipe("right");
+          break;
+        case " ": // Space bar
+          e.preventDefault();
+          if (!isFinished && currentName) {
+            haptics.tap();
+            setIsFlipped(!isFlipped);
+          }
+          break;
+        case "1":
+          setActivePartner(1);
+          break;
+        case "2":
+          setActivePartner(2);
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleSwipe, isFinished, currentName, isFlipped]);
 
   const handleCardTap = () => {
     if (!isFinished) {
@@ -91,14 +162,40 @@ export default function Home() {
     return "text-muted";
   };
 
+  // Show loading state
+  if (!isLoaded || !appState) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Image src="/icon.png" alt="Namesy" width={48} height={48} className="rounded-xl mx-auto mb-4 animate-pulse" />
+          <p className="text-muted">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show onboarding for first-time users
+  if (!appState.onboardingComplete) {
+    return <Onboarding onComplete={handleOnboardingComplete} />;
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="px-4 pt-5 pb-3">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <Image src="/icon.png" alt="Namesy" width={28} height={28} className="rounded-lg" />
-          <span className="font-heading text-xl font-semibold">namesy</span>
+        {/* Logo + Settings */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="w-10" /> {/* Spacer for centering */}
+          <div className="flex items-center gap-2">
+            <Image src="/icon.png" alt="Namesy" width={28} height={28} className="rounded-lg" />
+            <span className="font-heading text-xl font-semibold">namesy</span>
+          </div>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="w-10 h-10 flex items-center justify-center text-muted hover:text-foreground transition-colors"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Partner Toggle */}
@@ -112,9 +209,9 @@ export default function Home() {
                   : "text-muted hover:text-foreground"
               }`}
             >
-              Partner 1
+              {appState.partner1.name || "Partner 1"}
               <span className="ml-2 text-xs opacity-75">
-                {partner1.currentIndex}/{namePool.length}
+                {appState.partner1.currentIndex}/{namePool.length}
               </span>
             </button>
             <button
@@ -125,9 +222,9 @@ export default function Home() {
                   : "text-muted hover:text-foreground"
               }`}
             >
-              Partner 2
+              {appState.partner2.name || "Partner 2"}
               <span className="ml-2 text-xs opacity-75">
-                {partner2.currentIndex}/{namePool.length}
+                {appState.partner2.currentIndex}/{namePool.length}
               </span>
             </button>
           </div>
@@ -147,9 +244,9 @@ export default function Home() {
           className={`relative p-2 transition-colors ${screen === "matches" ? "text-foreground" : "text-muted"}`}
         >
           <Heart className="w-5 h-5" />
-          {matches.length > 0 && (
+          {matchedNames.length > 0 && (
             <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-white text-xs rounded-full flex items-center justify-center font-medium">
-              {matches.length}
+              {matchedNames.length}
             </span>
           )}
         </button>
@@ -159,10 +256,14 @@ export default function Home() {
       <main className="flex-1 flex flex-col items-center px-4 py-6">
         {screen === "swipe" && (
           <div className="w-full max-w-sm flex flex-col items-center">
-            {isFinished ? (
+            {isFinished || !currentName ? (
               <div className="text-center py-20">
                 <p className="font-heading text-3xl text-foreground mb-2">All done!</p>
-                <p className="text-muted">Switch partners or check matches</p>
+                <p className="text-muted">
+                  {matchedNames.length > 0
+                    ? `You have ${matchedNames.length} match${matchedNames.length === 1 ? "" : "es"}!`
+                    : "Switch partners or check matches"}
+                </p>
               </div>
             ) : (
               <>
@@ -200,7 +301,7 @@ export default function Home() {
 
                 {/* Progress */}
                 <p className="mt-6 text-sm text-muted">
-                  {currentState.currentIndex + 1} / {namePool.length}
+                  {currentState ? currentState.currentIndex + 1 : 0} / {namePool.length}
                 </p>
               </>
             )}
@@ -210,11 +311,11 @@ export default function Home() {
         {screen === "matches" && (
           <div className="w-full max-w-md">
             <h2 className="font-heading text-2xl text-center mb-6">Matches</h2>
-            {matches.length === 0 ? (
+            {matchedNames.length === 0 ? (
               <p className="text-center text-muted">No matches yet. Keep swiping!</p>
             ) : (
               <ul className="space-y-3">
-                {matches.map((m) => (
+                {matchedNames.map((m) => (
                   <li
                     key={m.id}
                     className="flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm"
@@ -268,6 +369,14 @@ export default function Home() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Settings Sheet */}
+      <SettingsSheet
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        appState={appState}
+        onStateChange={setAppState}
+      />
     </div>
   );
 }
