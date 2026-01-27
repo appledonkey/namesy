@@ -3,7 +3,7 @@
  * Shared functions for analyzing baby names - syllables, flow, teasing potential, etc.
  */
 
-import { namesData } from "./names-data";
+import { namesData } from "./names";
 
 // Bad acronym patterns to check - comprehensive list
 export const BAD_ACRONYMS = [
