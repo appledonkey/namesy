@@ -158,6 +158,36 @@ export function advanceIndex(partner: 1 | 2): AppState {
 }
 
 /**
+ * Process a swipe in a single batched operation
+ * Combines like + index advance + match check for better performance
+ */
+export function processSwipe(
+  partner: 1 | 2,
+  nameId: string,
+  liked: boolean
+): { state: AppState; isMatch: boolean } {
+  const state = getAppState();
+  const currentKey = partner === 1 ? "partner1" : "partner2";
+  const otherKey = partner === 1 ? "partner2" : "partner1";
+
+  let isMatch = false;
+
+  if (liked) {
+    if (!state[currentKey].likes.includes(nameId)) {
+      state[currentKey].likes = [...state[currentKey].likes, nameId];
+    }
+    isMatch = state[otherKey].likes.includes(nameId) && !state.matches.includes(nameId);
+    if (isMatch) {
+      state.matches = [...state.matches, nameId];
+    }
+  }
+
+  state[currentKey].currentIndex += 1;
+  saveAppState(state);
+  return { state, isMatch };
+}
+
+/**
  * Remove a match
  */
 export function removeMatch(nameId: string): AppState {
@@ -179,6 +209,13 @@ export function updateSettings(settings: Partial<Settings>): AppState {
   saveAppState(state);
   return state;
 }
+
+// Middle name presets by gender
+export const MIDDLE_NAME_PRESETS = {
+  F: ["Rose", "Marie", "Grace", "Mae", "Anne", "Jane"],
+  M: ["James", "Lee", "Michael", "Alexander", "John", "William"],
+  N: ["Taylor", "Jordan", "Morgan", "Riley", "Quinn", "Avery"],
+};
 
 /**
  * Generate a random session code (e.g., "MAPLE-7X3K")

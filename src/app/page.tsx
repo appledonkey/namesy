@@ -8,9 +8,10 @@ import { namesData, type NameData } from "@/lib/names";
 import { haptics } from "@/lib/haptics";
 import {
   getAppState,
-  addLike,
-  advanceIndex,
+  processSwipe,
   shuffleWithSeed,
+  updateOnboardingSettings,
+  MIDDLE_NAME_PRESETS,
   type AppState,
 } from "@/lib/partner-storage";
 import { Onboarding } from "@/components/features/onboarding";
@@ -41,11 +42,56 @@ function NamePreview({ firstName, middleName, surname }: NamePreviewProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.3 }}
-      className="text-center mb-4"
+      className="text-center mb-6"
     >
-      <p className="text-lg text-foreground/70 font-heading">{fullName}</p>
-      <p className="text-sm text-muted tracking-widest">{initials}</p>
+      <p className="text-2xl md:text-3xl font-heading text-foreground tracking-wide mb-2">
+        {fullName}
+      </p>
+      <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-secondary/50 rounded-full">
+        <span className="text-sm font-medium tracking-[0.3em] text-foreground/80 uppercase">
+          {initials}
+        </span>
+      </div>
     </motion.div>
+  );
+}
+
+// Middle Name Selector Component
+interface MiddleNameSelectorProps {
+  currentMiddleName?: string;
+  gender: "all" | "M" | "F";
+  onChange: (name: string | undefined) => void;
+}
+
+function MiddleNameSelector({ currentMiddleName, gender, onChange }: MiddleNameSelectorProps) {
+  const presets = useMemo(() => {
+    if (gender === "F") return MIDDLE_NAME_PRESETS.F;
+    if (gender === "M") return MIDDLE_NAME_PRESETS.M;
+    return [...MIDDLE_NAME_PRESETS.N.slice(0, 3), ...MIDDLE_NAME_PRESETS.F.slice(0, 2), ...MIDDLE_NAME_PRESETS.M.slice(0, 1)];
+  }, [gender]);
+
+  return (
+    <div className="flex flex-wrap justify-center gap-2 mb-4 max-w-xs">
+      <button
+        onClick={() => onChange(undefined)}
+        className={`px-3 py-1.5 text-xs rounded-full transition-all ${
+          !currentMiddleName ? "bg-accent text-white" : "bg-secondary text-muted hover:bg-secondary-dark"
+        }`}
+      >
+        None
+      </button>
+      {presets.map((name) => (
+        <button
+          key={name}
+          onClick={() => onChange(name)}
+          className={`px-3 py-1.5 text-xs rounded-full transition-all ${
+            currentMiddleName === name ? "bg-accent text-white" : "bg-secondary text-muted hover:bg-secondary-dark"
+          }`}
+        >
+          {name}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -53,7 +99,7 @@ function NamePreview({ firstName, middleName, surname }: NamePreviewProps) {
 const SPRING_CONFIG = {
   drag: { damping: 25, stiffness: 200 },      // Responsive during drag
   snapBack: { damping: 30, stiffness: 300 },  // Quick snap back
-  exit: { damping: 20, stiffness: 100 },      // Smooth fly off
+  exit: { damping: 30, stiffness: 300 },      // Fast exit for snappy feel
 };
 
 // Swipe thresholds
@@ -118,31 +164,24 @@ export default function Home() {
   const currentName = currentState ? namePool[currentState.currentIndex] : null;
   const isFinished = currentState ? currentState.currentIndex >= namePool.length : false;
 
-  // Process the swipe result after animation completes
+  // Process the swipe result - now batched for better performance
   const processSwipeResult = useCallback(
     (direction: "left" | "right") => {
       if (!currentName || !appState) return;
 
       haptics.swipe();
 
-      if (direction === "right") {
-        // Add like and check for match
-        const { state: newState, isMatch } = addLike(activePartner, currentName.id);
-        setAppState(newState);
+      const { state: newState, isMatch } = processSwipe(
+        activePartner,
+        currentName.id,
+        direction === "right"
+      );
+      setAppState(newState);
 
-        if (isMatch) {
-          setShowMatch(currentName);
-          haptics.save();
-          setTimeout(() => setShowMatch(null), 1800);
-        }
-
-        // Advance index
-        const advancedState = advanceIndex(activePartner);
-        setAppState(advancedState);
-      } else {
-        // Just advance index for left swipe
-        const newState = advanceIndex(activePartner);
-        setAppState(newState);
+      if (isMatch) {
+        setShowMatch(currentName);
+        haptics.save();
+        setTimeout(() => setShowMatch(null), 1800);
       }
 
       setIsFlipped(false);
@@ -151,6 +190,14 @@ export default function Home() {
     },
     [currentName, appState, activePartner]
   );
+
+  // Handle middle name changes
+  const handleMiddleNameChange = useCallback((name: string | undefined) => {
+    if (!appState) return;
+    haptics.tap();
+    const newState = updateOnboardingSettings({ middleName: name });
+    setAppState(newState);
+  }, [appState]);
 
   // Handle button-triggered swipes
   const handleButtonSwipe = useCallback(
@@ -341,8 +388,15 @@ export default function Home() {
                   />
                 </AnimatePresence>
 
+                {/* Middle Name Selector */}
+                <MiddleNameSelector
+                  currentMiddleName={appState.middleName}
+                  gender={appState.genderFilter}
+                  onChange={handleMiddleNameChange}
+                />
+
                 {/* Card Stack */}
-                <div className="relative w-full max-w-xs aspect-[3/4]">
+                <div className="relative w-full max-w-xs aspect-[3/4] overflow-hidden">
                   {/* Render up to 3 cards in reverse order so top card is last (on top) */}
                   {namePool
                     .slice(currentState!.currentIndex, currentState!.currentIndex + 3)
@@ -528,12 +582,17 @@ function FlipCard({
     if (isExiting) return;
     setIsExiting(true);
 
+    // Process state immediately for snappy feel
+    onSwipe(direction);
+    onSwipeComplete?.();
+
     const exitX = direction === "right"
       ? window.innerWidth * 1.5
       : -window.innerWidth * 1.5;
     const exitRotate = direction === "right" ? 30 : -30;
 
-    await controls.start({
+    // Animation runs in parallel with state update
+    controls.start({
       x: exitX,
       y: 50,
       rotate: exitRotate,
@@ -542,9 +601,6 @@ function FlipCard({
         ...SPRING_CONFIG.exit,
       }
     });
-
-    onSwipe(direction);
-    onSwipeComplete?.();
   };
 
   const handleDragEnd = async (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
