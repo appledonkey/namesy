@@ -20,20 +20,20 @@ import { SettingsSheet } from "@/components/features/settings-sheet";
 type Screen = "swipe" | "matches";
 type Partner = 1 | 2;
 
-// Name Preview Component
+// Name Preview Component with inline editable middle name
 interface NamePreviewProps {
   firstName: string;
   middleName?: string;
   surname?: string;
+  onMiddleNameChange: (name: string | undefined) => void;
 }
 
-function NamePreview({ firstName, middleName, surname }: NamePreviewProps) {
-  // Build full name parts
-  const nameParts = [firstName, middleName, surname].filter(Boolean);
-  const fullName = nameParts.join(" ");
-
+function NamePreview({ firstName, middleName, surname, onMiddleNameChange }: NamePreviewProps) {
   // Build initials
-  const initials = nameParts.map((part) => part!.charAt(0).toUpperCase()).join(" ");
+  const initials = [firstName, middleName, surname]
+    .filter(Boolean)
+    .map((part) => part!.charAt(0).toUpperCase())
+    .join(" · ");
 
   return (
     <motion.div
@@ -44,44 +44,26 @@ function NamePreview({ firstName, middleName, surname }: NamePreviewProps) {
       transition={{ duration: 0.3 }}
       className="text-center mb-6"
     >
-      <p className="text-2xl md:text-3xl font-heading text-foreground tracking-wide mb-2">
-        {fullName}
-      </p>
-      <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-secondary/50 rounded-full">
-        <span className="text-sm font-medium tracking-[0.3em] text-foreground/80 uppercase">
+      {/* Full name with inline editable middle name */}
+      <div className="flex items-center justify-center gap-1 text-2xl md:text-3xl font-heading text-foreground tracking-wide mb-3">
+        <span>{firstName}</span>
+        <input
+          type="text"
+          value={middleName || ""}
+          onChange={(e) => onMiddleNameChange(e.target.value || undefined)}
+          placeholder="middle"
+          className="w-24 md:w-32 bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-muted/40 placeholder:text-lg"
+        />
+        {surname && <span>{surname}</span>}
+      </div>
+
+      {/* Initials pill - bigger */}
+      <div className="inline-flex items-center gap-2 px-5 py-2 bg-secondary/50 rounded-full">
+        <span className="text-base md:text-lg font-medium tracking-[0.3em] text-foreground/80 uppercase">
           {initials}
         </span>
       </div>
     </motion.div>
-  );
-}
-
-// Middle Name Input Component
-interface MiddleNameInputProps {
-  value?: string;
-  onChange: (name: string | undefined) => void;
-}
-
-function MiddleNameInput({ value, onChange }: MiddleNameInputProps) {
-  return (
-    <div className="flex items-center gap-2 mb-4">
-      <label className="text-xs text-muted uppercase tracking-wider">Middle:</label>
-      <input
-        type="text"
-        value={value || ""}
-        onChange={(e) => onChange(e.target.value || undefined)}
-        placeholder="swipe up to use name"
-        className="flex-1 max-w-[180px] px-3 py-1.5 text-sm bg-secondary/50 rounded-full border-0 outline-none focus:ring-2 focus:ring-accent/50 placeholder:text-muted/50 text-center"
-      />
-      {value && (
-        <button
-          onClick={() => onChange(undefined)}
-          className="text-muted hover:text-foreground text-sm"
-        >
-          ×
-        </button>
-      )}
-    </div>
   );
 }
 
@@ -389,21 +371,16 @@ export default function Home() {
               </div>
             ) : (
               <>
-                {/* Name Preview */}
+                {/* Name Preview with inline middle name input */}
                 <AnimatePresence mode="wait">
                   <NamePreview
                     key={currentName.id}
                     firstName={currentName.name}
                     middleName={appState.middleName}
                     surname={appState.surname}
+                    onMiddleNameChange={handleMiddleNameChange}
                   />
                 </AnimatePresence>
-
-                {/* Middle Name Input */}
-                <MiddleNameInput
-                  value={appState.middleName}
-                  onChange={handleMiddleNameChange}
-                />
 
                 {/* Card Stack */}
                 <div className="relative w-full max-w-xs aspect-[3/4] overflow-hidden">
