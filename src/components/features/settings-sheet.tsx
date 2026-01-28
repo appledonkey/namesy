@@ -24,6 +24,7 @@ interface SettingsSheetProps {
 
 export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: SettingsSheetProps) {
   const [surname, setSurname] = useState(appState.surname || "");
+  const [middleName, setMiddleName] = useState(appState.middleName || "");
   const [genderFilter, setGenderFilter] = useState<GenderFilter>(appState.genderFilter);
   const [sessionCode, setSessionCode] = useState(appState.sessionCode || "");
   const [copied, setCopied] = useState(false);
@@ -32,6 +33,7 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
   // Sync state when appState changes
   useEffect(() => {
     setSurname(appState.surname || "");
+    setMiddleName(appState.middleName || "");
     setGenderFilter(appState.genderFilter);
     setSessionCode(appState.sessionCode || "");
   }, [appState]);
@@ -39,6 +41,14 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
   const handleSurnameBlur = () => {
     if (surname !== (appState.surname || "")) {
       const newState = updateOnboardingSettings({ surname: surname.trim() || undefined });
+      onStateChange(newState);
+      haptics.save();
+    }
+  };
+
+  const handleMiddleNameBlur = () => {
+    if (middleName !== (appState.middleName || "")) {
+      const newState = updateOnboardingSettings({ middleName: middleName.trim() || undefined });
       onStateChange(newState);
       haptics.save();
     }
@@ -118,6 +128,23 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
 
             {/* Content */}
             <div className="px-6 py-6 space-y-8">
+              {/* Middle Name */}
+              <div>
+                <label className="block text-sm font-medium text-muted mb-2">
+                  Middle name
+                </label>
+                <Input
+                  variant="pill"
+                  placeholder="e.g., Rose"
+                  value={middleName}
+                  onChange={(e) => setMiddleName(e.target.value)}
+                  onBlur={handleMiddleNameBlur}
+                />
+                <p className="text-xs text-muted mt-2">
+                  Shows in the full name preview
+                </p>
+              </div>
+
               {/* Surname */}
               <div>
                 <label className="block text-sm font-medium text-muted mb-2">

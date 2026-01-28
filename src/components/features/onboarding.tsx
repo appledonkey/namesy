@@ -23,6 +23,7 @@ interface OnboardingProps {
 export function Onboarding({ onComplete }: OnboardingProps) {
   const [step, setStep] = useState<Step>("surname");
   const [surname, setSurname] = useState("");
+  const [middleName, setMiddleName] = useState("");
   const [genderFilter, setGenderFilter] = useState<GenderFilter | null>(null);
   const [partnerMode, setPartnerMode] = useState<"solo" | "partner" | null>(null);
   const [sessionCode, setSessionCode] = useState<string>("");
@@ -78,6 +79,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     (mode: "solo" | "partner", code?: string) => {
       const data: OnboardingData = {
         surname: surname.trim() || undefined,
+        middleName: middleName.trim() || undefined,
         genderFilter: genderFilter || "all",
         partnerMode: mode,
         sessionCode: code || sessionCode || undefined,
@@ -86,7 +88,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       haptics.save();
       onComplete(newState);
     },
-    [surname, genderFilter, sessionCode, onComplete]
+    [surname, middleName, genderFilter, sessionCode, onComplete]
   );
 
   const handleStartSwiping = () => {
@@ -123,23 +125,32 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               transition={{ duration: 0.3 }}
               className="w-full max-w-sm text-center"
             >
-              <h1 className="font-heading text-3xl mb-2">What&apos;s your surname?</h1>
+              <h1 className="font-heading text-3xl mb-2">Family names</h1>
               <p className="text-muted text-sm mb-8">
-                Helps check how names flow together
+                Helps preview how the full name looks
               </p>
 
-              <Input
-                variant="underlined"
-                placeholder="e.g., Smith"
-                value={surname}
-                onChange={(e) => setSurname(e.target.value)}
-                className="text-center text-xl mb-8"
-                autoFocus
-              />
+              <div className="space-y-4 mb-8">
+                <Input
+                  variant="underlined"
+                  placeholder="Middle name (optional)"
+                  value={middleName}
+                  onChange={(e) => setMiddleName(e.target.value)}
+                  className="text-center text-xl"
+                  autoFocus
+                />
+                <Input
+                  variant="underlined"
+                  placeholder="Surname (optional)"
+                  value={surname}
+                  onChange={(e) => setSurname(e.target.value)}
+                  className="text-center text-xl"
+                />
+              </div>
 
               <div className="flex flex-col gap-3">
                 <Button onClick={handleSurnameNext} size="lg" className="w-full">
-                  {surname.trim() ? "Continue" : "Skip"}
+                  {surname.trim() || middleName.trim() ? "Continue" : "Skip"}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>

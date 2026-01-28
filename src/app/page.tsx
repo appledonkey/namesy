@@ -19,6 +19,36 @@ import { SettingsSheet } from "@/components/features/settings-sheet";
 type Screen = "swipe" | "matches";
 type Partner = 1 | 2;
 
+// Name Preview Component
+interface NamePreviewProps {
+  firstName: string;
+  middleName?: string;
+  surname?: string;
+}
+
+function NamePreview({ firstName, middleName, surname }: NamePreviewProps) {
+  // Build full name parts
+  const nameParts = [firstName, middleName, surname].filter(Boolean);
+  const fullName = nameParts.join(" ");
+
+  // Build initials
+  const initials = nameParts.map((part) => part!.charAt(0).toUpperCase()).join(" ");
+
+  return (
+    <motion.div
+      key={firstName}
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      transition={{ duration: 0.3 }}
+      className="text-center mb-4"
+    >
+      <p className="text-lg text-foreground/70 font-heading">{fullName}</p>
+      <p className="text-sm text-muted tracking-widest">{initials}</p>
+    </motion.div>
+  );
+}
+
 // Spring physics configurations
 const SPRING_CONFIG = {
   drag: { damping: 25, stiffness: 200 },      // Responsive during drag
@@ -301,6 +331,16 @@ export default function Home() {
               </div>
             ) : (
               <>
+                {/* Name Preview */}
+                <AnimatePresence mode="wait">
+                  <NamePreview
+                    key={currentName.id}
+                    firstName={currentName.name}
+                    middleName={appState.middleName}
+                    surname={appState.surname}
+                  />
+                </AnimatePresence>
+
                 {/* Card Stack */}
                 <div className="relative w-full max-w-xs aspect-[3/4]">
                   {/* Render up to 3 cards in reverse order so top card is last (on top) */}

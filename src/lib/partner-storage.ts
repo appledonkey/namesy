@@ -39,6 +39,7 @@ export interface AppState {
   shuffleSeed: number; // For consistent shuffle across sessions
   // Onboarding data
   surname?: string;
+  middleName?: string;
   genderFilter: "all" | "M" | "F";
   sessionCode?: string;
   partnerMode: "solo" | "partner";
@@ -66,6 +67,7 @@ const defaultState: AppState = {
   onboardingComplete: false,
   shuffleSeed: Math.floor(Math.random() * 10000),
   surname: undefined,
+  middleName: undefined,
   genderFilter: "all",
   sessionCode: undefined,
   partnerMode: "solo",
@@ -92,6 +94,7 @@ export function getAppState(): AppState {
       onboardingComplete: parsed.onboardingComplete || false,
       shuffleSeed: parsed.shuffleSeed || Math.floor(Math.random() * 10000),
       surname: parsed.surname,
+      middleName: parsed.middleName,
       genderFilter: parsed.genderFilter || "all",
       sessionCode: parsed.sessionCode,
       partnerMode: parsed.partnerMode || "solo",
@@ -193,6 +196,7 @@ export function generateSessionCode(): string {
 
 export interface OnboardingData {
   surname?: string;
+  middleName?: string;
   genderFilter: "all" | "M" | "F";
   partnerMode: "solo" | "partner";
   sessionCode?: string;
@@ -205,6 +209,7 @@ export function completeOnboarding(data: OnboardingData): AppState {
   const state = getAppState();
   state.onboardingComplete = true;
   state.surname = data.surname;
+  state.middleName = data.middleName;
   state.genderFilter = data.genderFilter;
   state.partnerMode = data.partnerMode;
   state.sessionCode = data.sessionCode;
@@ -218,6 +223,7 @@ export function completeOnboarding(data: OnboardingData): AppState {
 export function updateOnboardingSettings(data: Partial<OnboardingData>): AppState {
   const state = getAppState();
   if (data.surname !== undefined) state.surname = data.surname;
+  if (data.middleName !== undefined) state.middleName = data.middleName;
   if (data.genderFilter !== undefined) state.genderFilter = data.genderFilter;
   if (data.partnerMode !== undefined) state.partnerMode = data.partnerMode;
   if (data.sessionCode !== undefined) state.sessionCode = data.sessionCode;
