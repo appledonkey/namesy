@@ -11,7 +11,7 @@ import {
   processSwipe,
   shuffleWithSeed,
   updateOnboardingSettings,
-  MIDDLE_NAME_PRESETS,
+  advanceIndex,
   type AppState,
 } from "@/lib/partner-storage";
 import { Onboarding } from "@/components/features/onboarding";
@@ -56,41 +56,31 @@ function NamePreview({ firstName, middleName, surname }: NamePreviewProps) {
   );
 }
 
-// Middle Name Selector Component
-interface MiddleNameSelectorProps {
-  currentMiddleName?: string;
-  gender: "all" | "M" | "F";
+// Middle Name Input Component
+interface MiddleNameInputProps {
+  value?: string;
   onChange: (name: string | undefined) => void;
 }
 
-function MiddleNameSelector({ currentMiddleName, gender, onChange }: MiddleNameSelectorProps) {
-  const presets = useMemo(() => {
-    if (gender === "F") return MIDDLE_NAME_PRESETS.F;
-    if (gender === "M") return MIDDLE_NAME_PRESETS.M;
-    return [...MIDDLE_NAME_PRESETS.N.slice(0, 3), ...MIDDLE_NAME_PRESETS.F.slice(0, 2), ...MIDDLE_NAME_PRESETS.M.slice(0, 1)];
-  }, [gender]);
-
+function MiddleNameInput({ value, onChange }: MiddleNameInputProps) {
   return (
-    <div className="flex flex-wrap justify-center gap-2 mb-4 max-w-xs">
-      <button
-        onClick={() => onChange(undefined)}
-        className={`px-3 py-1.5 text-xs rounded-full transition-all ${
-          !currentMiddleName ? "bg-accent text-white" : "bg-secondary text-muted hover:bg-secondary-dark"
-        }`}
-      >
-        None
-      </button>
-      {presets.map((name) => (
+    <div className="flex items-center gap-2 mb-4">
+      <label className="text-xs text-muted uppercase tracking-wider">Middle:</label>
+      <input
+        type="text"
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value || undefined)}
+        placeholder="swipe up to use name"
+        className="flex-1 max-w-[180px] px-3 py-1.5 text-sm bg-secondary/50 rounded-full border-0 outline-none focus:ring-2 focus:ring-accent/50 placeholder:text-muted/50 text-center"
+      />
+      {value && (
         <button
-          key={name}
-          onClick={() => onChange(name)}
-          className={`px-3 py-1.5 text-xs rounded-full transition-all ${
-            currentMiddleName === name ? "bg-accent text-white" : "bg-secondary text-muted hover:bg-secondary-dark"
-          }`}
+          onClick={() => onChange(undefined)}
+          className="text-muted hover:text-foreground text-sm"
         >
-          {name}
+          ×
         </button>
-      ))}
+      )}
     </div>
   );
 }
@@ -199,6 +189,23 @@ export default function Home() {
     setAppState(newState);
   }, [appState]);
 
+  // Handle swipe up to use current name as middle name
+  const handleSwipeUp = useCallback(() => {
+    if (!currentName || !appState) return;
+    haptics.save();
+
+    // Set current name as middle name
+    const updatedState = updateOnboardingSettings({ middleName: currentName.name });
+
+    // Advance to next card (don't add to likes)
+    const finalState = advanceIndex(activePartner);
+    setAppState(finalState);
+
+    setIsFlipped(false);
+    setIsAnimating(false);
+    setButtonSwipe(null);
+  }, [currentName, appState, activePartner]);
+
   // Handle button-triggered swipes
   const handleButtonSwipe = useCallback(
     (direction: "left" | "right") => {
@@ -211,10 +218,14 @@ export default function Home() {
 
   // Handle drag-triggered swipes (directly from card)
   const handleSwipe = useCallback(
-    (direction: "left" | "right") => {
-      processSwipeResult(direction);
+    (direction: "left" | "right" | "up") => {
+      if (direction === "up") {
+        handleSwipeUp();
+      } else {
+        processSwipeResult(direction);
+      }
     },
-    [processSwipeResult]
+    [processSwipeResult, handleSwipeUp]
   );
 
   // Keyboard shortcuts
@@ -388,10 +399,9 @@ export default function Home() {
                   />
                 </AnimatePresence>
 
-                {/* Middle Name Selector */}
-                <MiddleNameSelector
-                  currentMiddleName={appState.middleName}
-                  gender={appState.genderFilter}
+                {/* Middle Name Input */}
+                <MiddleNameInput
+                  value={appState.middleName}
                   onChange={handleMiddleNameChange}
                 />
 
@@ -531,7 +541,7 @@ interface FlipCardProps {
   name: NameData;
   isFlipped: boolean;
   onTap: () => void;
-  onSwipe: (direction: "left" | "right") => void;
+  onSwipe: (direction: "left" | "right" | "up") => void;
   getTrendIcon: (trend: string) => React.ReactNode;
   getTrendColor: (trend: string) => string;
   isTop?: boolean;
@@ -555,9 +565,11 @@ function FlipCard({
   const controls = useAnimationControls();
   const [isExiting, setIsExiting] = useState(false);
   const x = useMotionValue(0);
+  const y = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
   const likeOpacity = useTransform(x, [0, 100], [0, 1]);
   const nopeOpacity = useTransform(x, [-100, 0], [1, 0]);
+  const middleOpacity = useTransform(y, [-100, 0], [1, 0]);
   // Scale up slightly when dragging for "lifted" feel
   const scale = useTransform(x, [-200, 0, 200], [1.02, 1, 1.02]);
 
@@ -578,7 +590,7 @@ function FlipCard({
     }
   }, [isFlipped, isTop, isExiting, controls]);
 
-  const performSwipe = async (direction: "left" | "right") => {
+  const performSwipe = async (direction: "left" | "right" | "up") => {
     if (isExiting) return;
     setIsExiting(true);
 
@@ -586,21 +598,33 @@ function FlipCard({
     onSwipe(direction);
     onSwipeComplete?.();
 
-    const exitX = direction === "right"
-      ? window.innerWidth * 1.5
-      : -window.innerWidth * 1.5;
-    const exitRotate = direction === "right" ? 30 : -30;
-
     // Animation runs in parallel with state update
-    controls.start({
-      x: exitX,
-      y: 50,
-      rotate: exitRotate,
-      transition: {
-        type: "spring",
-        ...SPRING_CONFIG.exit,
-      }
-    });
+    if (direction === "up") {
+      controls.start({
+        x: 0,
+        y: -window.innerHeight,
+        rotate: 0,
+        transition: {
+          type: "spring",
+          ...SPRING_CONFIG.exit,
+        }
+      });
+    } else {
+      const exitX = direction === "right"
+        ? window.innerWidth * 1.5
+        : -window.innerWidth * 1.5;
+      const exitRotate = direction === "right" ? 30 : -30;
+
+      controls.start({
+        x: exitX,
+        y: 50,
+        rotate: exitRotate,
+        transition: {
+          type: "spring",
+          ...SPRING_CONFIG.exit,
+        }
+      });
+    }
   };
 
   const handleDragEnd = async (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
@@ -608,8 +632,12 @@ function FlipCard({
 
     const swipeRight = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > VELOCITY_THRESHOLD;
     const swipeLeft = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -VELOCITY_THRESHOLD;
+    const swipeUp = info.offset.y < -SWIPE_THRESHOLD || info.velocity.y < -VELOCITY_THRESHOLD;
 
-    if (swipeRight) {
+    if (swipeUp && Math.abs(info.offset.y) > Math.abs(info.offset.x)) {
+      // Prioritize vertical swipe if it's more dominant
+      await performSwipe("up");
+    } else if (swipeRight) {
       await performSwipe("right");
     } else if (swipeLeft) {
       await performSwipe("left");
@@ -658,9 +686,9 @@ function FlipCard({
         style={{
           transformStyle: "preserve-3d",
           x: isTop ? x : 0,
+          y: isTop ? y : stackY,
           rotate: isTop ? rotate : 0,
           scale: isTop ? scale : stackScale,
-          y: isTop ? 0 : stackY,
         }}
       >
         {/* Front */}
@@ -668,7 +696,7 @@ function FlipCard({
           className="absolute inset-0 bg-card rounded-2xl shadow-lg flex flex-col items-center justify-center p-8 backface-hidden"
           style={{ backfaceVisibility: "hidden" }}
         >
-          {/* Like/Nope indicators */}
+          {/* Like/Nope/Middle indicators */}
           <motion.div
             style={{ opacity: nopeOpacity }}
             className="absolute top-6 right-6 px-4 py-2 border-2 border-partner1 text-partner1 rounded-lg font-bold text-sm rotate-12"
@@ -680,6 +708,12 @@ function FlipCard({
             className="absolute top-6 left-6 px-4 py-2 border-2 border-partner2 text-partner2 rounded-lg font-bold text-sm -rotate-12"
           >
             LIKE
+          </motion.div>
+          <motion.div
+            style={{ opacity: middleOpacity }}
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 border-2 border-accent text-accent rounded-lg font-bold text-sm"
+          >
+            MIDDLE NAME
           </motion.div>
 
           {/* Gender dot */}
