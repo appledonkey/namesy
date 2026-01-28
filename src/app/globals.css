@@ -260,4 +260,12 @@ html {
   .pull-indicator {
     transition: transform 0.2s ease-out;
   }
+
+  /* Swipe card - prevents page scrolling during drag */
+  .swipe-card {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
 }

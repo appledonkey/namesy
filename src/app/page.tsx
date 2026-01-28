@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, useAnimationControls, PanInfo } from "framer-motion";
 import { Heart, X, Layers, TrendingUp, TrendingDown, Minus, Settings } from "lucide-react";
 import { namesData, type NameData } from "@/lib/names";
 import { haptics } from "@/lib/haptics";
@@ -19,6 +19,17 @@ import { SettingsSheet } from "@/components/features/settings-sheet";
 type Screen = "swipe" | "matches";
 type Partner = 1 | 2;
 
+// Spring physics configurations
+const SPRING_CONFIG = {
+  drag: { damping: 25, stiffness: 200 },      // Responsive during drag
+  snapBack: { damping: 30, stiffness: 300 },  // Quick snap back
+  exit: { damping: 20, stiffness: 100 },      // Smooth fly off
+};
+
+// Swipe thresholds
+const SWIPE_THRESHOLD = 100;
+const VELOCITY_THRESHOLD = 500;
+
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("swipe");
   const [activePartner, setActivePartner] = useState<Partner>(1);
@@ -27,6 +38,8 @@ export default function Home() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [buttonSwipe, setButtonSwipe] = useState<"left" | "right" | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   // Load state from localStorage on mount
   useEffect(() => {
@@ -75,9 +88,10 @@ export default function Home() {
   const currentName = currentState ? namePool[currentState.currentIndex] : null;
   const isFinished = currentState ? currentState.currentIndex >= namePool.length : false;
 
-  const handleSwipe = useCallback(
+  // Process the swipe result after animation completes
+  const processSwipeResult = useCallback(
     (direction: "left" | "right") => {
-      if (isFinished || isFlipped || !currentName || !appState) return;
+      if (!currentName || !appState) return;
 
       haptics.swipe();
 
@@ -102,8 +116,28 @@ export default function Home() {
       }
 
       setIsFlipped(false);
+      setIsAnimating(false);
+      setButtonSwipe(null);
     },
-    [isFinished, isFlipped, currentName, appState, activePartner]
+    [currentName, appState, activePartner]
+  );
+
+  // Handle button-triggered swipes
+  const handleButtonSwipe = useCallback(
+    (direction: "left" | "right") => {
+      if (isFinished || isFlipped || !currentName || !appState || isAnimating) return;
+      setIsAnimating(true);
+      setButtonSwipe(direction);
+    },
+    [isFinished, isFlipped, currentName, appState, isAnimating]
+  );
+
+  // Handle drag-triggered swipes (directly from card)
+  const handleSwipe = useCallback(
+    (direction: "left" | "right") => {
+      processSwipeResult(direction);
+    },
+    [processSwipeResult]
   );
 
   // Keyboard shortcuts
@@ -117,11 +151,11 @@ export default function Home() {
       switch (e.key) {
         case "ArrowLeft":
           e.preventDefault();
-          handleSwipe("left");
+          handleButtonSwipe("left");
           break;
         case "ArrowRight":
           e.preventDefault();
-          handleSwipe("right");
+          handleButtonSwipe("right");
           break;
         case " ": // Space bar
           e.preventDefault();
@@ -141,7 +175,7 @@ export default function Home() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleSwipe, isFinished, currentName, isFlipped]);
+  }, [handleButtonSwipe, isFinished, currentName, isFlipped]);
 
   const handleCardTap = () => {
     if (!isFinished) {
@@ -267,32 +301,49 @@ export default function Home() {
               </div>
             ) : (
               <>
-                {/* Flip Card */}
-                <FlipCard
-                  name={currentName}
-                  isFlipped={isFlipped}
-                  onTap={handleCardTap}
-                  onSwipe={handleSwipe}
-                  getTrendIcon={getTrendIcon}
-                  getTrendColor={getTrendColor}
-                />
+                {/* Card Stack */}
+                <div className="relative w-full max-w-xs aspect-[3/4]">
+                  {/* Render up to 3 cards in reverse order so top card is last (on top) */}
+                  {namePool
+                    .slice(currentState!.currentIndex, currentState!.currentIndex + 3)
+                    .reverse()
+                    .map((name, reverseIndex, arr) => {
+                      const stackIndex = arr.length - 1 - reverseIndex;
+                      const isTop = stackIndex === 0;
+                      return (
+                        <FlipCard
+                          key={name.id}
+                          name={name}
+                          isFlipped={isTop ? isFlipped : false}
+                          onTap={isTop ? handleCardTap : () => {}}
+                          onSwipe={handleSwipe}
+                          getTrendIcon={getTrendIcon}
+                          getTrendColor={getTrendColor}
+                          isTop={isTop}
+                          stackIndex={stackIndex}
+                          triggerSwipe={isTop ? buttonSwipe : null}
+                          onSwipeComplete={() => processSwipeResult(buttonSwipe!)}
+                        />
+                      );
+                    })}
+                </div>
 
                 {/* Action Buttons */}
                 <div className="flex gap-6 mt-8">
                   <motion.button
-                    onClick={() => handleSwipe("left")}
+                    onClick={() => handleButtonSwipe("left")}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
-                    disabled={isFlipped}
+                    disabled={isFlipped || isAnimating}
                     className="w-16 h-16 rounded-full bg-card border-2 border-partner1/30 text-partner1 flex items-center justify-center shadow-md hover:border-partner1 transition-colors disabled:opacity-40"
                   >
                     <X className="w-7 h-7" strokeWidth={2.5} />
                   </motion.button>
                   <motion.button
-                    onClick={() => handleSwipe("right")}
+                    onClick={() => handleButtonSwipe("right")}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
-                    disabled={isFlipped}
+                    disabled={isFlipped || isAnimating}
                     className="w-16 h-16 rounded-full bg-card border-2 border-partner2/30 text-partner2 flex items-center justify-center shadow-md hover:border-partner2 transition-colors disabled:opacity-40"
                   >
                     <Heart className="w-7 h-7" />
@@ -389,38 +440,132 @@ interface FlipCardProps {
   onSwipe: (direction: "left" | "right") => void;
   getTrendIcon: (trend: string) => React.ReactNode;
   getTrendColor: (trend: string) => string;
+  isTop?: boolean;
+  stackIndex?: number;
+  triggerSwipe?: "left" | "right" | null;
+  onSwipeComplete?: () => void;
 }
 
-function FlipCard({ name, isFlipped, onTap, onSwipe, getTrendIcon, getTrendColor }: FlipCardProps) {
+function FlipCard({
+  name,
+  isFlipped,
+  onTap,
+  onSwipe,
+  getTrendIcon,
+  getTrendColor,
+  isTop = true,
+  stackIndex = 0,
+  triggerSwipe = null,
+  onSwipeComplete
+}: FlipCardProps) {
+  const controls = useAnimationControls();
+  const [isExiting, setIsExiting] = useState(false);
   const x = useMotionValue(0);
-  const rotate = useTransform(x, [-200, 200], [-12, 12]);
+  const rotate = useTransform(x, [-200, 200], [-15, 15]);
   const likeOpacity = useTransform(x, [0, 100], [0, 1]);
   const nopeOpacity = useTransform(x, [-100, 0], [1, 0]);
+  // Scale up slightly when dragging for "lifted" feel
+  const scale = useTransform(x, [-200, 0, 200], [1.02, 1, 1.02]);
 
-  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (isFlipped) return;
-    if (info.offset.x > 100 || info.velocity.x > 500) {
-      onSwipe("right");
-    } else if (info.offset.x < -100 || info.velocity.x < -500) {
-      onSwipe("left");
+  // Handle programmatic swipe from buttons
+  useEffect(() => {
+    if (triggerSwipe && isTop && !isExiting) {
+      performSwipe(triggerSwipe);
+    }
+  }, [triggerSwipe]);
+
+  // Handle flip animation
+  useEffect(() => {
+    if (isTop && !isExiting) {
+      controls.start({
+        rotateY: isFlipped ? 180 : 0,
+        transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] }
+      });
+    }
+  }, [isFlipped, isTop, isExiting, controls]);
+
+  const performSwipe = async (direction: "left" | "right") => {
+    if (isExiting) return;
+    setIsExiting(true);
+
+    const exitX = direction === "right"
+      ? window.innerWidth * 1.5
+      : -window.innerWidth * 1.5;
+    const exitRotate = direction === "right" ? 30 : -30;
+
+    await controls.start({
+      x: exitX,
+      y: 50,
+      rotate: exitRotate,
+      transition: {
+        type: "spring",
+        ...SPRING_CONFIG.exit,
+      }
+    });
+
+    onSwipe(direction);
+    onSwipeComplete?.();
+  };
+
+  const handleDragEnd = async (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (isFlipped || isExiting || !isTop) return;
+
+    const swipeRight = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > VELOCITY_THRESHOLD;
+    const swipeLeft = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -VELOCITY_THRESHOLD;
+
+    if (swipeRight) {
+      await performSwipe("right");
+    } else if (swipeLeft) {
+      await performSwipe("left");
+    } else {
+      // Snap back with spring physics
+      controls.start({
+        x: 0,
+        y: 0,
+        rotate: 0,
+        transition: {
+          type: "spring",
+          ...SPRING_CONFIG.snapBack
+        }
+      });
     }
   };
 
   const genderDotColor =
     name.gender === "F" ? "bg-partner1" : name.gender === "M" ? "bg-partner2" : "bg-muted";
 
+  // Stack positioning - cards behind are slightly smaller and offset
+  const stackScale = 1 - stackIndex * 0.05;
+  const stackY = stackIndex * 8;
+
   return (
-    <div className="w-full aspect-[3/4] max-w-xs" style={{ perspective: 1000 }}>
+    <div
+      className="w-full aspect-[3/4] max-w-xs swipe-card"
+      style={{
+        perspective: 1000,
+        position: stackIndex > 0 ? "absolute" : "relative",
+        zIndex: 10 - stackIndex,
+      }}
+    >
       <motion.div
-        drag={!isFlipped}
-        dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+        drag={isTop && !isFlipped && !isExiting}
         dragElastic={0.9}
         onDragEnd={handleDragEnd}
-        onClick={onTap}
-        className="relative w-full h-full cursor-pointer"
-        animate={{ rotateY: isFlipped ? 180 : 0 }}
-        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-        style={{ transformStyle: "preserve-3d", x, rotate }}
+        onClick={isTop ? onTap : undefined}
+        className={`relative w-full h-full ${isTop ? "cursor-pointer" : ""}`}
+        animate={controls}
+        initial={{
+          rotateY: 0,
+          scale: stackScale,
+          y: stackY,
+        }}
+        style={{
+          transformStyle: "preserve-3d",
+          x: isTop ? x : 0,
+          rotate: isTop ? rotate : 0,
+          scale: isTop ? scale : stackScale,
+          y: isTop ? 0 : stackY,
+        }}
       >
         {/* Front */}
         <div
