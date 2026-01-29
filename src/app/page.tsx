@@ -45,15 +45,22 @@ function NamePreview({ firstName, middleName, surname, onMiddleNameChange }: Nam
       className="text-center mb-6"
     >
       {/* Full name with inline editable middle name */}
-      <div className="flex items-center justify-center gap-1 text-2xl md:text-3xl font-heading text-foreground tracking-wide mb-3">
+      <div className="flex items-center justify-center gap-1 text-2xl md:text-3xl font-heading text-foreground tracking-wide mb-3 flex-wrap">
         <span>{firstName}</span>
-        <input
-          type="text"
-          value={middleName || ""}
-          onChange={(e) => onMiddleNameChange(e.target.value || undefined)}
-          placeholder="middle"
-          className="w-24 md:w-32 bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-muted/40 placeholder:text-lg"
-        />
+        <span className="relative inline-block">
+          {/* Hidden sizer */}
+          <span className="invisible whitespace-pre px-1" aria-hidden="true">
+            {middleName || "middle"}
+          </span>
+          {/* Actual input overlaid */}
+          <input
+            type="text"
+            value={middleName || ""}
+            onChange={(e) => onMiddleNameChange(e.target.value || undefined)}
+            placeholder="middle"
+            className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-muted/40"
+          />
+        </span>
         {surname && <span>{surname}</span>}
       </div>
 
@@ -719,7 +726,7 @@ function FlipCard({
 
         {/* Back */}
         <div
-          className="absolute inset-0 bg-card rounded-2xl shadow-lg p-6 backface-hidden overflow-y-auto"
+          className="absolute inset-0 bg-card rounded-2xl shadow-lg p-6 backface-hidden overflow-y-auto scrollbar-hide"
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
           {/* Header */}
