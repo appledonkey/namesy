@@ -42,10 +42,10 @@ function NamePreview({ firstName, middleName, surname, onMiddleNameChange }: Nam
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.3 }}
-      className="text-center mb-6"
+      className="text-center mb-3 sm:mb-6"
     >
       {/* Full name with inline editable middle name */}
-      <div className="flex items-center justify-center gap-1 text-2xl md:text-3xl font-heading text-foreground tracking-wide mb-3 flex-wrap">
+      <div className="flex items-center justify-center gap-1 text-xl sm:text-2xl md:text-3xl font-heading text-foreground tracking-wide mb-2 sm:mb-3 flex-wrap">
         <span>{firstName}</span>
         <span className="relative inline-block">
           {/* Hidden sizer */}
@@ -58,15 +58,15 @@ function NamePreview({ firstName, middleName, surname, onMiddleNameChange }: Nam
             value={middleName || ""}
             onChange={(e) => onMiddleNameChange(e.target.value || undefined)}
             placeholder="middle"
-            className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-muted/40"
+            className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-muted/40 touch-target"
           />
         </span>
         {surname && <span>{surname}</span>}
       </div>
 
-      {/* Initials pill - bigger */}
-      <div className="inline-flex items-center gap-2 px-5 py-2 bg-secondary/50 rounded-full">
-        <span className="text-base md:text-lg font-medium tracking-[0.3em] text-foreground/80 uppercase">
+      {/* Initials pill */}
+      <div className="inline-flex items-center gap-2 px-3 sm:px-5 py-1.5 sm:py-2 bg-secondary/50 rounded-full">
+        <span className="text-sm sm:text-base md:text-lg font-medium tracking-[0.25em] sm:tracking-[0.3em] text-foreground/80 uppercase">
           {initials}
         </span>
       </div>
@@ -291,19 +291,19 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-dvh bg-background flex flex-col overflow-x-hidden safe-top">
       {/* Header */}
-      <header className="px-4 pt-5 pb-3">
+      <header className="flex-shrink-0 px-4 pt-3 pb-2 sm:pt-5 sm:pb-3">
         {/* Logo + Settings */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-2 sm:mb-4">
           <div className="w-10" /> {/* Spacer for centering */}
           <div className="flex items-center gap-2">
-            <Image src="/icon.png" alt="Namesy" width={28} height={28} className="rounded-lg" />
-            <span className="font-heading text-xl font-semibold">namesy</span>
+            <Image src="/icon.png" alt="Namesy" width={24} height={24} className="rounded-lg sm:w-7 sm:h-7" />
+            <span className="font-heading text-lg sm:text-xl font-semibold">namesy</span>
           </div>
           <button
             onClick={() => setShowSettings(true)}
-            className="w-10 h-10 flex items-center justify-center text-muted hover:text-foreground transition-colors"
+            className="w-10 h-10 flex items-center justify-center text-muted hover:text-foreground transition-colors touch-target"
           >
             <Settings className="w-5 h-5" />
           </button>
@@ -314,27 +314,31 @@ export default function Home() {
           <div className="flex gap-1 p-1 bg-secondary rounded-full">
             <button
               onClick={() => setActivePartner(1)}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all touch-target ${
                 activePartner === 1
                   ? "bg-partner1 text-white shadow-md"
                   : "text-muted hover:text-foreground"
               }`}
             >
-              {appState.partner1.name || "Partner 1"}
-              <span className="ml-2 text-xs opacity-75">
+              <span className="truncate max-w-[60px] sm:max-w-none inline-block align-middle">
+                {appState.partner1.name || "Partner 1"}
+              </span>
+              <span className="ml-1.5 sm:ml-2 text-[10px] sm:text-xs opacity-75 hidden sm:inline">
                 {appState.partner1.currentIndex}/{namePool.length}
               </span>
             </button>
             <button
               onClick={() => setActivePartner(2)}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all touch-target ${
                 activePartner === 2
                   ? "bg-partner2 text-white shadow-md"
                   : "text-muted hover:text-foreground"
               }`}
             >
-              {appState.partner2.name || "Partner 2"}
-              <span className="ml-2 text-xs opacity-75">
+              <span className="truncate max-w-[60px] sm:max-w-none inline-block align-middle">
+                {appState.partner2.name || "Partner 2"}
+              </span>
+              <span className="ml-1.5 sm:ml-2 text-[10px] sm:text-xs opacity-75 hidden sm:inline">
                 {appState.partner2.currentIndex}/{namePool.length}
               </span>
             </button>
@@ -343,16 +347,16 @@ export default function Home() {
       </header>
 
       {/* Nav */}
-      <nav className="flex justify-center gap-8 py-3 border-b border-border">
+      <nav className="flex-shrink-0 flex justify-center gap-8 py-2 sm:py-3 border-b border-border">
         <button
           onClick={() => setScreen("swipe")}
-          className={`p-2 transition-colors ${screen === "swipe" ? "text-foreground" : "text-muted"}`}
+          className={`p-2 transition-colors touch-target ${screen === "swipe" ? "text-foreground" : "text-muted"}`}
         >
           <Layers className="w-5 h-5" />
         </button>
         <button
           onClick={() => setScreen("matches")}
-          className={`relative p-2 transition-colors ${screen === "matches" ? "text-foreground" : "text-muted"}`}
+          className={`relative p-2 transition-colors touch-target ${screen === "matches" ? "text-foreground" : "text-muted"}`}
         >
           <Heart className="w-5 h-5" />
           {matchedNames.length > 0 && (
@@ -364,9 +368,9 @@ export default function Home() {
       </nav>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center px-4 py-6">
+      <main className="flex-1 flex flex-col items-center px-6 py-3 sm:py-6">
         {screen === "swipe" && (
-          <div className="w-full max-w-sm flex flex-col items-center">
+          <div className="w-full max-w-sm flex flex-col items-center flex-1 min-h-0">
             {isFinished || !currentName ? (
               <div className="text-center py-20">
                 <p className="font-heading text-3xl text-foreground mb-2">All done!</p>
@@ -379,18 +383,23 @@ export default function Home() {
             ) : (
               <>
                 {/* Name Preview with inline middle name input */}
-                <AnimatePresence mode="wait">
-                  <NamePreview
-                    key={currentName.id}
-                    firstName={currentName.name}
-                    middleName={appState.middleName}
-                    surname={appState.surname}
-                    onMiddleNameChange={handleMiddleNameChange}
-                  />
-                </AnimatePresence>
+                <div className="flex-shrink-0">
+                  <AnimatePresence mode="wait">
+                    <NamePreview
+                      key={currentName.id}
+                      firstName={currentName.name}
+                      middleName={appState.middleName}
+                      surname={appState.surname}
+                      onMiddleNameChange={handleMiddleNameChange}
+                    />
+                  </AnimatePresence>
+                </div>
 
                 {/* Card Stack */}
-                <div className="relative w-full max-w-xs aspect-[3/4] overflow-hidden">
+                <div
+                  className="relative flex-1 w-full max-w-[280px] sm:max-w-[300px]"
+                  style={{ maxHeight: "min(50vh, 380px)", aspectRatio: "3/4" }}
+                >
                   {/* Render up to 3 cards in reverse order so top card is last (on top) */}
                   {namePool
                     .slice(currentState!.currentIndex, currentState!.currentIndex + 3)
@@ -417,29 +426,29 @@ export default function Home() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-6 mt-8">
+                <div className="flex-shrink-0 flex gap-4 sm:gap-6 mt-4 sm:mt-8">
                   <motion.button
                     onClick={() => handleButtonSwipe("left")}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     disabled={isFlipped || isAnimating}
-                    className="w-16 h-16 rounded-full bg-card border-2 border-partner1/30 text-partner1 flex items-center justify-center shadow-md hover:border-partner1 transition-colors disabled:opacity-40"
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-card border-2 border-partner1/30 text-partner1 flex items-center justify-center shadow-md hover:border-partner1 transition-colors disabled:opacity-40 touch-target"
                   >
-                    <X className="w-7 h-7" strokeWidth={2.5} />
+                    <X className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2.5} />
                   </motion.button>
                   <motion.button
                     onClick={() => handleButtonSwipe("right")}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     disabled={isFlipped || isAnimating}
-                    className="w-16 h-16 rounded-full bg-card border-2 border-partner2/30 text-partner2 flex items-center justify-center shadow-md hover:border-partner2 transition-colors disabled:opacity-40"
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-card border-2 border-partner2/30 text-partner2 flex items-center justify-center shadow-md hover:border-partner2 transition-colors disabled:opacity-40 touch-target"
                   >
-                    <Heart className="w-7 h-7" />
+                    <Heart className="w-6 h-6 sm:w-7 sm:h-7" />
                   </motion.button>
                 </div>
 
                 {/* Progress */}
-                <p className="mt-6 text-sm text-muted">
+                <p className="flex-shrink-0 mt-3 sm:mt-6 text-xs sm:text-sm text-muted safe-bottom pb-2">
                   {currentState ? currentState.currentIndex + 1 : 0} / {namePool.length}
                 </p>
               </>
@@ -448,29 +457,29 @@ export default function Home() {
         )}
 
         {screen === "matches" && (
-          <div className="w-full max-w-md">
-            <h2 className="font-heading text-2xl text-center mb-6">Matches</h2>
+          <div className="w-full max-w-md flex-1 overflow-y-auto scrollbar-hide safe-bottom">
+            <h2 className="font-heading text-xl sm:text-2xl text-center mb-4 sm:mb-6">Matches</h2>
             {matchedNames.length === 0 ? (
               <p className="text-center text-muted">No matches yet. Keep swiping!</p>
             ) : (
-              <ul className="space-y-3">
+              <ul className="space-y-2 sm:space-y-3 pb-4">
                 {matchedNames.map((m) => (
                   <li
                     key={m.id}
-                    className="flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm"
+                    className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-card rounded-2xl shadow-sm"
                   >
                     <div
-                      className={`w-3 h-3 rounded-full ${
+                      className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${
                         m.gender === "F" ? "bg-partner1" : m.gender === "M" ? "bg-partner2" : "bg-muted"
                       }`}
                     />
-                    <div className="flex-1">
-                      <p className="font-heading text-xl">{m.name}</p>
-                      <p className="text-sm text-muted">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-heading text-lg sm:text-xl">{m.name}</p>
+                      <p className="text-xs sm:text-sm text-muted truncate">
                         {m.origin} · {m.meaning}
                       </p>
                     </div>
-                    <div className={`flex items-center gap-1 text-sm ${getTrendColor(m.trend)}`}>
+                    <div className={`flex items-center gap-1 text-xs sm:text-sm flex-shrink-0 ${getTrendColor(m.trend)}`}>
                       {getTrendIcon(m.trend)}
                       <span>{m.popularity}</span>
                     </div>
@@ -489,21 +498,21 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 safe-y px-4"
           >
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-card p-10 rounded-3xl text-center shadow-xl"
+              className="bg-card p-8 sm:p-10 rounded-3xl text-center shadow-xl mx-4 max-w-[280px] sm:max-w-none"
               style={{
                 background: "linear-gradient(135deg, #FDDCD6 0%, #C5E8DA 100%)",
               }}
             >
-              <p className="text-sm uppercase tracking-widest text-foreground/70 mb-2">
+              <p className="text-xs sm:text-sm uppercase tracking-widest text-foreground/70 mb-2">
                 It&apos;s a match!
               </p>
-              <p className="font-heading text-4xl text-foreground">{showMatch.name}</p>
+              <p className="font-heading text-3xl sm:text-4xl text-foreground">{showMatch.name}</p>
             </motion.div>
           </motion.div>
         )}
@@ -648,10 +657,9 @@ function FlipCard({
 
   return (
     <div
-      className="w-full aspect-[3/4] max-w-xs swipe-card"
+      className="absolute inset-0 swipe-card overflow-visible"
       style={{
         perspective: 1000,
-        position: stackIndex > 0 ? "absolute" : "relative",
         zIndex: 10 - stackIndex,
       }}
     >
@@ -677,89 +685,89 @@ function FlipCard({
       >
         {/* Front */}
         <div
-          className="absolute inset-0 bg-card rounded-2xl shadow-lg flex flex-col items-center justify-center p-8 backface-hidden"
+          className="absolute inset-0 bg-card rounded-2xl shadow-lg flex flex-col items-center justify-center p-4 sm:p-8 backface-hidden"
           style={{ backfaceVisibility: "hidden" }}
         >
           {/* Like/Nope/Middle indicators */}
           <motion.div
             style={{ opacity: nopeOpacity }}
-            className="absolute top-6 right-6 px-4 py-2 border-2 border-partner1 text-partner1 rounded-lg font-bold text-sm rotate-12"
+            className="absolute top-4 sm:top-6 right-4 sm:right-6 px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-partner1 text-partner1 rounded-lg font-bold text-xs sm:text-sm rotate-12"
           >
             NOPE
           </motion.div>
           <motion.div
             style={{ opacity: likeOpacity }}
-            className="absolute top-6 left-6 px-4 py-2 border-2 border-partner2 text-partner2 rounded-lg font-bold text-sm -rotate-12"
+            className="absolute top-4 sm:top-6 left-4 sm:left-6 px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-partner2 text-partner2 rounded-lg font-bold text-xs sm:text-sm -rotate-12"
           >
             LIKE
           </motion.div>
           <motion.div
             style={{ opacity: middleOpacity }}
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 border-2 border-accent text-accent rounded-lg font-bold text-sm"
+            className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-accent text-accent rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap"
           >
             MIDDLE NAME
           </motion.div>
 
           {/* Gender dot */}
-          <div className={`w-2 h-2 rounded-full ${genderDotColor} mb-4`} />
+          <div className={`w-2 h-2 rounded-full ${genderDotColor} mb-3 sm:mb-4`} />
 
           {/* Name */}
-          <h1 className="font-heading text-5xl font-light tracking-tight text-foreground mb-2">
+          <h1 className="font-heading text-4xl sm:text-5xl font-light tracking-tight text-foreground mb-1 sm:mb-2">
             {name.name}
           </h1>
 
           {/* Origin */}
-          <p className="text-xs uppercase tracking-widest text-muted mb-3">
+          <p className="text-[10px] sm:text-xs uppercase tracking-widest text-muted mb-2 sm:mb-3">
             {name.origin}
           </p>
 
           {/* Meaning */}
-          <p className="text-base italic text-foreground/70 font-heading">
+          <p className="text-sm sm:text-base italic text-foreground/70 font-heading text-center px-2">
             &ldquo;{name.meaning}&rdquo;
           </p>
 
           {/* Tap hint */}
-          <p className="absolute bottom-6 text-xs text-muted/50 tracking-wide">
+          <p className="absolute bottom-4 sm:bottom-6 text-[10px] sm:text-xs text-muted/50 tracking-wide">
             tap for more
           </p>
         </div>
 
         {/* Back */}
         <div
-          className="absolute inset-0 bg-card rounded-2xl shadow-lg p-6 backface-hidden overflow-y-auto scrollbar-hide"
+          className="absolute inset-0 bg-card rounded-2xl shadow-lg p-4 sm:p-6 backface-hidden overflow-y-auto scrollbar-hide overscroll-contain"
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
           {/* Header */}
-          <div className="text-center border-b border-border pb-4 mb-4">
-            <h2 className="font-heading text-3xl font-light text-foreground">{name.name}</h2>
-            <p className="text-sm text-muted mt-1">{name.origin}</p>
+          <div className="text-center border-b border-border pb-3 sm:pb-4 mb-3 sm:mb-4">
+            <h2 className="font-heading text-2xl sm:text-3xl font-light text-foreground">{name.name}</h2>
+            <p className="text-xs sm:text-sm text-muted mt-1">{name.origin}</p>
           </div>
 
           {/* Stats */}
-          <div className="flex justify-around mb-4 pb-4 border-b border-border">
+          <div className="flex justify-around mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-border">
             <div className="text-center">
-              <p className="text-[10px] uppercase tracking-widest text-muted">Popularity</p>
-              <p className="text-lg font-medium">{name.popularity}</p>
+              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted">Popularity</p>
+              <p className="text-base sm:text-lg font-medium">{name.popularity}</p>
             </div>
             <div className="text-center">
-              <p className="text-[10px] uppercase tracking-widest text-muted">Trend</p>
-              <p className={`text-lg font-medium flex items-center gap-1 ${getTrendColor(name.trend)}`}>
+              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted">Trend</p>
+              <p className={`text-base sm:text-lg font-medium flex items-center justify-center gap-1 ${getTrendColor(name.trend)}`}>
                 {getTrendIcon(name.trend)} {name.trend}
               </p>
             </div>
             <div className="text-center">
-              <p className="text-[10px] uppercase tracking-widest text-muted">Syllables</p>
-              <p className="text-lg font-medium">{name.syllables}</p>
+              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted">Syllables</p>
+              <p className="text-base sm:text-lg font-medium">{name.syllables}</p>
             </div>
           </div>
 
           {/* Nicknames */}
           {name.nicknames.length > 0 && (
-            <div className="mb-4">
-              <p className="text-[10px] uppercase tracking-widest text-muted mb-2">Nicknames</p>
-              <div className="flex flex-wrap gap-2">
+            <div className="mb-3 sm:mb-4">
+              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted mb-1.5 sm:mb-2">Nicknames</p>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {name.nicknames.map((n) => (
-                  <span key={n} className="px-3 py-1 bg-secondary rounded-full text-sm">
+                  <span key={n} className="px-2 sm:px-3 py-0.5 sm:py-1 bg-secondary rounded-full text-xs sm:text-sm">
                     {n}
                   </span>
                 ))}
@@ -769,11 +777,11 @@ function FlipCard({
 
           {/* Famous people */}
           {name.famousPeople.length > 0 && (
-            <div className="mb-4">
-              <p className="text-[10px] uppercase tracking-widest text-muted mb-2">Famous People</p>
-              <ul className="space-y-1">
+            <div className="mb-3 sm:mb-4">
+              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted mb-1.5 sm:mb-2">Famous People</p>
+              <ul className="space-y-0.5 sm:space-y-1">
                 {name.famousPeople.slice(0, 3).map((person, i) => (
-                  <li key={i} className="text-sm text-foreground/80">
+                  <li key={i} className="text-xs sm:text-sm text-foreground/80">
                     {person}
                   </li>
                 ))}
@@ -783,11 +791,11 @@ function FlipCard({
 
           {/* Vibe tags */}
           {name.vibe.length > 0 && (
-            <div className="mb-4">
-              <p className="text-[10px] uppercase tracking-widest text-muted mb-2">Vibe</p>
-              <div className="flex flex-wrap gap-2">
+            <div className="mb-3 sm:mb-4">
+              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted mb-1.5 sm:mb-2">Vibe</p>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {name.vibe.map((v) => (
-                  <span key={v} className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+                  <span key={v} className="px-2 sm:px-3 py-0.5 sm:py-1 bg-primary/10 text-primary rounded-full text-xs sm:text-sm">
                     {v}
                   </span>
                 ))}
@@ -796,7 +804,7 @@ function FlipCard({
           )}
 
           {/* Tap hint */}
-          <p className="text-center text-xs text-muted/50 tracking-wide mt-auto pt-4">
+          <p className="text-center text-[10px] sm:text-xs text-muted/50 tracking-wide mt-auto pt-3 sm:pt-4">
             tap to flip back
           </p>
         </div>

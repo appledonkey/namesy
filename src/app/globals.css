@@ -268,4 +268,24 @@ html {
     -webkit-user-select: none;
     -webkit-touch-callout: none;
   }
+
+  /* Prevent overscroll bounce on iOS */
+  .overscroll-none {
+    overscroll-behavior: none;
+  }
+
+  /* Contain overscroll within element */
+  .overscroll-contain {
+    overscroll-behavior: contain;
+  }
+
+  /* Dynamic viewport height for mobile */
+  .h-dvh {
+    height: 100dvh;
+  }
+
+  /* Minimum height with dynamic viewport */
+  .min-h-dvh {
+    min-height: 100dvh;
+  }
 }

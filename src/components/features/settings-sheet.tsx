@@ -108,26 +108,26 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 bg-background rounded-t-3xl z-50 max-h-[85vh] overflow-y-auto safe-bottom"
+            className="fixed bottom-0 left-0 right-0 bg-background rounded-t-3xl z-50 max-h-[85vh] overflow-y-auto scrollbar-hide safe-bottom overscroll-contain"
           >
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-2">
-              <div className="w-10 h-1 bg-border rounded-full" />
+              <div className="w-12 h-1.5 bg-border rounded-full" />
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-6 pb-4 border-b border-border">
+            <div className="flex items-center justify-between px-5 sm:px-6 pb-4 border-b border-border">
               <h2 className="font-heading text-xl">Settings</h2>
               <button
                 onClick={onClose}
-                className="p-2 -mr-2 text-muted hover:text-foreground transition-colors"
+                className="p-2.5 -mr-2 text-muted hover:text-foreground transition-colors touch-target"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Content */}
-            <div className="px-6 py-6 space-y-8">
+            <div className="px-5 sm:px-6 py-5 sm:py-6 space-y-6 sm:space-y-8 pb-8">
               {/* Middle Name */}
               <div>
                 <label className="block text-sm font-medium text-muted mb-2">
@@ -170,7 +170,7 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleGenderChange("M")}
-                    className={`flex-1 py-3 px-4 rounded-full text-sm font-medium transition-all ${
+                    className={`flex-1 py-3.5 px-3 rounded-full text-sm font-medium transition-all touch-target ${
                       genderFilter === "M"
                         ? "bg-partner2 text-white"
                         : "bg-card border border-border text-foreground hover:border-partner2/50"
@@ -180,7 +180,7 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
                   </button>
                   <button
                     onClick={() => handleGenderChange("F")}
-                    className={`flex-1 py-3 px-4 rounded-full text-sm font-medium transition-all ${
+                    className={`flex-1 py-3.5 px-3 rounded-full text-sm font-medium transition-all touch-target ${
                       genderFilter === "F"
                         ? "bg-partner1 text-white"
                         : "bg-card border border-border text-foreground hover:border-partner1/50"
@@ -190,7 +190,7 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
                   </button>
                   <button
                     onClick={() => handleGenderChange("all")}
-                    className={`flex-1 py-3 px-4 rounded-full text-sm font-medium transition-all ${
+                    className={`flex-1 py-3.5 px-3 rounded-full text-sm font-medium transition-all touch-target ${
                       genderFilter === "all"
                         ? "bg-accent text-white"
                         : "bg-card border border-border text-foreground hover:border-accent/50"

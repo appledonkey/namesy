@@ -100,9 +100,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const currentStepIndex = steps.indexOf(step);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-dvh bg-background flex flex-col overflow-hidden safe-top">
       {/* Progress dots */}
-      <div className="flex justify-center gap-2 pt-8 pb-4">
+      <div className="flex-shrink-0 flex justify-center gap-2 pt-6 sm:pt-8 pb-4">
         {steps.map((s, i) => (
           <div
             key={s}
@@ -114,7 +114,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
+      <div className="flex-1 flex flex-col items-center justify-center px-5 sm:px-6 overflow-y-auto scrollbar-hide safe-bottom pb-6">
         <AnimatePresence mode="wait">
           {step === "surname" && (
             <motion.div
@@ -172,38 +172,38 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={() => handleGenderSelect("M")}
-                  className={`p-5 rounded-2xl border-2 transition-all duration-300 ${
+                  className={`p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 touch-target ${
                     genderFilter === "M"
                       ? "border-partner2 bg-partner2-light"
                       : "border-border bg-card hover:border-partner2/50"
                   }`}
                 >
-                  <span className="text-2xl mb-1 block">👦</span>
-                  <span className="font-heading text-lg">Boy names</span>
+                  <span className="text-xl sm:text-2xl mb-1 block">👦</span>
+                  <span className="font-heading text-base sm:text-lg">Boy names</span>
                 </button>
 
                 <button
                   onClick={() => handleGenderSelect("F")}
-                  className={`p-5 rounded-2xl border-2 transition-all duration-300 ${
+                  className={`p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 touch-target ${
                     genderFilter === "F"
                       ? "border-partner1 bg-partner1-light"
                       : "border-border bg-card hover:border-partner1/50"
                   }`}
                 >
-                  <span className="text-2xl mb-1 block">👧</span>
-                  <span className="font-heading text-lg">Girl names</span>
+                  <span className="text-xl sm:text-2xl mb-1 block">👧</span>
+                  <span className="font-heading text-base sm:text-lg">Girl names</span>
                 </button>
 
                 <button
                   onClick={() => handleGenderSelect("all")}
-                  className={`p-5 rounded-2xl border-2 transition-all duration-300 ${
+                  className={`p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 touch-target ${
                     genderFilter === "all"
                       ? "border-accent bg-secondary"
                       : "border-border bg-card hover:border-accent/50"
                   }`}
                 >
-                  <span className="text-2xl mb-1 block">✨</span>
-                  <span className="font-heading text-lg">Both / We don&apos;t know yet</span>
+                  <span className="text-xl sm:text-2xl mb-1 block">✨</span>
+                  <span className="font-heading text-base sm:text-lg">Both / We don&apos;t know yet</span>
                 </button>
               </div>
             </motion.div>
@@ -228,27 +228,27 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   <div className="flex flex-col gap-3">
                     <button
                       onClick={() => handlePartnerChoice("partner")}
-                      className="p-5 rounded-2xl border-2 border-border bg-card hover:border-primary/50 transition-all duration-300 flex items-center gap-4"
+                      className="p-4 sm:p-5 rounded-2xl border-2 border-border bg-card hover:border-primary/50 transition-all duration-300 flex items-center gap-3 sm:gap-4 touch-target"
                     >
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-partner1-light to-partner2-light flex items-center justify-center">
-                        <Users className="w-6 h-6 text-foreground" />
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-partner1-light to-partner2-light flex items-center justify-center flex-shrink-0">
+                        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
                       </div>
-                      <div className="text-left flex-1">
-                        <span className="font-heading text-lg block">Yes, set it up</span>
-                        <span className="text-sm text-muted">Share a code with your partner</span>
+                      <div className="text-left flex-1 min-w-0">
+                        <span className="font-heading text-base sm:text-lg block">Yes, set it up</span>
+                        <span className="text-xs sm:text-sm text-muted">Share a code with your partner</span>
                       </div>
                     </button>
 
                     <button
                       onClick={() => handlePartnerChoice("solo")}
-                      className="p-5 rounded-2xl border-2 border-border bg-card hover:border-primary/50 transition-all duration-300 flex items-center gap-4"
+                      className="p-4 sm:p-5 rounded-2xl border-2 border-border bg-card hover:border-primary/50 transition-all duration-300 flex items-center gap-3 sm:gap-4 touch-target"
                     >
-                      <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
-                        <User className="w-6 h-6 text-muted" />
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                        <User className="w-5 h-5 sm:w-6 sm:h-6 text-muted" />
                       </div>
-                      <div className="text-left flex-1">
-                        <span className="font-heading text-lg block">Just me</span>
-                        <span className="text-sm text-muted">I&apos;ll invite them later</span>
+                      <div className="text-left flex-1 min-w-0">
+                        <span className="font-heading text-base sm:text-lg block">Just me</span>
+                        <span className="text-xs sm:text-sm text-muted">I&apos;ll invite them later</span>
                       </div>
                     </button>
                   </div>

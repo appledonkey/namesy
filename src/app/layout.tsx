@@ -108,6 +108,14 @@ const organizationSchema = {
   sameAs: [],
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -127,7 +135,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${playfair.variable} ${inter.variable} ${meowScript.variable} antialiased bg-background text-foreground`}
+        className={`${playfair.variable} ${inter.variable} ${meowScript.variable} antialiased bg-background text-foreground overscroll-none`}
       >
         <PaperTexture />
         <ErrorBoundary>
