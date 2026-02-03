@@ -648,7 +648,7 @@ const FlipCard = memo(function FlipCard({
   };
 
   const handleDragEnd = async (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (isFlipped || isExiting || !isTop) return;
+    if (isExiting || !isTop) return;
 
     const swipeRight = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > VELOCITY_THRESHOLD;
     const swipeLeft = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -VELOCITY_THRESHOLD;
@@ -691,7 +691,7 @@ const FlipCard = memo(function FlipCard({
       }}
     >
       <motion.div
-        drag={isTop && !isFlipped && !isExiting}
+        drag={isTop && !isExiting}
         dragElastic={0.9}
         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
         onDragStart={(e) => {
