@@ -45,11 +45,11 @@ function NamePreview({ firstName, middleName, surname, onMiddleNameChange }: Nam
       className="text-center mb-3 sm:mb-6"
     >
       {/* Full name with inline editable middle name */}
-      <div className="flex items-center justify-center gap-1 text-xl sm:text-2xl md:text-3xl font-heading text-foreground tracking-wide mb-2 sm:mb-3 flex-wrap">
-        <span>{firstName}</span>
-        <span className="relative inline-block">
+      <div className="flex items-center justify-center gap-1.5 text-lg sm:text-xl md:text-2xl font-heading text-foreground tracking-wide mb-2 sm:mb-3 whitespace-nowrap">
+        <span className="truncate max-w-[100px] sm:max-w-none">{firstName}</span>
+        <span className="relative inline-block flex-shrink-0">
           {/* Hidden sizer */}
-          <span className="invisible whitespace-pre px-1" aria-hidden="true">
+          <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
             {middleName || "middle"}
           </span>
           {/* Actual input overlaid */}
@@ -58,10 +58,10 @@ function NamePreview({ firstName, middleName, surname, onMiddleNameChange }: Nam
             value={middleName || ""}
             onChange={(e) => onMiddleNameChange(e.target.value || undefined)}
             placeholder="middle"
-            className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-muted/40 touch-target"
+            className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-muted/40"
           />
         </span>
-        {surname && <span>{surname}</span>}
+        {surname && <span className="truncate max-w-[100px] sm:max-w-none">{surname}</span>}
       </div>
 
       {/* Initials pill */}
