@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, useMotionValue, useTransform, useAnimationControls, PanInfo } from "framer-motion";
-import { Heart, X, Layers, TrendingUp, TrendingDown, Minus, Settings } from "lucide-react";
+import { Heart, X, ChevronLeft, TrendingUp, TrendingDown, Minus, Settings } from "lucide-react";
 import { namesData, type NameData } from "@/lib/names";
 import { haptics } from "@/lib/haptics";
 import {
@@ -320,68 +320,42 @@ export default function Home() {
     <div className="h-dvh bg-background flex flex-col overflow-x-hidden safe-top">
       {/* Header */}
       <header className="flex-shrink-0 px-4 pt-3 pb-2 sm:pt-5 sm:pb-3">
-        {/* Logo + Settings */}
-        <div className="flex items-center justify-between mb-2 sm:mb-4">
-          <div className="w-10" /> {/* Spacer for centering */}
-          <div className="flex items-center gap-2">
-            <Image src="/icon.png" alt="Namesy" width={24} height={24} className="rounded-lg sm:w-7 sm:h-7" />
-            <span className="font-heading text-lg sm:text-xl font-semibold">namesy</span>
-          </div>
-          <button
-            onClick={() => setShowSettings(true)}
-            className="w-10 h-10 flex items-center justify-center text-muted hover:text-foreground transition-colors touch-target"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Partner Toggle */}
-        <div className="flex justify-center">
-          <div className="flex gap-1 p-1 bg-secondary rounded-full">
+        <div className="flex items-center justify-between">
+          {screen === "matches" ? (
             <button
-              onClick={() => setActivePartner(1)}
-              className={`px-4 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all touch-target ${
-                activePartner === 1
-                  ? "bg-partner1 text-white shadow-md"
-                  : "text-muted hover:text-foreground"
-              }`}
+              onClick={() => setScreen("swipe")}
+              className="flex items-center gap-1 text-muted hover:text-foreground transition-colors touch-target"
             >
-              {appState.partner1.name || "Partner 1"}
+              <ChevronLeft className="w-5 h-5" />
+              <span className="text-sm">Back</span>
             </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Image src="/icon.png" alt="Namesy" width={24} height={24} className="rounded-lg sm:w-7 sm:h-7" />
+              <span className="font-heading text-lg sm:text-xl font-semibold">namesy</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            {screen === "swipe" && (
+              <button
+                onClick={() => setScreen("matches")}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary hover:bg-secondary-dark rounded-full transition-colors touch-target"
+              >
+                <Heart className="w-4 h-4 text-partner1" fill="currentColor" />
+                <span className="text-sm font-medium">
+                  {matchedNames.length} {matchedNames.length === 1 ? "match" : "matches"}
+                </span>
+              </button>
+            )}
             <button
-              onClick={() => setActivePartner(2)}
-              className={`px-4 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all touch-target ${
-                activePartner === 2
-                  ? "bg-partner2 text-white shadow-md"
-                  : "text-muted hover:text-foreground"
-              }`}
+              onClick={() => setShowSettings(true)}
+              className="w-10 h-10 flex items-center justify-center text-muted hover:text-foreground transition-colors touch-target"
             >
-              {appState.partner2.name || "Partner 2"}
+              <Settings className="w-5 h-5" />
             </button>
           </div>
         </div>
       </header>
-
-      {/* Nav */}
-      <nav className="flex-shrink-0 flex justify-center gap-8 py-2 sm:py-3 border-b border-border">
-        <button
-          onClick={() => setScreen("swipe")}
-          className={`p-2 transition-colors touch-target ${screen === "swipe" ? "text-foreground" : "text-muted"}`}
-        >
-          <Layers className="w-5 h-5" />
-        </button>
-        <button
-          onClick={() => setScreen("matches")}
-          className={`relative p-2 transition-colors touch-target ${screen === "matches" ? "text-foreground" : "text-muted"}`}
-        >
-          <Heart className="w-5 h-5" />
-          {matchedNames.length > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-white text-xs rounded-full flex items-center justify-center font-medium">
-              {matchedNames.length}
-            </span>
-          )}
-        </button>
-      </nav>
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center px-6 py-3 sm:py-6">
@@ -470,8 +444,7 @@ export default function Home() {
         )}
 
         {screen === "matches" && (
-          <div className="w-full max-w-md flex-1 overflow-y-auto scrollbar-hide safe-bottom">
-            <h2 className="font-heading text-xl sm:text-2xl text-center mb-4 sm:mb-6">Matches</h2>
+          <div className="w-full max-w-md flex-1 overflow-y-auto scrollbar-hide safe-bottom pt-2">
             {matchedNames.length === 0 ? (
               <p className="text-center text-muted">No matches yet. Keep swiping!</p>
             ) : (
