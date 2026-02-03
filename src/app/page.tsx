@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, memo } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence, useMotionValue, useTransform, useAnimationControls, PanInfo } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, useAnimationControls, PanInfo, MotionConfig } from "framer-motion";
 import { Heart, X, ChevronLeft, TrendingUp, TrendingDown, Minus, Settings } from "lucide-react";
 import { namesData, type NameData } from "@/lib/names";
 import { haptics } from "@/lib/haptics";
@@ -356,6 +356,7 @@ export default function Home() {
   }
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="h-dvh bg-background flex flex-col overflow-x-hidden safe-top">
       {/* Header */}
       <header className="flex-shrink-0 px-4 pt-3 pb-2 sm:pt-5 sm:pb-3">
@@ -551,6 +552,7 @@ export default function Home() {
         onStateChange={setAppState}
       />
     </div>
+    </MotionConfig>
   );
 }
 
@@ -568,7 +570,7 @@ interface FlipCardProps {
   onSwipeComplete?: () => void;
 }
 
-function FlipCard({
+const FlipCard = memo(function FlipCard({
   name,
   isFlipped,
   onTap,
@@ -842,4 +844,4 @@ function FlipCard({
       </motion.div>
     </div>
   );
-}
+});
