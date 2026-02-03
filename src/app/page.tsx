@@ -736,7 +736,7 @@ const FlipCard = memo(function FlipCard({
           </motion.div>
           <motion.div
             style={{ opacity: middleOpacity }}
-            className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-accent text-accent rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap"
+            className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-accent text-accent rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap"
           >
             MIDDLE NAME
           </motion.div>
