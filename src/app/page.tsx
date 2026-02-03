@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback, memo } from "react";
+import { useState, useMemo, useEffect, useCallback, memo, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, useMotionValue, useTransform, useAnimationControls, PanInfo, MotionConfig } from "framer-motion";
 import { Heart, X, ChevronLeft, TrendingUp, TrendingDown, Minus, Settings } from "lucide-react";
@@ -607,6 +607,7 @@ const FlipCard = memo(function FlipCard({
 }: FlipCardProps) {
   const controls = useAnimationControls();
   const [isExiting, setIsExiting] = useState(false);
+  const wasDragging = useRef(false);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
@@ -615,6 +616,14 @@ const FlipCard = memo(function FlipCard({
   const middleOpacity = useTransform(y, [-100, 0], [1, 0]);
   // Scale up slightly when dragging for "lifted" feel
   const scale = useTransform(x, [-200, 0, 200], [1.02, 1, 1.02]);
+
+  const handleClick = () => {
+    if (wasDragging.current) {
+      wasDragging.current = false;
+      return;
+    }
+    onTap();
+  };
 
   // Handle programmatic swipe from buttons
   useEffect(() => {
@@ -718,11 +727,12 @@ const FlipCard = memo(function FlipCard({
         dragElastic={0.9}
         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
         onDragStart={(e) => {
-          // Prevent any default touch behavior
+          // Track that we're dragging to prevent flip on release
+          wasDragging.current = true;
           e.stopPropagation();
         }}
         onDragEnd={handleDragEnd}
-        onClick={isTop ? onTap : undefined}
+        onClick={isTop ? handleClick : undefined}
         className={`relative w-full h-full ${isTop ? "cursor-pointer" : ""}`}
         animate={controls}
         initial={{
@@ -739,31 +749,33 @@ const FlipCard = memo(function FlipCard({
           touchAction: "none",
         }}
       >
-        {/* Front */}
-        <div
-          className={`absolute inset-0 bg-card rounded-2xl flex flex-col items-center justify-center p-4 sm:p-8 backface-hidden ${genderGlowClass}`}
-          style={{ backfaceVisibility: "hidden" }}
-        >
-          {/* Like/Nope/Middle indicators */}
-          <motion.div
-            style={{ opacity: nopeOpacity }}
-            className="absolute top-4 sm:top-6 right-4 sm:right-6 px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-partner1 text-partner1 rounded-lg font-bold text-xs sm:text-sm rotate-12"
-          >
-            NOPE
-          </motion.div>
+        {/* Floating indicators above card */}
+        <div className="absolute -top-14 sm:-top-16 left-0 right-0 flex justify-between items-center px-2 pointer-events-none">
           <motion.div
             style={{ opacity: likeOpacity }}
-            className="absolute top-4 sm:top-6 left-4 sm:left-6 px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-partner2 text-partner2 rounded-lg font-bold text-xs sm:text-sm -rotate-12"
+            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-partner2/20 border-2 border-partner2 text-partner2 rounded-full font-bold text-sm sm:text-base -rotate-6"
           >
             LIKE
           </motion.div>
           <motion.div
             style={{ opacity: middleOpacity }}
-            className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-accent text-accent rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap"
+            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-accent/20 border-2 border-accent text-accent rounded-full font-bold text-sm sm:text-base"
           >
-            MIDDLE NAME
+            MIDDLE
           </motion.div>
+          <motion.div
+            style={{ opacity: nopeOpacity }}
+            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-partner1/20 border-2 border-partner1 text-partner1 rounded-full font-bold text-sm sm:text-base rotate-6"
+          >
+            NOPE
+          </motion.div>
+        </div>
 
+        {/* Front */}
+        <div
+          className={`absolute inset-0 bg-card rounded-2xl flex flex-col items-center justify-center p-4 sm:p-8 backface-hidden ${genderGlowClass}`}
+          style={{ backfaceVisibility: "hidden" }}
+        >
           {/* Name */}
           <h1 className="font-heading text-4xl sm:text-5xl font-light tracking-tight text-foreground mb-1 sm:mb-2">
             {name.name}
@@ -790,28 +802,8 @@ const FlipCard = memo(function FlipCard({
           className={`absolute inset-0 bg-card rounded-2xl p-4 sm:p-6 backface-hidden overflow-y-auto scrollbar-hide overscroll-contain ${genderGlowClass}`}
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
-          {/* Like/Nope/Middle indicators (same as front) */}
-          <motion.div
-            style={{ opacity: nopeOpacity }}
-            className="absolute top-4 sm:top-6 right-4 sm:right-6 px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-partner1 text-partner1 rounded-lg font-bold text-xs sm:text-sm rotate-12 z-10 bg-card/90"
-          >
-            NOPE
-          </motion.div>
-          <motion.div
-            style={{ opacity: likeOpacity }}
-            className="absolute top-4 sm:top-6 left-4 sm:left-6 px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-partner2 text-partner2 rounded-lg font-bold text-xs sm:text-sm -rotate-12 z-10 bg-card/90"
-          >
-            LIKE
-          </motion.div>
-          <motion.div
-            style={{ opacity: middleOpacity }}
-            className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-accent text-accent rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap z-10 bg-card/90"
-          >
-            MIDDLE NAME
-          </motion.div>
-
           {/* Header */}
-          <div className="text-center border-b border-border pb-3 sm:pb-4 mb-3 sm:mb-4 mt-8 sm:mt-10">
+          <div className="text-center border-b border-border pb-3 sm:pb-4 mb-3 sm:mb-4">
             <h2 className="font-heading text-2xl sm:text-3xl font-light text-foreground">{name.name}</h2>
             <p className="text-xs sm:text-sm text-muted mt-1">{name.origin}</p>
           </div>
