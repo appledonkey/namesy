@@ -260,64 +260,83 @@ html {
     -webkit-transform: translateZ(0);
   }
 
-  /* Gender-based card glows */
-  .card-glow-girl {
-    box-shadow:
-      0 0 15px rgba(245, 168, 154, 0.5),
-      0 0 30px rgba(245, 168, 154, 0.4),
-      0 0 45px rgba(245, 168, 154, 0.3),
-      0 0 60px rgba(245, 168, 154, 0.2),
-      0 0 80px rgba(245, 168, 154, 0.1),
-      inset 0 0 30px rgba(245, 168, 154, 0.05);
-  }
-
-  .card-glow-boy {
-    box-shadow:
-      0 0 15px rgba(130, 177, 220, 0.5),
-      0 0 30px rgba(130, 177, 220, 0.4),
-      0 0 45px rgba(130, 177, 220, 0.3),
-      0 0 60px rgba(130, 177, 220, 0.2),
-      0 0 80px rgba(130, 177, 220, 0.1),
-      inset 0 0 30px rgba(130, 177, 220, 0.05);
-  }
-
+  /* Gender-based card glows - smooth blur technique */
+  .card-glow-girl,
+  .card-glow-boy,
   .card-glow-unisex {
     position: relative;
-    box-shadow:
-      0 0 20px rgba(200, 170, 190, 0.3),
-      inset 0 0 30px rgba(200, 170, 190, 0.05);
+  }
+
+  .card-glow-girl::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 1.25rem;
+    background: rgba(245, 168, 154, 0.6);
+    z-index: -1;
+    filter: blur(20px);
+  }
+
+  .card-glow-girl::after {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    border-radius: 2rem;
+    background: rgba(245, 168, 154, 0.35);
+    z-index: -2;
+    filter: blur(40px);
+  }
+
+  .card-glow-boy::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 1.25rem;
+    background: rgba(130, 177, 220, 0.6);
+    z-index: -1;
+    filter: blur(20px);
+  }
+
+  .card-glow-boy::after {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    border-radius: 2rem;
+    background: rgba(130, 177, 220, 0.35);
+    z-index: -2;
+    filter: blur(40px);
   }
 
   .card-glow-unisex::before {
     content: '';
     position: absolute;
-    inset: -4px;
+    inset: -8px;
     border-radius: 1.25rem;
     background: linear-gradient(
       135deg,
-      rgba(245, 168, 154, 0.7) 0%,
-      rgba(245, 168, 154, 0.5) 40%,
-      rgba(130, 177, 220, 0.5) 60%,
-      rgba(130, 177, 220, 0.7) 100%
+      rgba(245, 168, 154, 0.6) 0%,
+      rgba(245, 168, 154, 0.4) 45%,
+      rgba(130, 177, 220, 0.4) 55%,
+      rgba(130, 177, 220, 0.6) 100%
     );
     z-index: -1;
-    filter: blur(15px);
+    filter: blur(20px);
   }
 
   .card-glow-unisex::after {
     content: '';
     position: absolute;
-    inset: -8px;
-    border-radius: 1.5rem;
+    inset: -20px;
+    border-radius: 2rem;
     background: linear-gradient(
       135deg,
-      rgba(245, 168, 154, 0.4) 0%,
-      rgba(245, 168, 154, 0.2) 40%,
-      rgba(130, 177, 220, 0.2) 60%,
-      rgba(130, 177, 220, 0.4) 100%
+      rgba(245, 168, 154, 0.35) 0%,
+      rgba(245, 168, 154, 0.2) 45%,
+      rgba(130, 177, 220, 0.2) 55%,
+      rgba(130, 177, 220, 0.35) 100%
     );
     z-index: -2;
-    filter: blur(25px);
+    filter: blur(40px);
   }
 
   /* Optimize animations - use GPU layer */
