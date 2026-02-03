@@ -360,7 +360,7 @@ export default function Home() {
     <div className="h-dvh bg-background flex flex-col overflow-x-hidden safe-top">
       {/* Header */}
       <header className="flex-shrink-0 px-4 pt-3 pb-2 sm:pt-5 sm:pb-3">
-        <div className="flex items-center justify-between">
+        <div className="max-w-xl mx-auto flex items-center justify-between">
           {screen === "matches" ? (
             <button
               onClick={() => setScreen("swipe")}
