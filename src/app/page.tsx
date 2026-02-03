@@ -121,6 +121,45 @@ export default function Home() {
     setIsLoaded(true);
   }, []);
 
+  // Prevent iOS pull-to-refresh and bounce scrolling
+  useEffect(() => {
+    const preventPullToRefresh = (e: TouchEvent) => {
+      // Only prevent if we're at the top of the page and pulling down
+      // or if the target is within a swipe-card
+      const target = e.target as HTMLElement;
+      if (target.closest('.swipe-card')) {
+        e.preventDefault();
+      }
+    };
+
+    const preventOverscroll = (e: TouchEvent) => {
+      // Prevent overscroll on the document
+      if (e.touches.length === 1) {
+        const target = e.target as HTMLElement;
+        // Allow scrolling inside scrollable elements
+        const scrollableParent = target.closest('.overflow-y-auto, .scrollbar-hide');
+        if (!scrollableParent) {
+          // Check if we're on a swipe card or the main swipe area
+          if (target.closest('.swipe-card') || target.closest('main')) {
+            // Only prevent if not in a scrollable container
+            const isScrollable = target.scrollHeight > target.clientHeight;
+            if (!isScrollable) {
+              e.preventDefault();
+            }
+          }
+        }
+      }
+    };
+
+    document.addEventListener('touchmove', preventPullToRefresh, { passive: false });
+    document.addEventListener('touchstart', preventOverscroll, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchmove', preventPullToRefresh);
+      document.removeEventListener('touchstart', preventOverscroll);
+    };
+  }, []);
+
   // Handle onboarding completion
   const handleOnboardingComplete = useCallback((newState: AppState) => {
     setAppState(newState);
@@ -652,6 +691,11 @@ function FlipCard({
       <motion.div
         drag={isTop && !isFlipped && !isExiting}
         dragElastic={0.9}
+        dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+        onDragStart={(e) => {
+          // Prevent any default touch behavior
+          e.stopPropagation();
+        }}
         onDragEnd={handleDragEnd}
         onClick={isTop ? onTap : undefined}
         className={`relative w-full h-full ${isTop ? "cursor-pointer" : ""}`}
@@ -667,6 +711,7 @@ function FlipCard({
           y: isTop ? y : stackY,
           rotate: isTop ? rotate : 0,
           scale: isTop ? scale : stackScale,
+          touchAction: "none",
         }}
       >
         {/* Front */}

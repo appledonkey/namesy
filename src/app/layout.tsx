@@ -124,6 +124,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* iOS web app meta tags */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="format-detection" content="telephone=no" />
         {/* Schema.org structured data */}
         <script
           type="application/ld+json"

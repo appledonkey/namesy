@@ -89,8 +89,22 @@
   --duration-slower: 1000ms;
 }
 
-/* Base Styles */
+/* Base Styles - Lock viewport to prevent iOS drag/bounce */
+html {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
 body {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-family-body, var(--font-inter), 'Inter', system-ui, sans-serif);
@@ -267,6 +281,21 @@ html {
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+  }
+
+  /* Prevent touch callout on all interactive elements */
+  button, a, input {
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Root app container - prevent iOS overscroll */
+  #__next {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
   }
 
   /* Prevent overscroll bounce on iOS */
