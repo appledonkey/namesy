@@ -38,6 +38,7 @@ export interface AppState {
   onboardingComplete: boolean;
   shuffleSeed: number; // For consistent shuffle across sessions
   // Onboarding data
+  firstName?: string;
   surname?: string;
   middleName?: string;
   genderFilter: "all" | "M" | "F";
@@ -66,6 +67,7 @@ const defaultState: AppState = {
   settings: defaultSettings,
   onboardingComplete: false,
   shuffleSeed: Math.floor(Math.random() * 10000),
+  firstName: undefined,
   surname: undefined,
   middleName: undefined,
   genderFilter: "all",
@@ -232,6 +234,7 @@ export function generateSessionCode(): string {
 }
 
 export interface OnboardingData {
+  firstName?: string;
   surname?: string;
   middleName?: string;
   genderFilter: "all" | "M" | "F";
@@ -245,6 +248,7 @@ export interface OnboardingData {
 export function completeOnboarding(data: OnboardingData): AppState {
   const state = getAppState();
   state.onboardingComplete = true;
+  state.firstName = data.firstName;
   state.surname = data.surname;
   state.middleName = data.middleName;
   state.genderFilter = data.genderFilter;
@@ -259,6 +263,7 @@ export function completeOnboarding(data: OnboardingData): AppState {
  */
 export function updateOnboardingSettings(data: Partial<OnboardingData>): AppState {
   const state = getAppState();
+  if (data.firstName !== undefined) state.firstName = data.firstName;
   if (data.surname !== undefined) state.surname = data.surname;
   if (data.middleName !== undefined) state.middleName = data.middleName;
   if (data.genderFilter !== undefined) state.genderFilter = data.genderFilter;

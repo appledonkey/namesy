@@ -20,33 +20,51 @@ import { SettingsSheet } from "@/components/features/settings-sheet";
 type Screen = "swipe" | "matches";
 type Partner = 1 | 2;
 
-// Name Preview Component with inline editable middle name
+// Name Preview Component with inline editable names
 interface NamePreviewProps {
-  firstName: string;
+  cardFirstName: string;
+  customFirstName?: string;
   middleName?: string;
   surname?: string;
+  onFirstNameChange: (name: string | undefined) => void;
   onMiddleNameChange: (name: string | undefined) => void;
 }
 
-function NamePreview({ firstName, middleName, surname, onMiddleNameChange }: NamePreviewProps) {
+function NamePreview({ cardFirstName, customFirstName, middleName, surname, onFirstNameChange, onMiddleNameChange }: NamePreviewProps) {
+  // Use custom first name if set, otherwise use card's name
+  const displayFirstName = customFirstName || cardFirstName;
+
   // Build initials
-  const initials = [firstName, middleName, surname]
+  const initials = [displayFirstName, middleName, surname]
     .filter(Boolean)
     .map((part) => part!.charAt(0).toUpperCase())
     .join(" · ");
 
   return (
     <motion.div
-      key={firstName}
+      key={cardFirstName}
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.3 }}
       className="text-center mb-3 sm:mb-6"
     >
-      {/* Full name with inline editable middle name */}
+      {/* Full name with inline editable names */}
       <div className="flex items-center justify-center gap-1.5 text-lg sm:text-xl md:text-2xl font-heading text-foreground tracking-wide mb-2 sm:mb-3 whitespace-nowrap">
-        <span className="truncate max-w-[100px] sm:max-w-none">{firstName}</span>
+        <span className="relative inline-block flex-shrink-0">
+          {/* Hidden sizer */}
+          <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
+            {displayFirstName}
+          </span>
+          {/* Actual input overlaid */}
+          <input
+            type="text"
+            value={customFirstName ?? ""}
+            onChange={(e) => onFirstNameChange(e.target.value || undefined)}
+            placeholder={cardFirstName}
+            className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-foreground"
+          />
+        </span>
         <span className="relative inline-block flex-shrink-0">
           {/* Hidden sizer */}
           <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
@@ -169,6 +187,14 @@ export default function Home() {
     },
     [currentName, appState, activePartner]
   );
+
+  // Handle first name changes
+  const handleFirstNameChange = useCallback((name: string | undefined) => {
+    if (!appState) return;
+    haptics.tap();
+    const newState = updateOnboardingSettings({ firstName: name });
+    setAppState(newState);
+  }, [appState]);
 
   // Handle middle name changes
   const handleMiddleNameChange = useCallback((name: string | undefined) => {
@@ -382,14 +408,16 @@ export default function Home() {
               </div>
             ) : (
               <>
-                {/* Name Preview with inline middle name input */}
+                {/* Name Preview with inline editable names */}
                 <div className="flex-shrink-0">
                   <AnimatePresence mode="wait">
                     <NamePreview
                       key={currentName.id}
-                      firstName={currentName.name}
+                      cardFirstName={currentName.name}
+                      customFirstName={appState.firstName}
                       middleName={appState.middleName}
                       surname={appState.surname}
+                      onFirstNameChange={handleFirstNameChange}
                       onMiddleNameChange={handleMiddleNameChange}
                     />
                   </AnimatePresence>
