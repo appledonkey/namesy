@@ -340,33 +340,23 @@ export default function Home() {
           <div className="flex gap-1 p-1 bg-secondary rounded-full">
             <button
               onClick={() => setActivePartner(1)}
-              className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all touch-target ${
+              className={`px-4 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all touch-target ${
                 activePartner === 1
                   ? "bg-partner1 text-white shadow-md"
                   : "text-muted hover:text-foreground"
               }`}
             >
-              <span className="truncate max-w-[60px] sm:max-w-none inline-block align-middle">
-                {appState.partner1.name || "Partner 1"}
-              </span>
-              <span className="ml-1.5 sm:ml-2 text-[10px] sm:text-xs opacity-75 hidden sm:inline">
-                {appState.partner1.currentIndex}/{namePool.length}
-              </span>
+              {appState.partner1.name || "Partner 1"}
             </button>
             <button
               onClick={() => setActivePartner(2)}
-              className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all touch-target ${
+              className={`px-4 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all touch-target ${
                 activePartner === 2
                   ? "bg-partner2 text-white shadow-md"
                   : "text-muted hover:text-foreground"
               }`}
             >
-              <span className="truncate max-w-[60px] sm:max-w-none inline-block align-middle">
-                {appState.partner2.name || "Partner 2"}
-              </span>
-              <span className="ml-1.5 sm:ml-2 text-[10px] sm:text-xs opacity-75 hidden sm:inline">
-                {appState.partner2.currentIndex}/{namePool.length}
-              </span>
+              {appState.partner2.name || "Partner 2"}
             </button>
           </div>
         </div>
@@ -454,7 +444,7 @@ export default function Home() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex-shrink-0 flex gap-4 sm:gap-6 mt-4 sm:mt-8">
+                <div className="flex-shrink-0 flex gap-4 sm:gap-6 mt-4 sm:mt-8 safe-bottom pb-4">
                   <motion.button
                     onClick={() => handleButtonSwipe("left")}
                     whileHover={{ scale: 1.1 }}
@@ -474,11 +464,6 @@ export default function Home() {
                     <Heart className="w-6 h-6 sm:w-7 sm:h-7" />
                   </motion.button>
                 </div>
-
-                {/* Progress */}
-                <p className="flex-shrink-0 mt-3 sm:mt-6 text-xs sm:text-sm text-muted safe-bottom pb-2">
-                  {currentState ? currentState.currentIndex + 1 : 0} / {namePool.length}
-                </p>
               </>
             )}
           </div>
