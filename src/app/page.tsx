@@ -413,10 +413,10 @@ export default function Home() {
                   </AnimatePresence>
                 </div>
 
-                {/* Card Stack */}
+                {/* Card Stack - tarot card proportions */}
                 <div
-                  className="relative flex-1 w-full max-w-[280px] sm:max-w-[300px]"
-                  style={{ maxHeight: "min(50vh, 380px)", aspectRatio: "3/4" }}
+                  className="relative flex-1 w-full max-w-[260px] sm:max-w-[280px]"
+                  style={{ maxHeight: "min(65vh, 500px)", aspectRatio: "9/16" }}
                 >
                   {/* Render up to 3 cards in reverse order so top card is last (on top) */}
                   {namePool
