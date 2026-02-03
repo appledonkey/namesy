@@ -20,12 +20,16 @@
   --error: #D97373;                /* Soft coral red */
 
   /* Partner Colors - From Icon */
-  --partner1: #F5A89A;             /* Coral/Peach */
+  --partner1: #F5A89A;             /* Coral/Peach - Girls */
   --partner1-light: #FDDCD6;
   --partner1-dark: #E8938A;
   --partner2: #9DD5C0;             /* Mint/Seafoam */
   --partner2-light: #C5E8DA;
   --partner2-dark: #7DB88F;
+
+  /* Gender Colors for card glow */
+  --girl-glow: #F5A89A;            /* Coral pink */
+  --boy-glow: #82B1DC;             /* Soft blue */
 
   /* Shadows - Soft and warm */
   --shadow-sm: 0 2px 8px -2px rgba(74, 67, 64, 0.10), 0 1px 4px rgba(74, 67, 64, 0.06);
@@ -254,6 +258,44 @@ html {
     -webkit-backface-visibility: hidden;
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
+  }
+
+  /* Gender-based card glows */
+  .card-glow-girl {
+    box-shadow:
+      0 0 20px rgba(245, 168, 154, 0.35),
+      0 0 40px rgba(245, 168, 154, 0.2),
+      0 0 60px rgba(245, 168, 154, 0.1),
+      0 4px 16px -4px rgba(74, 67, 64, 0.12);
+  }
+
+  .card-glow-boy {
+    box-shadow:
+      0 0 20px rgba(130, 177, 220, 0.35),
+      0 0 40px rgba(130, 177, 220, 0.2),
+      0 0 60px rgba(130, 177, 220, 0.1),
+      0 4px 16px -4px rgba(74, 67, 64, 0.12);
+  }
+
+  .card-glow-unisex {
+    position: relative;
+    box-shadow: 0 4px 16px -4px rgba(74, 67, 64, 0.12);
+  }
+
+  .card-glow-unisex::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 1.1rem;
+    background: linear-gradient(
+      135deg,
+      rgba(245, 168, 154, 0.6) 0%,
+      rgba(245, 168, 154, 0.3) 45%,
+      rgba(130, 177, 220, 0.3) 55%,
+      rgba(130, 177, 220, 0.6) 100%
+    );
+    z-index: -1;
+    filter: blur(8px);
   }
 
   /* Optimize animations - use GPU layer */

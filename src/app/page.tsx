@@ -675,8 +675,8 @@ const FlipCard = memo(function FlipCard({
     }
   };
 
-  const genderDotColor =
-    name.gender === "F" ? "bg-partner1" : name.gender === "M" ? "bg-partner2" : "bg-muted";
+  const genderGlowClass =
+    name.gender === "F" ? "card-glow-girl" : name.gender === "M" ? "card-glow-boy" : "card-glow-unisex";
 
   // Stack positioning - cards behind are slightly smaller and offset
   const stackScale = 1 - stackIndex * 0.05;
@@ -718,7 +718,7 @@ const FlipCard = memo(function FlipCard({
       >
         {/* Front */}
         <div
-          className="absolute inset-0 bg-card rounded-2xl shadow-lg flex flex-col items-center justify-center p-4 sm:p-8 backface-hidden"
+          className={`absolute inset-0 bg-card rounded-2xl flex flex-col items-center justify-center p-4 sm:p-8 backface-hidden ${genderGlowClass}`}
           style={{ backfaceVisibility: "hidden" }}
         >
           {/* Like/Nope/Middle indicators */}
@@ -740,9 +740,6 @@ const FlipCard = memo(function FlipCard({
           >
             MIDDLE NAME
           </motion.div>
-
-          {/* Gender dot */}
-          <div className={`w-2 h-2 rounded-full ${genderDotColor} mb-3 sm:mb-4`} />
 
           {/* Name */}
           <h1 className="font-heading text-4xl sm:text-5xl font-light tracking-tight text-foreground mb-1 sm:mb-2">
@@ -767,7 +764,7 @@ const FlipCard = memo(function FlipCard({
 
         {/* Back */}
         <div
-          className="absolute inset-0 bg-card rounded-2xl shadow-lg p-4 sm:p-6 backface-hidden overflow-y-auto scrollbar-hide overscroll-contain"
+          className={`absolute inset-0 bg-card rounded-2xl p-4 sm:p-6 backface-hidden overflow-y-auto scrollbar-hide overscroll-contain ${genderGlowClass}`}
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
           {/* Header */}
