@@ -28,9 +28,10 @@ interface NamePreviewProps {
   surname?: string;
   onFirstNameChange: (name: string | undefined) => void;
   onMiddleNameChange: (name: string | undefined) => void;
+  onSurnameChange: (name: string | undefined) => void;
 }
 
-function NamePreview({ cardFirstName, customFirstName, middleName, surname, onFirstNameChange, onMiddleNameChange }: NamePreviewProps) {
+function NamePreview({ cardFirstName, customFirstName, middleName, surname, onFirstNameChange, onMiddleNameChange, onSurnameChange }: NamePreviewProps) {
   // Use custom first name if set, otherwise use card's name
   const displayFirstName = customFirstName || cardFirstName;
 
@@ -79,7 +80,20 @@ function NamePreview({ cardFirstName, customFirstName, middleName, surname, onFi
             className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-muted/40"
           />
         </span>
-        {surname && <span className="truncate max-w-[100px] sm:max-w-none">{surname}</span>}
+        <span className="relative inline-block flex-shrink-0">
+          {/* Hidden sizer */}
+          <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
+            {surname || "last"}
+          </span>
+          {/* Actual input overlaid */}
+          <input
+            type="text"
+            value={surname || ""}
+            onChange={(e) => onSurnameChange(e.target.value || undefined)}
+            placeholder="last"
+            className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-muted/40"
+          />
+        </span>
       </div>
 
       {/* Initials pill */}
@@ -240,6 +254,14 @@ export default function Home() {
     if (!appState) return;
     haptics.tap();
     const newState = updateOnboardingSettings({ middleName: name });
+    setAppState(newState);
+  }, [appState]);
+
+  // Handle surname changes
+  const handleSurnameChange = useCallback((name: string | undefined) => {
+    if (!appState) return;
+    haptics.tap();
+    const newState = updateOnboardingSettings({ surname: name });
     setAppState(newState);
   }, [appState]);
 
@@ -423,6 +445,7 @@ export default function Home() {
                       surname={appState.surname}
                       onFirstNameChange={handleFirstNameChange}
                       onMiddleNameChange={handleMiddleNameChange}
+                      onSurnameChange={handleSurnameChange}
                     />
                   </AnimatePresence>
                 </div>
