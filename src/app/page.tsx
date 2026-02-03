@@ -767,8 +767,28 @@ const FlipCard = memo(function FlipCard({
           className={`absolute inset-0 bg-card rounded-2xl p-4 sm:p-6 backface-hidden overflow-y-auto scrollbar-hide overscroll-contain ${genderGlowClass}`}
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
+          {/* Like/Nope/Middle indicators (same as front) */}
+          <motion.div
+            style={{ opacity: nopeOpacity }}
+            className="absolute top-4 sm:top-6 right-4 sm:right-6 px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-partner1 text-partner1 rounded-lg font-bold text-xs sm:text-sm rotate-12 z-10 bg-card/90"
+          >
+            NOPE
+          </motion.div>
+          <motion.div
+            style={{ opacity: likeOpacity }}
+            className="absolute top-4 sm:top-6 left-4 sm:left-6 px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-partner2 text-partner2 rounded-lg font-bold text-xs sm:text-sm -rotate-12 z-10 bg-card/90"
+          >
+            LIKE
+          </motion.div>
+          <motion.div
+            style={{ opacity: middleOpacity }}
+            className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-accent text-accent rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap z-10 bg-card/90"
+          >
+            MIDDLE NAME
+          </motion.div>
+
           {/* Header */}
-          <div className="text-center border-b border-border pb-3 sm:pb-4 mb-3 sm:mb-4">
+          <div className="text-center border-b border-border pb-3 sm:pb-4 mb-3 sm:mb-4 mt-8 sm:mt-10">
             <h2 className="font-heading text-2xl sm:text-3xl font-light text-foreground">{name.name}</h2>
             <p className="text-xs sm:text-sm text-muted mt-1">{name.origin}</p>
           </div>
