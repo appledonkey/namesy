@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
-import { Heart, X, ChevronLeft, TrendingUp, TrendingDown, Minus, Settings } from "lucide-react";
+import { Heart, X, ChevronLeft, TrendingUp, TrendingDown, Minus, Settings, Sun, Moon } from "lucide-react";
 import { namesData, type NameData } from "@/lib/names";
 import { haptics } from "@/lib/haptics";
 import {
@@ -12,7 +12,10 @@ import {
   shuffleWithSeed,
   updateOnboardingSettings,
   advanceIndex,
+  updateSettings,
+  applyTheme,
   type AppState,
+  type ThemePreference,
 } from "@/lib/partner-storage";
 import { Onboarding } from "@/components/features/onboarding";
 import { SettingsSheet } from "@/components/features/settings-sheet";
@@ -320,6 +323,30 @@ export default function Home() {
                 </span>
               </button>
             )}
+            <button
+              onClick={() => {
+                const current = appState.settings.theme;
+                let next: ThemePreference;
+                if (current === "system") {
+                  const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                  next = isDark ? "light" : "dark";
+                } else {
+                  next = current === "dark" ? "light" : "dark";
+                }
+                applyTheme(next);
+                const newState = updateSettings({ theme: next });
+                setAppState(newState);
+              }}
+              className="w-10 h-10 flex items-center justify-center text-muted hover:text-foreground transition-colors touch-target"
+              aria-label="Toggle theme"
+            >
+              {(appState.settings.theme === "dark" ||
+                (appState.settings.theme === "system" &&
+                  typeof window !== "undefined" &&
+                  window.matchMedia("(prefers-color-scheme: dark)").matches))
+                ? <Moon className="w-4 h-4" />
+                : <Sun className="w-4 h-4" />}
+            </button>
             <button
               onClick={() => setShowSettings(true)}
               className="w-10 h-10 flex items-center justify-center text-muted hover:text-foreground transition-colors touch-target"
