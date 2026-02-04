@@ -1,9 +1,11 @@
 "use client";
 
-import { memo, useState, useEffect, useCallback } from "react";
+import { memo, useState, useEffect, useCallback, useMemo } from "react";
 import { motion, useMotionValue, useTransform, useAnimationControls, PanInfo } from "framer-motion";
 import { type NameData } from "@/lib/names";
 import { SPRING_CONFIG, SWIPE_THRESHOLD, VELOCITY_THRESHOLD } from "@/lib/swipe-config";
+import { analyzeNameData } from "@/lib/name-analysis";
+import { RadarChart } from "@/components/ui/radar-chart";
 
 interface FlipCardProps {
   name: NameData;
@@ -124,6 +126,8 @@ export const FlipCard = memo(function FlipCard({
     }
   };
 
+  const scores = useMemo(() => analyzeNameData(name), [name]);
+
   const genderGlowClass =
     name.gender === "F" ? "card-glow-girl" : name.gender === "M" ? "card-glow-boy" : "card-glow-unisex";
 
@@ -139,6 +143,38 @@ export const FlipCard = memo(function FlipCard({
         zIndex: 10 - stackIndex,
       }}
     >
+      {/* Floating indicators — follows drag but not the 3D flip */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          x: isTop ? x : 0,
+          y: isTop ? y : stackY,
+          rotate: isTop ? rotate : 0,
+          scale: isTop ? scale : stackScale,
+        }}
+      >
+        <div className="absolute -top-14 sm:-top-16 left-0 right-0 flex justify-between items-center px-2">
+          <motion.div
+            style={{ opacity: likeOpacity }}
+            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-partner2/20 border-2 border-partner2 text-partner2 rounded-full font-bold text-sm sm:text-base -rotate-6"
+          >
+            LIKE
+          </motion.div>
+          <motion.div
+            style={{ opacity: middleOpacity }}
+            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-accent/20 border-2 border-accent text-accent rounded-full font-bold text-sm sm:text-base"
+          >
+            MIDDLE
+          </motion.div>
+          <motion.div
+            style={{ opacity: nopeOpacity }}
+            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-partner1/20 border-2 border-partner1 text-partner1 rounded-full font-bold text-sm sm:text-base rotate-6"
+          >
+            NOPE
+          </motion.div>
+        </div>
+      </motion.div>
+
       <motion.div
         drag={isTop && !isExiting}
         dragElastic={0.9}
@@ -164,28 +200,6 @@ export const FlipCard = memo(function FlipCard({
           touchAction: "none",
         }}
       >
-        {/* Floating indicators above card */}
-        <div className="absolute -top-14 sm:-top-16 left-0 right-0 flex justify-between items-center px-2 pointer-events-none">
-          <motion.div
-            style={{ opacity: likeOpacity }}
-            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-partner2/20 border-2 border-partner2 text-partner2 rounded-full font-bold text-sm sm:text-base -rotate-6"
-          >
-            LIKE
-          </motion.div>
-          <motion.div
-            style={{ opacity: middleOpacity }}
-            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-accent/20 border-2 border-accent text-accent rounded-full font-bold text-sm sm:text-base"
-          >
-            MIDDLE
-          </motion.div>
-          <motion.div
-            style={{ opacity: nopeOpacity }}
-            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-partner1/20 border-2 border-partner1 text-partner1 rounded-full font-bold text-sm sm:text-base rotate-6"
-          >
-            NOPE
-          </motion.div>
-        </div>
-
         {/* Front */}
         <div
           className={`absolute inset-0 bg-card rounded-2xl flex flex-col items-center justify-center p-4 sm:p-8 backface-hidden ${genderGlowClass}`}
@@ -218,13 +232,18 @@ export const FlipCard = memo(function FlipCard({
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
           {/* Header */}
-          <div className="text-center border-b border-border pb-3 sm:pb-4 mb-3 sm:mb-4">
+          <div className="text-center border-b border-border pb-2 sm:pb-3 mb-2 sm:mb-3">
             <h2 className="font-heading text-2xl sm:text-3xl font-light text-foreground">{name.name}</h2>
             <p className="text-xs sm:text-sm text-muted mt-1">{name.origin}</p>
           </div>
 
+          {/* Radar Chart */}
+          <div className="flex justify-center mb-2 sm:mb-3 pb-2 sm:pb-3 border-b border-border">
+            <RadarChart scores={scores} size={140} />
+          </div>
+
           {/* Stats */}
-          <div className="flex justify-around mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-border">
+          <div className="flex justify-around mb-2 sm:mb-3 pb-2 sm:pb-3 border-b border-border">
             <div className="text-center">
               <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted">Popularity</p>
               <p className="text-base sm:text-lg font-medium">{name.popularity}</p>
@@ -243,7 +262,7 @@ export const FlipCard = memo(function FlipCard({
 
           {/* Nicknames */}
           {name.nicknames.length > 0 && (
-            <div className="mb-3 sm:mb-4">
+            <div className="mb-2 sm:mb-3">
               <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted mb-1.5 sm:mb-2">Nicknames</p>
               <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {name.nicknames.map((n) => (
@@ -255,9 +274,23 @@ export const FlipCard = memo(function FlipCard({
             </div>
           )}
 
+          {/* Also Spelled */}
+          {name.alternates.length > 0 && (
+            <div className="mb-2 sm:mb-3">
+              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted mb-1.5 sm:mb-2">Also Spelled</p>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                {name.alternates.map((a) => (
+                  <span key={a} className="px-2 sm:px-3 py-0.5 sm:py-1 bg-secondary rounded-full text-xs sm:text-sm">
+                    {a}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Famous people */}
           {name.famousPeople.length > 0 && (
-            <div className="mb-3 sm:mb-4">
+            <div className="mb-2 sm:mb-3">
               <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted mb-1.5 sm:mb-2">Famous People</p>
               <ul className="space-y-0.5 sm:space-y-1">
                 {name.famousPeople.slice(0, 3).map((person, i) => (
@@ -271,7 +304,7 @@ export const FlipCard = memo(function FlipCard({
 
           {/* Vibe tags */}
           {name.vibe.length > 0 && (
-            <div className="mb-3 sm:mb-4">
+            <div className="mb-2 sm:mb-3">
               <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted mb-1.5 sm:mb-2">Vibe</p>
               <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {name.vibe.map((v) => (
@@ -283,8 +316,22 @@ export const FlipCard = memo(function FlipCard({
             </div>
           )}
 
+          {/* Similar Names */}
+          {name.similarNames.length > 0 && (
+            <div className="mb-2 sm:mb-3">
+              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted mb-1.5 sm:mb-2">Similar Names</p>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                {name.similarNames.map((s) => (
+                  <span key={s} className="px-2 sm:px-3 py-0.5 sm:py-1 border border-border text-foreground/60 rounded-full text-xs sm:text-sm">
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Tap hint */}
-          <p className="text-center text-[10px] sm:text-xs text-muted/50 tracking-wide mt-auto pt-3 sm:pt-4">
+          <p className="text-center text-[10px] sm:text-xs text-muted/50 tracking-wide mt-auto pt-2 sm:pt-3">
             tap to flip back
           </p>
         </div>

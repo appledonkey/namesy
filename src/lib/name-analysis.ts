@@ -3,6 +3,8 @@
  * Calculate meaningful scores for the radar chart based on name properties
  */
 
+import type { NameData } from "./names";
+
 export interface NameScores {
   [key: string]: number;
   Uniqueness: number;
@@ -357,4 +359,33 @@ export function analyzeNameScores(
     "Teasing Resistance": Math.round(calcTeasingResistance(name)),
     Flow: Math.round(calcFlow(name, syllables)),
   };
+}
+
+/**
+ * Map NameData popularity string to an approximate numeric rank
+ */
+function popularityToRank(popularity: string): number {
+  switch (popularity) {
+    case "top100": return 50;
+    case "top500": return 250;
+    case "top1000": return 750;
+    case "uncommon": return 2000;
+    case "rare": return 5000;
+    default: return 1000;
+  }
+}
+
+/**
+ * Convenience wrapper: compute all 8 radar scores directly from a NameData entry.
+ */
+export function analyzeNameData(nameData: NameData): NameScores {
+  return analyzeNameScores(
+    nameData.name,
+    nameData.gender,
+    nameData.syllables,
+    nameData.nicknames,
+    nameData.alternates,
+    popularityToRank(nameData.popularity),
+    nameData.trend as "rising" | "falling" | "stable",
+  );
 }
