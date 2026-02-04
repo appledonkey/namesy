@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Copy, Check, AlertTriangle } from "lucide-react";
+import { X, Copy, Check, AlertTriangle, Sun, Monitor, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
@@ -12,7 +12,9 @@ import {
   updateSettings,
   resetProgress,
   generateSessionCode,
+  applyTheme,
   type AppState,
+  type ThemePreference,
 } from "@/lib/partner-storage";
 
 type GenderFilter = "M" | "F" | "all";
@@ -32,6 +34,7 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
   const [copied, setCopied] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [hapticEnabled, setHapticEnabled] = useState(appState.settings.hapticEnabled);
+  const [theme, setTheme] = useState<ThemePreference>(appState.settings.theme || "system");
   const { showToast, ToastComponent } = useToast();
 
   // Sync state when appState changes
@@ -41,6 +44,7 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
     setGenderFilter(appState.genderFilter);
     setSessionCode(appState.sessionCode || "");
     setHapticEnabled(appState.settings.hapticEnabled);
+    setTheme(appState.settings.theme || "system");
   }, [appState]);
 
   const handleSurnameBlur = () => {
@@ -74,6 +78,14 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
     if (newEnabled) {
       haptics.select();
     }
+  };
+
+  const handleThemeChange = (newTheme: ThemePreference) => {
+    setTheme(newTheme);
+    applyTheme(newTheme);
+    const newState = updateSettings({ theme: newTheme });
+    onStateChange(newState);
+    haptics.select();
   };
 
   const handleGenerateCode = () => {
@@ -170,6 +182,48 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
                         animate={{ x: hapticEnabled ? 20 : 0 }}
                         transition={{ type: "spring", stiffness: 500, damping: 30 }}
                       />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Theme */}
+                <div>
+                  <label className="block text-sm font-medium text-muted mb-3">
+                    Theme
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleThemeChange("light")}
+                      className={`flex-1 py-3.5 px-3 rounded-full text-sm font-medium transition-all touch-target flex items-center justify-center gap-1.5 ${
+                        theme === "light"
+                          ? "bg-accent text-white"
+                          : "bg-card border border-border text-foreground hover:border-accent/50"
+                      }`}
+                    >
+                      <Sun className="w-4 h-4" />
+                      Light
+                    </button>
+                    <button
+                      onClick={() => handleThemeChange("system")}
+                      className={`flex-1 py-3.5 px-3 rounded-full text-sm font-medium transition-all touch-target flex items-center justify-center gap-1.5 ${
+                        theme === "system"
+                          ? "bg-accent text-white"
+                          : "bg-card border border-border text-foreground hover:border-accent/50"
+                      }`}
+                    >
+                      <Monitor className="w-4 h-4" />
+                      System
+                    </button>
+                    <button
+                      onClick={() => handleThemeChange("dark")}
+                      className={`flex-1 py-3.5 px-3 rounded-full text-sm font-medium transition-all touch-target flex items-center justify-center gap-1.5 ${
+                        theme === "dark"
+                          ? "bg-accent text-white"
+                          : "bg-card border border-border text-foreground hover:border-accent/50"
+                      }`}
+                    >
+                      <Moon className="w-4 h-4" />
+                      Dark
                     </button>
                   </div>
                 </div>

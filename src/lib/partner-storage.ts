@@ -25,9 +25,12 @@ export interface PartnerData {
   filters: FilterState;
 }
 
+export type ThemePreference = "system" | "light" | "dark";
+
 export interface Settings {
   soundEnabled: boolean;
   hapticEnabled: boolean;
+  theme: ThemePreference;
 }
 
 export interface AppState {
@@ -59,6 +62,7 @@ const defaultPartner: PartnerData = {
 const defaultSettings: Settings = {
   soundEnabled: true,
   hapticEnabled: true,
+  theme: "system",
 };
 
 const defaultState: AppState = {
@@ -214,6 +218,23 @@ export function updateSettings(settings: Partial<Settings>): AppState {
   state.settings = { ...state.settings, ...settings };
   saveAppState(state);
   return state;
+}
+
+/**
+ * Apply theme class to document.documentElement
+ * - "system": remove both classes, let media query handle it
+ * - "dark": add .dark class
+ * - "light": add .light class
+ */
+export function applyTheme(theme: ThemePreference): void {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  root.classList.remove("dark", "light");
+  if (theme === "dark") {
+    root.classList.add("dark");
+  } else if (theme === "light") {
+    root.classList.add("light");
+  }
 }
 
 // Middle name presets by gender

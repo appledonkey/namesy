@@ -41,9 +41,9 @@
   --shadow-xl: 0 20px 50px -12px rgba(74, 67, 64, 0.20);
 }
 
-/* Dark Mode - System preference */
+/* Dark Mode - System preference (skipped when .light is forced) */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     /* Core Colors - Dark & Warm */
     --background: #1A1614;           /* Dark warm brown */
     --foreground: #F5F0EA;           /* Light cream text */
@@ -82,6 +82,43 @@
     --shadow-lg: 0 8px 30px -8px rgba(0, 0, 0, 0.40), 0 4px 12px rgba(0, 0, 0, 0.30);
     --shadow-xl: 0 20px 50px -12px rgba(0, 0, 0, 0.50);
   }
+}
+
+/* Dark Mode - Forced via .dark class */
+:root.dark {
+  /* Core Colors - Dark & Warm */
+  --background: #1A1614;
+  --foreground: #F5F0EA;
+  --primary: #E8A0A0;
+  --primary-light: #D88E8E;
+  --secondary: #2A2422;
+  --secondary-dark: #1E1A18;
+  --accent: #D4B870;
+  --border: #3A3432;
+  --border-strong: #4A4240;
+  --card: #252220;
+  --card-alt: #2A2624;
+  --muted: #9A918A;
+  --success: #8BC99D;
+  --warning: #E5C070;
+  --error: #E58080;
+
+  --partner1: #F5A89A;
+  --partner1-light: #3A2A28;
+  --partner1-dark: #F5B8AC;
+  --partner2: #9DD5C0;
+  --partner2-light: #283A34;
+  --partner2-dark: #ADD8C8;
+
+  --girl-glow: #F5A89A;
+  --boy-glow: #82B1DC;
+
+  --match-gradient: linear-gradient(135deg, #4A2E2A 0%, #2A4A3E 100%);
+
+  --shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.30), 0 1px 4px rgba(0, 0, 0, 0.20);
+  --shadow-md: 0 4px 16px -4px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 8px 30px -8px rgba(0, 0, 0, 0.40), 0 4px 12px rgba(0, 0, 0, 0.30);
+  --shadow-xl: 0 20px 50px -12px rgba(0, 0, 0, 0.50);
 }
 
 @theme inline {
@@ -298,19 +335,37 @@ html {
     }
   }
 
-  /* iOS 26 Liquid Glass - Dark mode */
+  /* iOS 26 Liquid Glass - Dark mode (system preference, skipped when .light forced) */
   @media (max-width: 639px) and (prefers-color-scheme: dark) {
-    .glass-card {
+    :root:not(.light) .glass-card {
       background: rgba(37, 34, 32, 0.80);
       border: 1px solid rgba(58, 52, 50, 0.6);
     }
 
-    .glass-sheet {
+    :root:not(.light) .glass-sheet {
       background: rgba(26, 22, 20, 0.92);
       border-top: 1px solid rgba(58, 52, 50, 0.6);
     }
 
-    .glass-fab {
+    :root:not(.light) .glass-fab {
+      background: rgba(232, 160, 160, 0.90);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  /* iOS 26 Liquid Glass - Dark mode (forced via .dark class) */
+  @media (max-width: 639px) {
+    :root.dark .glass-card {
+      background: rgba(37, 34, 32, 0.80);
+      border: 1px solid rgba(58, 52, 50, 0.6);
+    }
+
+    :root.dark .glass-sheet {
+      background: rgba(26, 22, 20, 0.92);
+      border-top: 1px solid rgba(58, 52, 50, 0.6);
+    }
+
+    :root.dark .glass-fab {
       background: rgba(232, 160, 160, 0.90);
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     }

@@ -122,8 +122,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Anti-flash: apply theme class before paint */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=JSON.parse(localStorage.getItem("namesy-partner-app")||"{}");var t=(s.settings&&s.settings.theme)||"system";var d=document.documentElement;if(t==="dark")d.classList.add("dark");else if(t==="light")d.classList.add("light");var m=document.querySelectorAll('meta[name="theme-color"]');if(t==="dark"||(t==="system"&&window.matchMedia("(prefers-color-scheme:dark)").matches)){m.forEach(function(e){e.setAttribute("content","#1A1614")})}else{m.forEach(function(e){e.setAttribute("content","#E8A0A0")})}}catch(e){}})()`,
+          }}
+        />
         {/* PWA meta tags */}
         <meta name="theme-color" content="#E8A0A0" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#1A1614" media="(prefers-color-scheme: dark)" />
