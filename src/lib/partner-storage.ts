@@ -229,12 +229,19 @@ export function updateSettings(settings: Partial<Settings>): AppState {
 export function applyTheme(theme: ThemePreference): void {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
+
+  // Enable smooth transition for user-initiated theme change
+  root.classList.add("theme-transitioning");
+
   root.classList.remove("dark", "light");
   if (theme === "dark") {
     root.classList.add("dark");
   } else if (theme === "light") {
     root.classList.add("light");
   }
+
+  // Remove transition class after animation completes
+  setTimeout(() => root.classList.remove("theme-transitioning"), 350);
 }
 
 // Middle name presets by gender
