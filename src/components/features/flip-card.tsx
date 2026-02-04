@@ -14,7 +14,7 @@ interface FlipCardProps {
   getTrendColor: (trend: string) => string;
   isTop?: boolean;
   stackIndex?: number;
-  triggerSwipe?: "left" | "right" | null;
+  triggerSwipe?: "left" | "right" | "up" | null;
   onSwipeComplete?: () => void;
 }
 
@@ -139,7 +139,7 @@ export const FlipCard = memo(function FlipCard({
         zIndex: 10 - stackIndex,
       }}
     >
-      {/* Floating indicators — follows drag but not the 3D flip */}
+      {/* Floating indicators — overlaid on card face */}
       <motion.div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -149,26 +149,27 @@ export const FlipCard = memo(function FlipCard({
           scale: isTop ? scale : stackScale,
         }}
       >
-        <div className="absolute -top-14 sm:-top-16 left-0 right-0 flex justify-between items-center px-2">
-          <motion.div
-            style={{ opacity: likeOpacity }}
-            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-partner2/20 border-2 border-partner2 text-partner2 rounded-full font-bold text-sm sm:text-base -rotate-6"
-          >
-            LIKE
-          </motion.div>
-          <motion.div
-            style={{ opacity: middleOpacity }}
-            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-accent/20 border-2 border-accent text-accent rounded-full font-bold text-sm sm:text-base"
-          >
-            MIDDLE
-          </motion.div>
-          <motion.div
-            style={{ opacity: nopeOpacity }}
-            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-partner1/20 border-2 border-partner1 text-partner1 rounded-full font-bold text-sm sm:text-base rotate-6"
-          >
-            NOPE
-          </motion.div>
-        </div>
+        {/* LIKE stamp - upper left */}
+        <motion.div
+          style={{ opacity: likeOpacity }}
+          className="absolute top-6 left-4 sm:top-8 sm:left-5 px-3 sm:px-4 py-1.5 sm:py-2 border-[3px] border-partner2 text-partner2 rounded-lg font-bold text-lg sm:text-xl -rotate-12 uppercase tracking-wider"
+        >
+          LIKE
+        </motion.div>
+        {/* NOPE stamp - upper right */}
+        <motion.div
+          style={{ opacity: nopeOpacity }}
+          className="absolute top-6 right-4 sm:top-8 sm:right-5 px-3 sm:px-4 py-1.5 sm:py-2 border-[3px] border-partner1 text-partner1 rounded-lg font-bold text-lg sm:text-xl rotate-12 uppercase tracking-wider"
+        >
+          NOPE
+        </motion.div>
+        {/* MIDDLE stamp - top center */}
+        <motion.div
+          style={{ opacity: middleOpacity }}
+          className="absolute top-6 sm:top-8 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1.5 sm:py-2 border-[3px] border-accent text-accent rounded-lg font-bold text-lg sm:text-xl uppercase tracking-wider"
+        >
+          MIDDLE
+        </motion.div>
       </motion.div>
 
       <motion.div

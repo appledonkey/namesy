@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
-import { Heart, X, ChevronLeft, TrendingUp, TrendingDown, Minus, Settings, Sun, Moon } from "lucide-react";
+import { Heart, X, ChevronUp, ChevronLeft, TrendingUp, TrendingDown, Minus, Settings, Sun, Moon } from "lucide-react";
 import { namesData, type NameData } from "@/lib/names";
 import { haptics } from "@/lib/haptics";
 import {
@@ -34,7 +34,7 @@ export default function Home() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [buttonSwipe, setButtonSwipe] = useState<"left" | "right" | null>(null);
+  const [buttonSwipe, setButtonSwipe] = useState<"left" | "right" | "up" | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
 
@@ -196,7 +196,7 @@ export default function Home() {
 
   // Handle button-triggered swipes
   const handleButtonSwipe = useCallback(
-    (direction: "left" | "right") => {
+    (direction: "left" | "right" | "up") => {
       if (isFinished || isFlipped || !currentName || !appState || isAnimating) return;
       setIsAnimating(true);
       setButtonSwipe(direction);
@@ -413,14 +413,18 @@ export default function Home() {
                           isTop={isTop}
                           stackIndex={stackIndex}
                           triggerSwipe={isTop ? buttonSwipe : null}
-                          onSwipeComplete={() => processSwipeResult(buttonSwipe!)}
+                          onSwipeComplete={() => {
+                            if (buttonSwipe && buttonSwipe !== "up") {
+                              processSwipeResult(buttonSwipe);
+                            }
+                          }}
                         />
                       );
                     })}
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex-shrink-0 flex gap-4 sm:gap-6 mt-4 sm:mt-8 safe-bottom pb-4">
+                <div className="flex-shrink-0 flex items-center gap-4 sm:gap-6 mt-4 sm:mt-8 safe-bottom pb-4">
                   <motion.button
                     onClick={() => handleButtonSwipe("left")}
                     whileHover={{ scale: 1.1 }}
@@ -430,6 +434,17 @@ export default function Home() {
                     aria-label="Pass on this name"
                   >
                     <X className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2.5} />
+                  </motion.button>
+                  {/* Middle name button */}
+                  <motion.button
+                    onClick={() => handleButtonSwipe("up")}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    disabled={isFlipped || isAnimating}
+                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-card border-2 border-accent/30 text-accent flex items-center justify-center shadow-md hover:border-accent transition-colors disabled:opacity-40 touch-target"
+                    aria-label="Use as middle name"
+                  >
+                    <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6" />
                   </motion.button>
                   <motion.button
                     onClick={() => handleButtonSwipe("right")}

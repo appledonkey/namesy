@@ -93,21 +93,29 @@ export function NamePreview({
             className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-foreground"
           />
         </span>
-        <span className="relative inline-block flex-shrink-0">
-          {/* Hidden sizer */}
-          <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
-            {middleName || "middle"}
+        {middleName && (
+          <span className="relative inline-flex items-center flex-shrink-0">
+            <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
+              {middleName}__
+            </span>
+            <input
+              type="text"
+              value={middleName}
+              onChange={(e) => onMiddleNameChange(e.target.value || undefined)}
+              maxLength={50}
+              className="absolute inset-y-0 left-0 right-5 bg-transparent border-b border-dashed border-accent/50 text-center outline-none focus:border-accent"
+            />
+            <button
+              onClick={() => onMiddleNameChange(undefined)}
+              className="absolute right-0 top-1/2 -translate-y-1/2 text-muted/60 hover:text-foreground transition-colors"
+              aria-label="Clear middle name"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
           </span>
-          {/* Actual input overlaid */}
-          <input
-            type="text"
-            value={middleName || ""}
-            onChange={(e) => onMiddleNameChange(e.target.value || undefined)}
-            placeholder="middle"
-            maxLength={50}
-            className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-muted/40"
-          />
-        </span>
+        )}
         <span className="relative inline-block flex-shrink-0">
           {/* Hidden sizer */}
           <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
