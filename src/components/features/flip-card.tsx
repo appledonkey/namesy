@@ -1,11 +1,9 @@
 "use client";
 
-import { memo, useState, useEffect, useCallback, useMemo } from "react";
+import { memo, useState, useEffect, useCallback } from "react";
 import { motion, useMotionValue, useTransform, useAnimationControls, PanInfo } from "framer-motion";
 import { type NameData } from "@/lib/names";
 import { SPRING_CONFIG, SWIPE_THRESHOLD, VELOCITY_THRESHOLD } from "@/lib/swipe-config";
-import { analyzeNameData } from "@/lib/name-analysis";
-import { RadarChart } from "@/components/ui/radar-chart";
 
 interface FlipCardProps {
   name: NameData;
@@ -126,8 +124,6 @@ export const FlipCard = memo(function FlipCard({
     }
   };
 
-  const scores = useMemo(() => analyzeNameData(name), [name]);
-
   const genderGlowClass =
     name.gender === "F" ? "card-glow-girl" : name.gender === "M" ? "card-glow-boy" : "card-glow-unisex";
 
@@ -235,11 +231,6 @@ export const FlipCard = memo(function FlipCard({
           <div className="text-center border-b border-border pb-2 sm:pb-3 mb-2 sm:mb-3">
             <h2 className="font-heading text-2xl sm:text-3xl font-light text-foreground">{name.name}</h2>
             <p className="text-xs sm:text-sm text-muted mt-1">{name.origin}</p>
-          </div>
-
-          {/* Radar Chart */}
-          <div className="flex justify-center mb-2 sm:mb-3 pb-2 sm:pb-3 border-b border-border">
-            <RadarChart scores={scores} size={140} />
           </div>
 
           {/* Stats */}
