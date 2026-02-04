@@ -124,6 +124,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* PWA meta tags */}
+        <meta name="theme-color" content="#E8A0A0" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#1A1614" media="(prefers-color-scheme: dark)" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href="/icon.png" />
+        <link rel="apple-touch-icon" href="/icon.png" />
+        <meta name="apple-mobile-web-app-title" content="Namesy" />
         {/* iOS web app meta tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />

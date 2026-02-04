@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Users, User, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/toast";
 import { haptics } from "@/lib/haptics";
 import {
   generateSessionCode,
@@ -30,6 +31,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const [joinCode, setJoinCode] = useState("");
   const [showJoinInput, setShowJoinInput] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { showToast, ToastComponent } = useToast();
 
   const handleSurnameNext = () => {
     haptics.tap();
@@ -64,8 +66,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       haptics.save();
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback for older browsers
       haptics.error();
+      showToast("Couldn't copy code. Try selecting manually.", "error");
     }
   };
 
@@ -100,265 +102,271 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const currentStepIndex = steps.indexOf(step);
 
   return (
-    <div className="h-dvh bg-background flex flex-col overflow-hidden safe-top">
-      {/* Progress dots */}
-      <div className="flex-shrink-0 flex justify-center gap-2 pt-6 sm:pt-8 pb-4">
-        {steps.map((s, i) => (
-          <div
-            key={s}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              i <= currentStepIndex ? "bg-primary w-6" : "bg-border"
-            }`}
-          />
-        ))}
-      </div>
+    <>
+      <div className="h-dvh bg-background flex flex-col overflow-hidden safe-top">
+        {/* Progress dots */}
+        <div className="flex-shrink-0 flex justify-center gap-2 pt-6 sm:pt-8 pb-4">
+          {steps.map((s, i) => (
+            <div
+              key={s}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                i <= currentStepIndex ? "bg-primary w-6" : "bg-border"
+              }`}
+            />
+          ))}
+        </div>
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-5 sm:px-6 overflow-y-auto scrollbar-hide safe-bottom pb-6">
-        <AnimatePresence mode="wait">
-          {step === "surname" && (
-            <motion.div
-              key="surname"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-              className="w-full max-w-sm text-center"
-            >
-              <h1 className="font-heading text-3xl mb-2">Family names</h1>
-              <p className="text-muted text-sm mb-8">
-                Helps preview how the full name looks
-              </p>
+        {/* Content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-5 sm:px-6 overflow-y-auto scrollbar-hide safe-bottom pb-6">
+          <AnimatePresence mode="wait">
+            {step === "surname" && (
+              <motion.div
+                key="surname"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="w-full max-w-sm text-center"
+              >
+                <h1 className="font-heading text-3xl mb-2">Family names</h1>
+                <p className="text-muted text-sm mb-8">
+                  Helps preview how the full name looks
+                </p>
 
-              <div className="space-y-4 mb-8">
-                <Input
-                  variant="underlined"
-                  placeholder="Middle name (optional)"
-                  value={middleName}
-                  onChange={(e) => setMiddleName(e.target.value)}
-                  className="text-center text-xl"
-                  autoFocus
-                />
-                <Input
-                  variant="underlined"
-                  placeholder="Surname (optional)"
-                  value={surname}
-                  onChange={(e) => setSurname(e.target.value)}
-                  className="text-center text-xl"
-                />
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <Button onClick={handleSurnameNext} size="lg" className="w-full">
-                  {surname.trim() || middleName.trim() ? "Continue" : "Skip"}
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </motion.div>
-          )}
-
-          {step === "gender" && (
-            <motion.div
-              key="gender"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-              className="w-full max-w-sm text-center"
-            >
-              <h1 className="font-heading text-3xl mb-2">What are you looking for?</h1>
-              <p className="text-muted text-sm mb-8">You can change this anytime</p>
-
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={() => handleGenderSelect("M")}
-                  className={`p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 touch-target ${
-                    genderFilter === "M"
-                      ? "border-partner2 bg-partner2-light"
-                      : "border-border bg-card hover:border-partner2/50"
-                  }`}
-                >
-                  <span className="text-xl sm:text-2xl mb-1 block">👦</span>
-                  <span className="font-heading text-base sm:text-lg">Boy names</span>
-                </button>
-
-                <button
-                  onClick={() => handleGenderSelect("F")}
-                  className={`p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 touch-target ${
-                    genderFilter === "F"
-                      ? "border-partner1 bg-partner1-light"
-                      : "border-border bg-card hover:border-partner1/50"
-                  }`}
-                >
-                  <span className="text-xl sm:text-2xl mb-1 block">👧</span>
-                  <span className="font-heading text-base sm:text-lg">Girl names</span>
-                </button>
-
-                <button
-                  onClick={() => handleGenderSelect("all")}
-                  className={`p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 touch-target ${
-                    genderFilter === "all"
-                      ? "border-accent bg-secondary"
-                      : "border-border bg-card hover:border-accent/50"
-                  }`}
-                >
-                  <span className="text-xl sm:text-2xl mb-1 block">✨</span>
-                  <span className="font-heading text-base sm:text-lg">Both / We don&apos;t know yet</span>
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {step === "partner" && (
-            <motion.div
-              key="partner"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-              className="w-full max-w-sm text-center"
-            >
-              {!partnerMode && (
-                <>
-                  <h1 className="font-heading text-3xl mb-2">Swiping with a partner?</h1>
-                  <p className="text-muted text-sm mb-8">
-                    Match names together and see what you both love
-                  </p>
-
-                  <div className="flex flex-col gap-3">
-                    <button
-                      onClick={() => handlePartnerChoice("partner")}
-                      className="p-4 sm:p-5 rounded-2xl border-2 border-border bg-card hover:border-primary/50 transition-all duration-300 flex items-center gap-3 sm:gap-4 touch-target"
-                    >
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-partner1-light to-partner2-light flex items-center justify-center flex-shrink-0">
-                        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
-                      </div>
-                      <div className="text-left flex-1 min-w-0">
-                        <span className="font-heading text-base sm:text-lg block">Yes, set it up</span>
-                        <span className="text-xs sm:text-sm text-muted">Share a code with your partner</span>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => handlePartnerChoice("solo")}
-                      className="p-4 sm:p-5 rounded-2xl border-2 border-border bg-card hover:border-primary/50 transition-all duration-300 flex items-center gap-3 sm:gap-4 touch-target"
-                    >
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-                        <User className="w-5 h-5 sm:w-6 sm:h-6 text-muted" />
-                      </div>
-                      <div className="text-left flex-1 min-w-0">
-                        <span className="font-heading text-base sm:text-lg block">Just me</span>
-                        <span className="text-xs sm:text-sm text-muted">I&apos;ll invite them later</span>
-                      </div>
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {partnerMode === "partner" && !showJoinInput && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-6"
-                >
-                  <div>
-                    <h2 className="font-heading text-2xl mb-2">Share your code</h2>
-                    <p className="text-muted text-sm">
-                      Your partner enters this to join your session
-                    </p>
-                  </div>
-
-                  <div className="bg-card border border-border rounded-2xl p-6">
-                    <p className="font-mono text-2xl font-bold tracking-wider text-foreground">
-                      {sessionCode}
-                    </p>
-                  </div>
-
-                  <Button
-                    onClick={handleCopyCode}
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-4 h-4 mr-2" />
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copy code
-                      </>
-                    )}
-                  </Button>
-
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-border" />
-                    </div>
-                    <div className="relative flex justify-center">
-                      <span className="bg-background px-4 text-sm text-muted">or</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setShowJoinInput(true)}
-                    className="text-sm text-muted hover:text-foreground transition-colors"
-                  >
-                    I have my partner&apos;s code
-                  </button>
-
-                  <Button onClick={handleStartSwiping} size="lg" className="w-full">
-                    Start swiping
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </motion.div>
-              )}
-
-              {partnerMode === "partner" && showJoinInput && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-6"
-                >
-                  <div>
-                    <h2 className="font-heading text-2xl mb-2">Enter their code</h2>
-                    <p className="text-muted text-sm">
-                      Join your partner&apos;s session
-                    </p>
-                  </div>
-
+                <div className="space-y-4 mb-8">
                   <Input
                     variant="underlined"
-                    placeholder="e.g., MAPLE-7X3K"
-                    value={joinCode}
-                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                    className="text-center text-xl font-mono tracking-wider"
+                    placeholder="Middle name (optional)"
+                    value={middleName}
+                    onChange={(e) => setMiddleName(e.target.value)}
+                    className="text-center text-xl"
+                    maxLength={50}
                     autoFocus
                   />
+                  <Input
+                    variant="underlined"
+                    placeholder="Surname (optional)"
+                    value={surname}
+                    onChange={(e) => setSurname(e.target.value)}
+                    className="text-center text-xl"
+                    maxLength={50}
+                  />
+                </div>
 
-                  <Button
-                    onClick={handleJoinSession}
-                    size="lg"
-                    className="w-full"
-                    disabled={!joinCode.trim()}
-                  >
-                    Join session
+                <div className="flex flex-col gap-3">
+                  <Button onClick={handleSurnameNext} size="lg" className="w-full">
+                    {surname.trim() || middleName.trim() ? "Continue" : "Skip"}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {step === "gender" && (
+              <motion.div
+                key="gender"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="w-full max-w-sm text-center"
+              >
+                <h1 className="font-heading text-3xl mb-2">What are you looking for?</h1>
+                <p className="text-muted text-sm mb-8">You can change this anytime</p>
+
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => handleGenderSelect("M")}
+                    className={`p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 touch-target ${
+                      genderFilter === "M"
+                        ? "border-partner2 bg-partner2-light"
+                        : "border-border bg-card hover:border-partner2/50"
+                    }`}
+                  >
+                    <span className="text-xl sm:text-2xl mb-1 block">{"\uD83D\uDC66"}</span>
+                    <span className="font-heading text-base sm:text-lg">Boy names</span>
+                  </button>
 
                   <button
-                    onClick={() => setShowJoinInput(false)}
-                    className="text-sm text-muted hover:text-foreground transition-colors"
+                    onClick={() => handleGenderSelect("F")}
+                    className={`p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 touch-target ${
+                      genderFilter === "F"
+                        ? "border-partner1 bg-partner1-light"
+                        : "border-border bg-card hover:border-partner1/50"
+                    }`}
                   >
-                    Back to my code
+                    <span className="text-xl sm:text-2xl mb-1 block">{"\uD83D\uDC67"}</span>
+                    <span className="font-heading text-base sm:text-lg">Girl names</span>
                   </button>
-                </motion.div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+
+                  <button
+                    onClick={() => handleGenderSelect("all")}
+                    className={`p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 touch-target ${
+                      genderFilter === "all"
+                        ? "border-accent bg-secondary"
+                        : "border-border bg-card hover:border-accent/50"
+                    }`}
+                  >
+                    <span className="text-xl sm:text-2xl mb-1 block">{"\u2728"}</span>
+                    <span className="font-heading text-base sm:text-lg">Both / We don&apos;t know yet</span>
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {step === "partner" && (
+              <motion.div
+                key="partner"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="w-full max-w-sm text-center"
+              >
+                {!partnerMode && (
+                  <>
+                    <h1 className="font-heading text-3xl mb-2">Swiping with a partner?</h1>
+                    <p className="text-muted text-sm mb-8">
+                      Match names together and see what you both love
+                    </p>
+
+                    <div className="flex flex-col gap-3">
+                      <button
+                        onClick={() => handlePartnerChoice("partner")}
+                        className="p-4 sm:p-5 rounded-2xl border-2 border-border bg-card hover:border-primary/50 transition-all duration-300 flex items-center gap-3 sm:gap-4 touch-target"
+                      >
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-partner1-light to-partner2-light flex items-center justify-center flex-shrink-0">
+                          <Users className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
+                        </div>
+                        <div className="text-left flex-1 min-w-0">
+                          <span className="font-heading text-base sm:text-lg block">Yes, set it up</span>
+                          <span className="text-xs sm:text-sm text-muted">Share a code with your partner</span>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => handlePartnerChoice("solo")}
+                        className="p-4 sm:p-5 rounded-2xl border-2 border-border bg-card hover:border-primary/50 transition-all duration-300 flex items-center gap-3 sm:gap-4 touch-target"
+                      >
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                          <User className="w-5 h-5 sm:w-6 sm:h-6 text-muted" />
+                        </div>
+                        <div className="text-left flex-1 min-w-0">
+                          <span className="font-heading text-base sm:text-lg block">Just me</span>
+                          <span className="text-xs sm:text-sm text-muted">I&apos;ll invite them later</span>
+                        </div>
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {partnerMode === "partner" && !showJoinInput && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-6"
+                  >
+                    <div>
+                      <h2 className="font-heading text-2xl mb-2">Share your code</h2>
+                      <p className="text-muted text-sm">
+                        Your partner enters this to join your session
+                      </p>
+                    </div>
+
+                    <div className="bg-card border border-border rounded-2xl p-6">
+                      <p className="font-mono text-2xl font-bold tracking-wider text-foreground">
+                        {sessionCode}
+                      </p>
+                    </div>
+
+                    <Button
+                      onClick={handleCopyCode}
+                      variant="secondary"
+                      className="w-full"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-4 h-4 mr-2" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy code
+                        </>
+                      )}
+                    </Button>
+
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-border" />
+                      </div>
+                      <div className="relative flex justify-center">
+                        <span className="bg-background px-4 text-sm text-muted">or</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setShowJoinInput(true)}
+                      className="text-sm text-muted hover:text-foreground transition-colors"
+                    >
+                      I have my partner&apos;s code
+                    </button>
+
+                    <Button onClick={handleStartSwiping} size="lg" className="w-full">
+                      Start swiping
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </motion.div>
+                )}
+
+                {partnerMode === "partner" && showJoinInput && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-6"
+                  >
+                    <div>
+                      <h2 className="font-heading text-2xl mb-2">Enter their code</h2>
+                      <p className="text-muted text-sm">
+                        Join your partner&apos;s session
+                      </p>
+                    </div>
+
+                    <Input
+                      variant="underlined"
+                      placeholder="e.g., MAPLE-7X3K"
+                      value={joinCode}
+                      onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                      className="text-center text-xl font-mono tracking-wider"
+                      maxLength={50}
+                      autoFocus
+                    />
+
+                    <Button
+                      onClick={handleJoinSession}
+                      size="lg"
+                      className="w-full"
+                      disabled={!joinCode.trim()}
+                    >
+                      Join session
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+
+                    <button
+                      onClick={() => setShowJoinInput(false)}
+                      className="text-sm text-muted hover:text-foreground transition-colors"
+                    >
+                      Back to my code
+                    </button>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
-    </div>
+      {ToastComponent}
+    </>
   );
 }

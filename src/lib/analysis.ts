@@ -7,19 +7,32 @@ import { namesData } from "./names";
 
 // Bad acronym patterns to check - comprehensive list
 export const BAD_ACRONYMS = [
-  // Offensive/vulgar
-  "ASS", "FUK", "FUC", "SEX", "FAG", "TIT", "NUT", "CUM", "COK", "DIK",
-  "PEE", "POO", "BRA", "VAG", "HOR", "HOE", "STD", "HIV", "AIDS",
-  // Hate symbols
-  "KKK", "NAZ", "NZI",
-  // Death/negative
+  // Offensive/vulgar - explicit
+  "ASS", "FUK", "FUC", "FCK", "SEX", "FAG", "TIT", "NUT", "CUM", "COK", "DIK",
+  "PEE", "POO", "BRA", "VAG", "HOR", "HOE", "STD", "HIV", "AID", "AIDS",
+  "SHT", "SHI", "CRP", "DAM", "DMN", "HEL", "ARS", "BJS", "BJB", "BWB",
+  "FKU", "FKD", "SUK", "SUC", "WNK", "JRK", "TWA", "CNT", "DIC", "PNS",
+  "VJJ", "PMS", "BRD", "SLT", "WTH",
+  // Hate symbols and slurs
+  "KKK", "NAZ", "NZI", "JEW", "NIG", "NGR", "WOP", "KYK", "GOK", "JAP",
+  "CHK", "SPN", "WET", "GYP",
+  // Death/violence/negative
   "DIE", "DED", "RIP", "SAD", "MAD", "BAD", "FAT", "PIG", "DOG", "RAT",
-  "DUM", "SOB", "CRY", "WAR", "GUN", "SIN",
+  "DUM", "SOB", "CRY", "WAR", "GUN", "SIN", "KIL", "MRD", "HRT", "DRK",
+  "EVL", "HEL", "SAT", "DIS", "HAT", "FER", "SUF", "PAI", "LOS", "OLD",
   // Internet/slang that could be embarrassing
-  "WTF", "OMG", "LOL", "WTH", "FML", "SMH",
-  // Other potentially problematic
-  "POX", "FOB", "GAG", "GAY", "LSD", "POT", "BUM", "GIT", "COW",
-  "EWW", "ICK", "MEH", "NAH", "UGH", "DUH",
+  "WTF", "OMG", "LOL", "WTH", "FML", "SMH", "STF", "GTF", "BRB", "IDK",
+  "IDC", "TBH", "NFG", "NFW", "POS", "SOL", "SUX", "TMI", "OCD",
+  // Drugs and substances
+  "LSD", "POT", "THC", "CBD", "DUI", "DWI", "420", "DNK", "ALC",
+  // Body parts and functions
+  "BUM", "GUT", "ZIT", "PUS", "GAS", "BOD", "LEG", "ARM", "EAR",
+  // Animals used as insults
+  "COW", "APE", "ASP", "BAT", "BUG", "MUT", "RAT", "SOW",
+  // General negative/embarrassing
+  "POX", "FOB", "GAG", "GAY", "GIT", "EWW", "ICK", "MEH", "NAH", "UGH",
+  "DUH", "ODD", "AWK", "BOR", "LME", "WKD", "YUK", "FUG", "MOP", "NRD",
+  "DRK", "DRP", "CRZ", "PSY", "NUT", "MAD", "UGH", "YCK", "BLH", "ERR",
 ];
 
 // Build syllable lookup table from database (lazy initialization)
@@ -59,7 +72,7 @@ export function countSyllables(word: string): number {
  * Optimized for English name patterns - ~95%+ accuracy on common last names
  */
 function countSyllablesAlgorithm(word: string): number {
-  let lower = word.toLowerCase().trim().replace(/'/g, "");
+  const lower = word.toLowerCase().trim().replace(/'/g, "");
   if (lower.length === 0) return 0;
 
   // Very short words

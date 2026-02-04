@@ -5,9 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Copy, Check, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/toast";
 import { haptics } from "@/lib/haptics";
 import {
   updateOnboardingSettings,
+  updateSettings,
   resetProgress,
   generateSessionCode,
   type AppState,
@@ -29,6 +31,8 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
   const [sessionCode, setSessionCode] = useState(appState.sessionCode || "");
   const [copied, setCopied] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [hapticEnabled, setHapticEnabled] = useState(appState.settings.hapticEnabled);
+  const { showToast, ToastComponent } = useToast();
 
   // Sync state when appState changes
   useEffect(() => {
@@ -36,6 +40,7 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
     setMiddleName(appState.middleName || "");
     setGenderFilter(appState.genderFilter);
     setSessionCode(appState.sessionCode || "");
+    setHapticEnabled(appState.settings.hapticEnabled);
   }, [appState]);
 
   const handleSurnameBlur = () => {
@@ -61,6 +66,16 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
     haptics.select();
   };
 
+  const handleHapticToggle = () => {
+    const newEnabled = !hapticEnabled;
+    setHapticEnabled(newEnabled);
+    const newState = updateSettings({ hapticEnabled: newEnabled });
+    onStateChange(newState);
+    if (newEnabled) {
+      haptics.select();
+    }
+  };
+
   const handleGenerateCode = () => {
     const code = generateSessionCode();
     setSessionCode(code);
@@ -78,6 +93,7 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
       setTimeout(() => setCopied(false), 2000);
     } catch {
       haptics.error();
+      showToast("Couldn't copy code. Try selecting manually.", "error");
     }
   };
 
@@ -90,212 +106,247 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/40 z-40"
-          />
+    <>
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+              className="fixed inset-0 bg-black/40 z-40"
+            />
 
-          {/* Sheet */}
-          <motion.div
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 bg-background rounded-t-3xl z-50 max-h-[85vh] overflow-y-auto scrollbar-hide safe-bottom overscroll-contain"
-          >
-            {/* Handle */}
-            <div className="flex justify-center pt-3 pb-2">
-              <div className="w-12 h-1.5 bg-border rounded-full" />
-            </div>
-
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 sm:px-6 pb-4 border-b border-border">
-              <h2 className="font-heading text-xl">Settings</h2>
-              <button
-                onClick={onClose}
-                className="p-2.5 -mr-2 text-muted hover:text-foreground transition-colors touch-target"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="px-5 sm:px-6 py-5 sm:py-6 space-y-6 sm:space-y-8 pb-8">
-              {/* Middle Name */}
-              <div>
-                <label className="block text-sm font-medium text-muted mb-2">
-                  Middle name
-                </label>
-                <Input
-                  variant="pill"
-                  placeholder="e.g., Rose"
-                  value={middleName}
-                  onChange={(e) => setMiddleName(e.target.value)}
-                  onBlur={handleMiddleNameBlur}
-                />
-                <p className="text-xs text-muted mt-2">
-                  Shows in the full name preview
-                </p>
+            {/* Sheet */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed bottom-0 left-0 right-0 bg-background rounded-t-3xl z-50 max-h-[85vh] overflow-y-auto scrollbar-hide safe-bottom overscroll-contain"
+            >
+              {/* Handle */}
+              <div className="flex justify-center pt-3 pb-2">
+                <div className="w-12 h-1.5 bg-border rounded-full" />
               </div>
 
-              {/* Surname */}
-              <div>
-                <label className="block text-sm font-medium text-muted mb-2">
-                  Surname
-                </label>
-                <Input
-                  variant="pill"
-                  placeholder="e.g., Smith"
-                  value={surname}
-                  onChange={(e) => setSurname(e.target.value)}
-                  onBlur={handleSurnameBlur}
-                />
-                <p className="text-xs text-muted mt-2">
-                  Helps check how names flow together
-                </p>
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 sm:px-6 pb-4 border-b border-border">
+                <h2 className="font-heading text-xl">Settings</h2>
+                <button
+                  onClick={onClose}
+                  className="p-2.5 -mr-2 text-muted hover:text-foreground transition-colors touch-target"
+                  aria-label="Close settings"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              {/* Gender Filter */}
-              <div>
-                <label className="block text-sm font-medium text-muted mb-3">
-                  Looking for
-                </label>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleGenderChange("M")}
-                    className={`flex-1 py-3.5 px-3 rounded-full text-sm font-medium transition-all touch-target ${
-                      genderFilter === "M"
-                        ? "bg-partner2 text-white"
-                        : "bg-card border border-border text-foreground hover:border-partner2/50"
-                    }`}
-                  >
-                    👦 Boy
-                  </button>
-                  <button
-                    onClick={() => handleGenderChange("F")}
-                    className={`flex-1 py-3.5 px-3 rounded-full text-sm font-medium transition-all touch-target ${
-                      genderFilter === "F"
-                        ? "bg-partner1 text-white"
-                        : "bg-card border border-border text-foreground hover:border-partner1/50"
-                    }`}
-                  >
-                    👧 Girl
-                  </button>
-                  <button
-                    onClick={() => handleGenderChange("all")}
-                    className={`flex-1 py-3.5 px-3 rounded-full text-sm font-medium transition-all touch-target ${
-                      genderFilter === "all"
-                        ? "bg-accent text-white"
-                        : "bg-card border border-border text-foreground hover:border-accent/50"
-                    }`}
-                  >
-                    ✨ Both
-                  </button>
-                </div>
-                <p className="text-xs text-muted mt-2">
-                  Changing this will update your name pool
-                </p>
-              </div>
-
-              {/* Partner Code */}
-              <div>
-                <label className="block text-sm font-medium text-muted mb-3">
-                  Partner sync
-                </label>
-                {sessionCode ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-4 bg-card border border-border rounded-2xl">
-                      <div className="flex-1">
-                        <p className="text-xs text-muted mb-1">Your code</p>
-                        <p className="font-mono text-lg font-bold tracking-wider">
-                          {sessionCode}
-                        </p>
-                      </div>
-                      <button
-                        onClick={handleCopyCode}
-                        className="p-3 bg-secondary rounded-full hover:bg-secondary-dark transition-colors"
-                      >
-                        {copied ? (
-                          <Check className="w-5 h-5 text-success" />
-                        ) : (
-                          <Copy className="w-5 h-5 text-muted" />
-                        )}
-                      </button>
+              {/* Content */}
+              <div className="px-5 sm:px-6 py-5 sm:py-6 space-y-6 sm:space-y-8 pb-8">
+                {/* Preferences Section */}
+                <div>
+                  <label className="block text-sm font-medium text-muted mb-3">
+                    Preferences
+                  </label>
+                  <div className="flex items-center justify-between p-4 bg-card border border-border rounded-2xl">
+                    <div>
+                      <p className="font-medium text-foreground">Haptic feedback</p>
+                      <p className="text-xs text-muted mt-0.5">Vibration on interactions</p>
                     </div>
-                    <p className="text-xs text-muted">
-                      Share this code with your partner to sync your likes
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <p className="text-sm text-foreground/80">
-                      Generate a code to sync likes with your partner on their device.
-                    </p>
-                    <Button
-                      onClick={handleGenerateCode}
-                      variant="secondary"
-                      className="w-full"
+                    <button
+                      onClick={handleHapticToggle}
+                      className={`relative w-12 h-7 rounded-full transition-colors ${
+                        hapticEnabled ? "bg-primary" : "bg-border"
+                      }`}
+                      role="switch"
+                      aria-checked={hapticEnabled}
+                      aria-label="Toggle haptic feedback"
                     >
-                      Generate partner code
-                    </Button>
+                      <motion.div
+                        className="absolute top-1 left-1 w-5 h-5 bg-background rounded-full shadow-sm"
+                        animate={{ x: hapticEnabled ? 20 : 0 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      />
+                    </button>
                   </div>
-                )}
-              </div>
+                </div>
 
-              {/* Divider */}
-              <div className="border-t border-border" />
+                {/* Middle Name */}
+                <div>
+                  <label className="block text-sm font-medium text-muted mb-2">
+                    Middle name
+                  </label>
+                  <Input
+                    variant="pill"
+                    placeholder="e.g., Rose"
+                    value={middleName}
+                    onChange={(e) => setMiddleName(e.target.value)}
+                    onBlur={handleMiddleNameBlur}
+                    maxLength={50}
+                  />
+                  <p className="text-xs text-muted mt-2">
+                    Shows in the full name preview
+                  </p>
+                </div>
 
-              {/* Reset */}
-              <div>
-                {!showResetConfirm ? (
-                  <button
-                    onClick={() => setShowResetConfirm(true)}
-                    className="text-sm text-error hover:underline"
-                  >
-                    Reset all progress
-                  </button>
-                ) : (
-                  <div className="p-4 bg-error/10 border border-error/20 rounded-2xl space-y-3">
-                    <div className="flex items-start gap-3">
-                      <AlertTriangle className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium text-foreground">Are you sure?</p>
-                        <p className="text-sm text-muted">
-                          This will clear all your likes, matches, and preferences.
-                        </p>
+                {/* Surname */}
+                <div>
+                  <label className="block text-sm font-medium text-muted mb-2">
+                    Surname
+                  </label>
+                  <Input
+                    variant="pill"
+                    placeholder="e.g., Smith"
+                    value={surname}
+                    onChange={(e) => setSurname(e.target.value)}
+                    onBlur={handleSurnameBlur}
+                    maxLength={50}
+                  />
+                  <p className="text-xs text-muted mt-2">
+                    Helps check how names flow together
+                  </p>
+                </div>
+
+                {/* Gender Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-muted mb-3">
+                    Looking for
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleGenderChange("M")}
+                      className={`flex-1 py-3.5 px-3 rounded-full text-sm font-medium transition-all touch-target ${
+                        genderFilter === "M"
+                          ? "bg-partner2 text-white"
+                          : "bg-card border border-border text-foreground hover:border-partner2/50"
+                      }`}
+                    >
+                      {"\uD83D\uDC66"} Boy
+                    </button>
+                    <button
+                      onClick={() => handleGenderChange("F")}
+                      className={`flex-1 py-3.5 px-3 rounded-full text-sm font-medium transition-all touch-target ${
+                        genderFilter === "F"
+                          ? "bg-partner1 text-white"
+                          : "bg-card border border-border text-foreground hover:border-partner1/50"
+                      }`}
+                    >
+                      {"\uD83D\uDC67"} Girl
+                    </button>
+                    <button
+                      onClick={() => handleGenderChange("all")}
+                      className={`flex-1 py-3.5 px-3 rounded-full text-sm font-medium transition-all touch-target ${
+                        genderFilter === "all"
+                          ? "bg-accent text-white"
+                          : "bg-card border border-border text-foreground hover:border-accent/50"
+                      }`}
+                    >
+                      {"\u2728"} Both
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted mt-2">
+                    Changing this will update your name pool
+                  </p>
+                </div>
+
+                {/* Partner Code */}
+                <div>
+                  <label className="block text-sm font-medium text-muted mb-3">
+                    Partner sync
+                  </label>
+                  {sessionCode ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 p-4 bg-card border border-border rounded-2xl">
+                        <div className="flex-1">
+                          <p className="text-xs text-muted mb-1">Your code</p>
+                          <p className="font-mono text-lg font-bold tracking-wider">
+                            {sessionCode}
+                          </p>
+                        </div>
+                        <button
+                          onClick={handleCopyCode}
+                          className="p-3 bg-secondary rounded-full hover:bg-secondary-dark transition-colors"
+                          aria-label={copied ? "Code copied" : "Copy partner code"}
+                        >
+                          {copied ? (
+                            <Check className="w-5 h-5 text-success" />
+                          ) : (
+                            <Copy className="w-5 h-5 text-muted" />
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-xs text-muted">
+                        Share this code with your partner to sync your likes
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-sm text-foreground/80">
+                        Generate a code to sync likes with your partner on their device.
+                      </p>
+                      <Button
+                        onClick={handleGenerateCode}
+                        variant="secondary"
+                        className="w-full"
+                      >
+                        Generate partner code
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-border" />
+
+                {/* Reset */}
+                <div>
+                  {!showResetConfirm ? (
+                    <button
+                      onClick={() => setShowResetConfirm(true)}
+                      className="text-sm text-error hover:underline"
+                    >
+                      Reset all progress
+                    </button>
+                  ) : (
+                    <div className="p-4 bg-error/10 border border-error/20 rounded-2xl space-y-3">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-medium text-foreground">Are you sure?</p>
+                          <p className="text-sm text-muted">
+                            This will clear all your likes, matches, and preferences.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => setShowResetConfirm(false)}
+                          variant="secondary"
+                          size="sm"
+                          className="flex-1"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleReset}
+                          size="sm"
+                          className="flex-1 bg-error hover:bg-error/90"
+                        >
+                          Reset
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => setShowResetConfirm(false)}
-                        variant="secondary"
-                        size="sm"
-                        className="flex-1"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={handleReset}
-                        size="sm"
-                        className="flex-1 bg-error hover:bg-error/90"
-                      >
-                        Reset
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+      {ToastComponent}
+    </>
   );
 }

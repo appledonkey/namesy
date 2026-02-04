@@ -3,6 +3,8 @@
  * Uses the Vibration API where available
  */
 
+import { getAppState } from "./partner-storage";
+
 type HapticType = 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error' | 'selection';
 
 const patterns: Record<HapticType, number[]> = {
@@ -16,11 +18,27 @@ const patterns: Record<HapticType, number[]> = {
 };
 
 /**
+ * Check if haptics are enabled in settings
+ */
+function isHapticEnabled(): boolean {
+  if (typeof window === 'undefined') return true;
+  try {
+    const state = getAppState();
+    return state.settings.hapticEnabled;
+  } catch {
+    return true; // Default to enabled if settings can't be read
+  }
+}
+
+/**
  * Trigger haptic feedback on supported devices
  */
 export function haptic(type: HapticType = 'light'): void {
   // Only run on client side
   if (typeof window === 'undefined') return;
+
+  // Check if haptics are enabled in settings
+  if (!isHapticEnabled()) return;
 
   // Check if vibration API is available
   if ('vibrate' in navigator) {

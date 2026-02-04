@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback, memo, useRef } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence, useMotionValue, useTransform, useAnimationControls, PanInfo, MotionConfig } from "framer-motion";
+import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import { Heart, X, ChevronLeft, TrendingUp, TrendingDown, Minus, Settings } from "lucide-react";
 import { namesData, type NameData } from "@/lib/names";
 import { haptics } from "@/lib/haptics";
@@ -16,106 +16,12 @@ import {
 } from "@/lib/partner-storage";
 import { Onboarding } from "@/components/features/onboarding";
 import { SettingsSheet } from "@/components/features/settings-sheet";
+import { NamePreview } from "@/components/features/name-preview";
+import { SwipeTutorial } from "@/components/features/swipe-tutorial";
+import { FlipCard } from "@/components/features/flip-card";
 
 type Screen = "swipe" | "matches";
 type Partner = 1 | 2;
-
-// Name Preview Component with inline editable names
-interface NamePreviewProps {
-  cardFirstName: string;
-  customFirstName?: string;
-  middleName?: string;
-  surname?: string;
-  onFirstNameChange: (name: string | undefined) => void;
-  onMiddleNameChange: (name: string | undefined) => void;
-  onSurnameChange: (name: string | undefined) => void;
-}
-
-function NamePreview({ cardFirstName, customFirstName, middleName, surname, onFirstNameChange, onMiddleNameChange, onSurnameChange }: NamePreviewProps) {
-  // Use custom first name if set, otherwise use card's name
-  const displayFirstName = customFirstName || cardFirstName;
-
-  // Build initials
-  const initials = [displayFirstName, middleName, surname]
-    .filter(Boolean)
-    .map((part) => part!.charAt(0).toUpperCase())
-    .join(" · ");
-
-  return (
-    <motion.div
-      key={cardFirstName}
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 10 }}
-      transition={{ duration: 0.3 }}
-      className="text-center mb-3 sm:mb-6"
-    >
-      {/* Full name with inline editable names */}
-      <div className="flex items-center justify-center gap-1.5 text-lg sm:text-xl md:text-2xl font-heading text-foreground tracking-wide mb-2 sm:mb-3 whitespace-nowrap">
-        <span className="relative inline-block flex-shrink-0">
-          {/* Hidden sizer */}
-          <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
-            {displayFirstName}
-          </span>
-          {/* Actual input overlaid */}
-          <input
-            type="text"
-            value={customFirstName ?? ""}
-            onChange={(e) => onFirstNameChange(e.target.value || undefined)}
-            placeholder={cardFirstName}
-            className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-foreground"
-          />
-        </span>
-        <span className="relative inline-block flex-shrink-0">
-          {/* Hidden sizer */}
-          <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
-            {middleName || "middle"}
-          </span>
-          {/* Actual input overlaid */}
-          <input
-            type="text"
-            value={middleName || ""}
-            onChange={(e) => onMiddleNameChange(e.target.value || undefined)}
-            placeholder="middle"
-            className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-muted/40"
-          />
-        </span>
-        <span className="relative inline-block flex-shrink-0">
-          {/* Hidden sizer */}
-          <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
-            {surname || "last"}
-          </span>
-          {/* Actual input overlaid */}
-          <input
-            type="text"
-            value={surname || ""}
-            onChange={(e) => onSurnameChange(e.target.value || undefined)}
-            placeholder="last"
-            className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-muted/40"
-          />
-        </span>
-      </div>
-
-      {/* Initials pill */}
-      <div className="inline-flex items-center gap-2 px-3 sm:px-5 py-1.5 sm:py-2 bg-secondary/50 rounded-full">
-        <span className="text-sm sm:text-base md:text-lg font-medium tracking-[0.25em] sm:tracking-[0.3em] text-foreground/80 uppercase">
-          {initials}
-        </span>
-      </div>
-    </motion.div>
-  );
-}
-
-// Spring physics configurations
-const SPRING_CONFIG = {
-  drag: { damping: 25, stiffness: 200 },      // Responsive during drag
-  snapBack: { damping: 30, stiffness: 300 },  // Quick snap back
-  exit: { damping: 30, stiffness: 300 },      // Fast exit for snappy feel
-};
-
-// Swipe thresholds
-const SWIPE_THRESHOLD = 100;
-const VELOCITY_THRESHOLD = 500;
 
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("swipe");
@@ -127,6 +33,7 @@ export default function Home() {
   const [showSettings, setShowSettings] = useState(false);
   const [buttonSwipe, setButtonSwipe] = useState<"left" | "right" | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   // Load state from localStorage on mount
   useEffect(() => {
@@ -134,6 +41,13 @@ export default function Home() {
     setAppState(state);
     setIsLoaded(true);
   }, []);
+
+  // Show tutorial for first-time users (after onboarding)
+  useEffect(() => {
+    if (appState?.onboardingComplete && !appState?.hasSeenTutorial) {
+      setShowTutorial(true);
+    }
+  }, [appState?.onboardingComplete, appState?.hasSeenTutorial]);
 
   // Prevent iOS pull-to-refresh and bounce scrolling
   useEffect(() => {
@@ -206,11 +120,6 @@ export default function Home() {
       ? appState.partner1
       : appState.partner2
     : null;
-  const otherState = appState
-    ? activePartner === 1
-      ? appState.partner2
-      : appState.partner1
-    : null;
   const currentName = currentState ? namePool[currentState.currentIndex] : null;
   const isFinished = currentState ? currentState.currentIndex >= namePool.length : false;
 
@@ -271,7 +180,7 @@ export default function Home() {
     haptics.save();
 
     // Set current name as middle name
-    const updatedState = updateOnboardingSettings({ middleName: currentName.name });
+    updateOnboardingSettings({ middleName: currentName.name });
 
     // Advance to next card (don't add to likes)
     const finalState = advanceIndex(activePartner);
@@ -387,6 +296,7 @@ export default function Home() {
             <button
               onClick={() => setScreen("swipe")}
               className="flex items-center gap-1 text-muted hover:text-foreground transition-colors touch-target"
+              aria-label="Go back to swipe screen"
             >
               <ChevronLeft className="w-5 h-5" />
               <span className="text-sm">Back</span>
@@ -402,6 +312,7 @@ export default function Home() {
               <button
                 onClick={() => setScreen("matches")}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary hover:bg-secondary-dark rounded-full transition-colors touch-target"
+                aria-label={`View ${matchedNames.length} ${matchedNames.length === 1 ? "match" : "matches"}`}
               >
                 <Heart className="w-4 h-4 text-partner1" fill="currentColor" />
                 <span className="text-sm font-medium">
@@ -412,6 +323,7 @@ export default function Home() {
             <button
               onClick={() => setShowSettings(true)}
               className="w-10 h-10 flex items-center justify-center text-muted hover:text-foreground transition-colors touch-target"
+              aria-label="Open settings"
             >
               <Settings className="w-5 h-5" />
             </button>
@@ -488,6 +400,7 @@ export default function Home() {
                     whileTap={{ scale: 0.9 }}
                     disabled={isFlipped || isAnimating}
                     className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-card border-2 border-partner1/30 text-partner1 flex items-center justify-center shadow-md hover:border-partner1 transition-colors disabled:opacity-40 touch-target"
+                    aria-label="Pass on this name"
                   >
                     <X className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2.5} />
                   </motion.button>
@@ -497,6 +410,7 @@ export default function Home() {
                     whileTap={{ scale: 0.9 }}
                     disabled={isFlipped || isAnimating}
                     className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-card border-2 border-partner2/30 text-partner2 flex items-center justify-center shadow-md hover:border-partner2 transition-colors disabled:opacity-40 touch-target"
+                    aria-label="Like this name"
                   >
                     <Heart className="w-6 h-6 sm:w-7 sm:h-7" />
                   </motion.button>
@@ -555,7 +469,7 @@ export default function Home() {
               exit={{ scale: 0.8, opacity: 0 }}
               className="bg-card p-8 sm:p-10 rounded-3xl text-center shadow-xl mx-4 max-w-[280px] sm:max-w-none"
               style={{
-                background: "linear-gradient(135deg, #FDDCD6 0%, #C5E8DA 100%)",
+                background: "var(--match-gradient)",
               }}
             >
               <p className="text-xs sm:text-sm uppercase tracking-widest text-foreground/70 mb-2">
@@ -564,6 +478,18 @@ export default function Home() {
               <p className="font-heading text-3xl sm:text-4xl text-foreground">{showMatch.name}</p>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Swipe Tutorial */}
+      <AnimatePresence>
+        {showTutorial && (
+          <SwipeTutorial
+            onComplete={() => {
+              setShowTutorial(false);
+              setAppState(getAppState());
+            }}
+          />
         )}
       </AnimatePresence>
 
@@ -578,302 +504,3 @@ export default function Home() {
     </MotionConfig>
   );
 }
-
-// Flip Card Component
-interface FlipCardProps {
-  name: NameData;
-  isFlipped: boolean;
-  onTap: () => void;
-  onSwipe: (direction: "left" | "right" | "up") => void;
-  getTrendIcon: (trend: string) => React.ReactNode;
-  getTrendColor: (trend: string) => string;
-  isTop?: boolean;
-  stackIndex?: number;
-  triggerSwipe?: "left" | "right" | null;
-  onSwipeComplete?: () => void;
-}
-
-const FlipCard = memo(function FlipCard({
-  name,
-  isFlipped,
-  onTap,
-  onSwipe,
-  getTrendIcon,
-  getTrendColor,
-  isTop = true,
-  stackIndex = 0,
-  triggerSwipe = null,
-  onSwipeComplete
-}: FlipCardProps) {
-  const controls = useAnimationControls();
-  const [isExiting, setIsExiting] = useState(false);
-  const wasDragging = useRef(false);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const rotate = useTransform(x, [-200, 200], [-15, 15]);
-  const likeOpacity = useTransform(x, [0, 100], [0, 1]);
-  const nopeOpacity = useTransform(x, [-100, 0], [1, 0]);
-  const middleOpacity = useTransform(y, [-100, 0], [1, 0]);
-  // Scale up slightly when dragging for "lifted" feel
-  const scale = useTransform(x, [-200, 0, 200], [1.02, 1, 1.02]);
-
-  const handleClick = () => {
-    if (wasDragging.current) {
-      wasDragging.current = false;
-      return;
-    }
-    onTap();
-  };
-
-  // Handle programmatic swipe from buttons
-  useEffect(() => {
-    if (triggerSwipe && isTop && !isExiting) {
-      performSwipe(triggerSwipe);
-    }
-  }, [triggerSwipe]);
-
-  // Handle flip animation
-  useEffect(() => {
-    if (isTop && !isExiting) {
-      controls.start({
-        rotateY: isFlipped ? 180 : 0,
-        transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] }
-      });
-    }
-  }, [isFlipped, isTop, isExiting, controls]);
-
-  const performSwipe = async (direction: "left" | "right" | "up") => {
-    if (isExiting) return;
-    setIsExiting(true);
-
-    // Process state immediately for snappy feel
-    onSwipe(direction);
-    onSwipeComplete?.();
-
-    // Animation runs in parallel with state update
-    if (direction === "up") {
-      controls.start({
-        x: 0,
-        y: -window.innerHeight,
-        rotate: 0,
-        transition: {
-          type: "spring",
-          ...SPRING_CONFIG.exit,
-        }
-      });
-    } else {
-      const exitX = direction === "right"
-        ? window.innerWidth * 1.5
-        : -window.innerWidth * 1.5;
-      const exitRotate = direction === "right" ? 30 : -30;
-
-      controls.start({
-        x: exitX,
-        y: 50,
-        rotate: exitRotate,
-        transition: {
-          type: "spring",
-          ...SPRING_CONFIG.exit,
-        }
-      });
-    }
-  };
-
-  const handleDragEnd = async (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (isExiting || !isTop) return;
-
-    const swipeRight = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > VELOCITY_THRESHOLD;
-    const swipeLeft = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -VELOCITY_THRESHOLD;
-    const swipeUp = info.offset.y < -SWIPE_THRESHOLD || info.velocity.y < -VELOCITY_THRESHOLD;
-
-    if (swipeUp && Math.abs(info.offset.y) > Math.abs(info.offset.x)) {
-      // Prioritize vertical swipe if it's more dominant
-      await performSwipe("up");
-    } else if (swipeRight) {
-      await performSwipe("right");
-    } else if (swipeLeft) {
-      await performSwipe("left");
-    } else {
-      // Snap back with spring physics
-      controls.start({
-        x: 0,
-        y: 0,
-        rotate: 0,
-        transition: {
-          type: "spring",
-          ...SPRING_CONFIG.snapBack
-        }
-      });
-    }
-  };
-
-  const genderGlowClass =
-    name.gender === "F" ? "card-glow-girl" : name.gender === "M" ? "card-glow-boy" : "card-glow-unisex";
-
-  // Stack positioning - cards behind are slightly smaller and offset
-  const stackScale = 1 - stackIndex * 0.05;
-  const stackY = stackIndex * 8;
-
-  return (
-    <div
-      className="absolute inset-0 swipe-card overflow-visible"
-      style={{
-        perspective: 1000,
-        zIndex: 10 - stackIndex,
-      }}
-    >
-      <motion.div
-        drag={isTop && !isExiting}
-        dragElastic={0.9}
-        dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-        onDragStart={(e) => {
-          // Track that we're dragging to prevent flip on release
-          wasDragging.current = true;
-          e.stopPropagation();
-        }}
-        onDragEnd={handleDragEnd}
-        onClick={isTop ? handleClick : undefined}
-        className={`relative w-full h-full ${isTop ? "cursor-pointer" : ""}`}
-        animate={controls}
-        initial={{
-          rotateY: 0,
-          scale: stackScale,
-          y: stackY,
-        }}
-        style={{
-          transformStyle: "preserve-3d",
-          x: isTop ? x : 0,
-          y: isTop ? y : stackY,
-          rotate: isTop ? rotate : 0,
-          scale: isTop ? scale : stackScale,
-          touchAction: "none",
-        }}
-      >
-        {/* Floating indicators above card */}
-        <div className="absolute -top-14 sm:-top-16 left-0 right-0 flex justify-between items-center px-2 pointer-events-none">
-          <motion.div
-            style={{ opacity: likeOpacity }}
-            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-partner2/20 border-2 border-partner2 text-partner2 rounded-full font-bold text-sm sm:text-base -rotate-6"
-          >
-            LIKE
-          </motion.div>
-          <motion.div
-            style={{ opacity: middleOpacity }}
-            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-accent/20 border-2 border-accent text-accent rounded-full font-bold text-sm sm:text-base"
-          >
-            MIDDLE
-          </motion.div>
-          <motion.div
-            style={{ opacity: nopeOpacity }}
-            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-partner1/20 border-2 border-partner1 text-partner1 rounded-full font-bold text-sm sm:text-base rotate-6"
-          >
-            NOPE
-          </motion.div>
-        </div>
-
-        {/* Front */}
-        <div
-          className={`absolute inset-0 bg-card rounded-2xl flex flex-col items-center justify-center p-4 sm:p-8 backface-hidden ${genderGlowClass}`}
-          style={{ backfaceVisibility: "hidden" }}
-        >
-          {/* Name */}
-          <h1 className="font-heading text-4xl sm:text-5xl font-light tracking-tight text-foreground mb-1 sm:mb-2">
-            {name.name}
-          </h1>
-
-          {/* Origin */}
-          <p className="text-[10px] sm:text-xs uppercase tracking-widest text-muted mb-2 sm:mb-3">
-            {name.origin}
-          </p>
-
-          {/* Meaning */}
-          <p className="text-sm sm:text-base italic text-foreground/70 font-heading text-center px-2">
-            &ldquo;{name.meaning}&rdquo;
-          </p>
-
-          {/* Tap hint */}
-          <p className="absolute bottom-4 sm:bottom-6 text-[10px] sm:text-xs text-muted/50 tracking-wide">
-            tap for more
-          </p>
-        </div>
-
-        {/* Back */}
-        <div
-          className={`absolute inset-0 bg-card rounded-2xl p-4 sm:p-6 backface-hidden overflow-y-auto scrollbar-hide overscroll-contain ${genderGlowClass}`}
-          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
-        >
-          {/* Header */}
-          <div className="text-center border-b border-border pb-3 sm:pb-4 mb-3 sm:mb-4">
-            <h2 className="font-heading text-2xl sm:text-3xl font-light text-foreground">{name.name}</h2>
-            <p className="text-xs sm:text-sm text-muted mt-1">{name.origin}</p>
-          </div>
-
-          {/* Stats */}
-          <div className="flex justify-around mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-border">
-            <div className="text-center">
-              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted">Popularity</p>
-              <p className="text-base sm:text-lg font-medium">{name.popularity}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted">Trend</p>
-              <p className={`text-base sm:text-lg font-medium flex items-center justify-center gap-1 ${getTrendColor(name.trend)}`}>
-                {getTrendIcon(name.trend)} {name.trend}
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted">Syllables</p>
-              <p className="text-base sm:text-lg font-medium">{name.syllables}</p>
-            </div>
-          </div>
-
-          {/* Nicknames */}
-          {name.nicknames.length > 0 && (
-            <div className="mb-3 sm:mb-4">
-              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted mb-1.5 sm:mb-2">Nicknames</p>
-              <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                {name.nicknames.map((n) => (
-                  <span key={n} className="px-2 sm:px-3 py-0.5 sm:py-1 bg-secondary rounded-full text-xs sm:text-sm">
-                    {n}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Famous people */}
-          {name.famousPeople.length > 0 && (
-            <div className="mb-3 sm:mb-4">
-              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted mb-1.5 sm:mb-2">Famous People</p>
-              <ul className="space-y-0.5 sm:space-y-1">
-                {name.famousPeople.slice(0, 3).map((person, i) => (
-                  <li key={i} className="text-xs sm:text-sm text-foreground/80">
-                    {person}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Vibe tags */}
-          {name.vibe.length > 0 && (
-            <div className="mb-3 sm:mb-4">
-              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted mb-1.5 sm:mb-2">Vibe</p>
-              <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                {name.vibe.map((v) => (
-                  <span key={v} className="px-2 sm:px-3 py-0.5 sm:py-1 bg-primary/10 text-primary rounded-full text-xs sm:text-sm">
-                    {v}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Tap hint */}
-          <p className="text-center text-[10px] sm:text-xs text-muted/50 tracking-wide mt-auto pt-3 sm:pt-4">
-            tap to flip back
-          </p>
-        </div>
-      </motion.div>
-    </div>
-  );
-});

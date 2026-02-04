@@ -36,6 +36,7 @@ export interface AppState {
   matches: string[]; // Name IDs
   settings: Settings;
   onboardingComplete: boolean;
+  hasSeenTutorial: boolean;
   shuffleSeed: number; // For consistent shuffle across sessions
   // Onboarding data
   firstName?: string;
@@ -66,6 +67,7 @@ const defaultState: AppState = {
   matches: [],
   settings: defaultSettings,
   onboardingComplete: false,
+  hasSeenTutorial: false,
   shuffleSeed: Math.floor(Math.random() * 10000),
   firstName: undefined,
   surname: undefined,
@@ -94,7 +96,9 @@ export function getAppState(): AppState {
       matches: parsed.matches || [],
       settings: { ...defaultSettings, ...parsed.settings },
       onboardingComplete: parsed.onboardingComplete || false,
+      hasSeenTutorial: parsed.hasSeenTutorial || false,
       shuffleSeed: parsed.shuffleSeed || Math.floor(Math.random() * 10000),
+      firstName: parsed.firstName,
       surname: parsed.surname,
       middleName: parsed.middleName,
       genderFilter: parsed.genderFilter || "all",
@@ -269,6 +273,16 @@ export function updateOnboardingSettings(data: Partial<OnboardingData>): AppStat
   if (data.genderFilter !== undefined) state.genderFilter = data.genderFilter;
   if (data.partnerMode !== undefined) state.partnerMode = data.partnerMode;
   if (data.sessionCode !== undefined) state.sessionCode = data.sessionCode;
+  saveAppState(state);
+  return state;
+}
+
+/**
+ * Mark tutorial as seen
+ */
+export function markTutorialSeen(): AppState {
+  const state = getAppState();
+  state.hasSeenTutorial = true;
   saveAppState(state);
   return state;
 }

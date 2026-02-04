@@ -31,11 +31,57 @@
   --girl-glow: #F5A89A;            /* Coral pink */
   --boy-glow: #82B1DC;             /* Soft blue */
 
+  /* Match popup gradient */
+  --match-gradient: linear-gradient(135deg, #FDDCD6 0%, #C5E8DA 100%);
+
   /* Shadows - Soft and warm */
   --shadow-sm: 0 2px 8px -2px rgba(74, 67, 64, 0.10), 0 1px 4px rgba(74, 67, 64, 0.06);
   --shadow-md: 0 4px 16px -4px rgba(74, 67, 64, 0.12), 0 2px 8px rgba(74, 67, 64, 0.08);
   --shadow-lg: 0 8px 30px -8px rgba(74, 67, 64, 0.15), 0 4px 12px rgba(74, 67, 64, 0.08);
   --shadow-xl: 0 20px 50px -12px rgba(74, 67, 64, 0.20);
+}
+
+/* Dark Mode - System preference */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Core Colors - Dark & Warm */
+    --background: #1A1614;           /* Dark warm brown */
+    --foreground: #F5F0EA;           /* Light cream text */
+    --primary: #E8A0A0;              /* Keep coral accent */
+    --primary-light: #D88E8E;        /* Darker coral for hovers */
+    --secondary: #2A2422;            /* Dark secondary */
+    --secondary-dark: #1E1A18;       /* Darker secondary */
+    --accent: #D4B870;               /* Brighter gold for dark */
+    --border: #3A3432;               /* Dark border */
+    --border-strong: #4A4240;        /* Stronger dark border */
+    --card: #252220;                 /* Dark card */
+    --card-alt: #2A2624;             /* Alt dark card */
+    --muted: #9A918A;                /* Light muted text */
+    --success: #8BC99D;              /* Brighter sage green */
+    --warning: #E5C070;              /* Brighter amber */
+    --error: #E58080;                /* Brighter coral red */
+
+    /* Partner Colors - Slightly brighter for dark mode */
+    --partner1: #F5A89A;             /* Keep coral */
+    --partner1-light: #3A2A28;       /* Dark coral background */
+    --partner1-dark: #F5B8AC;        /* Lighter coral */
+    --partner2: #9DD5C0;             /* Keep mint */
+    --partner2-light: #283A34;       /* Dark mint background */
+    --partner2-dark: #ADD8C8;        /* Lighter mint */
+
+    /* Gender Colors for card glow - slightly dimmed */
+    --girl-glow: #F5A89A;
+    --boy-glow: #82B1DC;
+
+    /* Match popup gradient - darker variant */
+    --match-gradient: linear-gradient(135deg, #4A2E2A 0%, #2A4A3E 100%);
+
+    /* Shadows - Darker, more subtle */
+    --shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.30), 0 1px 4px rgba(0, 0, 0, 0.20);
+    --shadow-md: 0 4px 16px -4px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 8px 30px -8px rgba(0, 0, 0, 0.40), 0 4px 12px rgba(0, 0, 0, 0.30);
+    --shadow-xl: 0 20px 50px -12px rgba(0, 0, 0, 0.50);
+  }
 }
 
 @theme inline {
@@ -252,6 +298,24 @@ html {
     }
   }
 
+  /* iOS 26 Liquid Glass - Dark mode */
+  @media (max-width: 639px) and (prefers-color-scheme: dark) {
+    .glass-card {
+      background: rgba(37, 34, 32, 0.80);
+      border: 1px solid rgba(58, 52, 50, 0.6);
+    }
+
+    .glass-sheet {
+      background: rgba(26, 22, 20, 0.92);
+      border-top: 1px solid rgba(58, 52, 50, 0.6);
+    }
+
+    .glass-fab {
+      background: rgba(232, 160, 160, 0.90);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+  }
+
   /* GPU-accelerated card faces */
   .backface-hidden {
     backface-visibility: hidden;
@@ -359,19 +423,17 @@ html {
     transition: transform 0.2s ease-out;
   }
 
-  /* Swipe card - prevents page scrolling during drag + GPU acceleration */
+  /* Swipe card - prevents page scrolling during drag */
   .swipe-card {
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
     -webkit-user-drag: none;
-    /* GPU acceleration */
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
     will-change: transform;
+    /* NOTE: Do NOT add transform or backface-visibility here.
+       A parent transform without preserve-3d flattens child 3D
+       transforms, breaking the card flip on mobile Safari. */
   }
 
   /* Prevent touch callout on all interactive elements */
