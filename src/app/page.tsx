@@ -15,6 +15,7 @@ import {
   updateSettings,
   updateLockedNames,
   applyTheme,
+  removeLike,
   type AppState,
   type ThemePreference,
 } from "@/lib/partner-storage";
@@ -38,6 +39,7 @@ export default function Home() {
   const [buttonSwipe, setButtonSwipe] = useState<"left" | "right" | "up" | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [matchesTab, setMatchesTab] = useState<"matches" | "liked">("matches");
 
   // Load state from localStorage on mount
   useEffect(() => {
@@ -118,6 +120,24 @@ export default function Home() {
       .map((id) => namesData.find((n) => n.id === id))
       .filter((n): n is NameData => n !== undefined);
   }, [appState?.matches]);
+
+  // Get liked names (excluding matches) for active partner
+  const likedNames = useMemo(() => {
+    if (!appState) return [];
+    const partnerData = activePartner === 1 ? appState.partner1 : appState.partner2;
+    const matchSet = new Set(appState.matches);
+    return partnerData.likes
+      .filter((id) => !matchSet.has(id))
+      .map((id) => namesData.find((n) => n.id === id))
+      .filter((n): n is NameData => n !== undefined);
+  }, [appState, activePartner]);
+
+  // Handle unliking a name
+  const handleUnlike = useCallback((nameId: string) => {
+    haptics.tap();
+    const newState = removeLike(activePartner, nameId);
+    setAppState(newState);
+  }, [activePartner]);
 
   const currentState = appState
     ? activePartner === 1
@@ -330,7 +350,7 @@ export default function Home() {
         <div className="max-w-xl mx-auto flex items-center justify-between">
           {screen === "matches" ? (
             <button
-              onClick={() => setScreen("swipe")}
+              onClick={() => { setScreen("swipe"); setMatchesTab("matches"); }}
               className="flex items-center gap-1 text-muted hover:text-foreground transition-colors touch-target"
               aria-label="Go back to swipe screen"
             >
@@ -502,35 +522,116 @@ export default function Home() {
         )}
 
         {screen === "matches" && (
-          <div className="w-full max-w-md flex-1 overflow-y-auto scrollbar-hide safe-bottom pt-2">
-            {matchedNames.length === 0 ? (
-              <p className="text-center text-muted">No matches yet. Keep swiping!</p>
-            ) : (
-              <ul className="space-y-2 sm:space-y-3 pb-4">
-                {matchedNames.map((m) => (
-                  <li
-                    key={m.id}
-                    className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-card rounded-2xl shadow-sm"
-                  >
-                    <div
-                      className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${
-                        m.gender === "F" ? "bg-partner1" : m.gender === "M" ? "bg-partner2" : "bg-muted"
-                      }`}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-heading text-lg sm:text-xl">{m.name}</p>
-                      <p className="text-xs sm:text-sm text-muted truncate">
-                        {m.origin} · {m.meaning}
-                      </p>
-                    </div>
-                    <div className={`flex items-center gap-1 text-xs sm:text-sm flex-shrink-0 ${getTrendColor(m.trend)}`}>
-                      {getTrendIcon(m.trend)}
-                      <span>{m.popularity}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+          <div className="w-full max-w-md flex-1 flex flex-col min-h-0 safe-bottom pt-2">
+            {/* Segmented tab control */}
+            <div className="flex-shrink-0 flex bg-secondary/50 rounded-full p-1 mb-4">
+              <button
+                onClick={() => setMatchesTab("matches")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-sm font-medium transition-colors ${
+                  matchesTab === "matches"
+                    ? "bg-foreground text-background"
+                    : "text-muted"
+                }`}
+              >
+                Matches
+                {matchedNames.length > 0 && (
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    matchesTab === "matches" ? "bg-background/20" : "bg-secondary"
+                  }`}>
+                    {matchedNames.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setMatchesTab("liked")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-sm font-medium transition-colors ${
+                  matchesTab === "liked"
+                    ? "bg-foreground text-background"
+                    : "text-muted"
+                }`}
+              >
+                Liked
+                {likedNames.length > 0 && (
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    matchesTab === "liked" ? "bg-background/20" : "bg-secondary"
+                  }`}>
+                    {likedNames.length}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Tab content */}
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
+              {matchesTab === "matches" && (
+                <>
+                  {matchedNames.length === 0 ? (
+                    <p className="text-center text-muted">No matches yet. Keep swiping!</p>
+                  ) : (
+                    <ul className="space-y-2 sm:space-y-3 pb-4">
+                      {matchedNames.map((m) => (
+                        <li
+                          key={m.id}
+                          className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-card rounded-2xl shadow-sm"
+                        >
+                          <div
+                            className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${
+                              m.gender === "F" ? "bg-partner1" : m.gender === "M" ? "bg-partner2" : "bg-muted"
+                            }`}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-heading text-lg sm:text-xl">{m.name}</p>
+                            <p className="text-xs sm:text-sm text-muted truncate">
+                              {m.origin} · {m.meaning}
+                            </p>
+                          </div>
+                          <div className={`flex items-center gap-1 text-xs sm:text-sm flex-shrink-0 ${getTrendColor(m.trend)}`}>
+                            {getTrendIcon(m.trend)}
+                            <span>{m.popularity}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              )}
+
+              {matchesTab === "liked" && (
+                <>
+                  {likedNames.length === 0 ? (
+                    <p className="text-center text-muted">No liked names yet. Swipe right to like!</p>
+                  ) : (
+                    <ul className="space-y-2 sm:space-y-3 pb-4">
+                      {likedNames.map((m) => (
+                        <li
+                          key={m.id}
+                          className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-card rounded-2xl shadow-sm"
+                        >
+                          <div
+                            className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${
+                              m.gender === "F" ? "bg-partner1" : m.gender === "M" ? "bg-partner2" : "bg-muted"
+                            }`}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-heading text-lg sm:text-xl">{m.name}</p>
+                            <p className="text-xs sm:text-sm text-muted truncate">
+                              {m.origin} · {m.meaning}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleUnlike(m.id)}
+                            className="w-8 h-8 flex items-center justify-center rounded-full text-muted hover:text-partner1 hover:bg-partner1/10 transition-colors flex-shrink-0"
+                            aria-label={`Unlike ${m.name}`}
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         )}
       </main>

@@ -205,6 +205,19 @@ export function processSwipe(
 }
 
 /**
+ * Remove a like for a partner (and remove from matches if applicable)
+ */
+export function removeLike(partner: 1 | 2, nameId: string): AppState {
+  const state = getAppState();
+  const key = partner === 1 ? "partner1" : "partner2";
+  state[key].likes = state[key].likes.filter((id) => id !== nameId);
+  // If this was also a match, remove the match too
+  state.matches = state.matches.filter((id) => id !== nameId);
+  saveAppState(state);
+  return state;
+}
+
+/**
  * Remove a match
  */
 export function removeMatch(nameId: string): AppState {
