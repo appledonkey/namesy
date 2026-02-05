@@ -46,39 +46,18 @@ export const FlipCard = memo(function FlipCard({
     if (isExiting) return;
     setIsExiting(true);
 
-    // Start exit animation first so the card flies off-screen
-    if (direction === "up") {
-      controls.start({
-        x: 0,
-        y: -window.innerHeight,
-        rotate: 0,
-        transition: {
-          type: "spring",
-          ...SPRING_CONFIG.exit,
-        }
-      });
-    } else {
-      const exitX = direction === "right"
-        ? window.innerWidth * 1.5
-        : -window.innerWidth * 1.5;
-      const exitRotate = direction === "right" ? 30 : -30;
+    const transition = { duration: 0.25, ease: [0.4, 0, 0.2, 1] as const };
 
-      controls.start({
-        x: exitX,
-        y: 50,
-        rotate: exitRotate,
-        transition: {
-          type: "spring",
-          ...SPRING_CONFIG.exit,
-        }
-      });
+    if (direction === "up") {
+      await controls.start({ y: y.get() - 60, opacity: 0, scale: 0.95, transition });
+    } else {
+      const driftX = direction === "right" ? 80 : -80;
+      await controls.start({ x: x.get() + driftX, opacity: 0, scale: 0.95, transition });
     }
 
-    // Let the card animate off-screen before processing state
-    await new Promise(resolve => setTimeout(resolve, 200));
     onSwipe(direction);
     onSwipeComplete?.();
-  }, [isExiting, onSwipe, onSwipeComplete, controls]);
+  }, [isExiting, onSwipe, onSwipeComplete, controls, x, y]);
 
   // Handle programmatic swipe from buttons
   useEffect(() => {
