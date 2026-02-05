@@ -179,11 +179,11 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     onClick={() => handleGenderSelect("M")}
                     className={`p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 touch-target ${
                       genderFilter === "M"
-                        ? "border-partner2 bg-partner2-light"
+                        ? "border-partner2 bg-partner2-light button-glow-boy"
                         : "border-border bg-card hover:border-partner2/50"
                     }`}
                   >
-                    <span className="text-xl sm:text-2xl mb-1 block">{"\uD83D\uDC66"}</span>
+                    <span className="text-xl sm:text-2xl mb-1 block">♂</span>
                     <span className="font-heading text-base sm:text-lg">Boy names</span>
                   </button>
 
@@ -191,11 +191,11 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     onClick={() => handleGenderSelect("F")}
                     className={`p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 touch-target ${
                       genderFilter === "F"
-                        ? "border-partner1 bg-partner1-light"
+                        ? "border-partner1 bg-partner1-light button-glow-girl"
                         : "border-border bg-card hover:border-partner1/50"
                     }`}
                   >
-                    <span className="text-xl sm:text-2xl mb-1 block">{"\uD83D\uDC67"}</span>
+                    <span className="text-xl sm:text-2xl mb-1 block">♀</span>
                     <span className="font-heading text-base sm:text-lg">Girl names</span>
                   </button>
 
@@ -203,11 +203,11 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     onClick={() => handleGenderSelect("all")}
                     className={`p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 touch-target ${
                       genderFilter === "all"
-                        ? "border-accent bg-secondary"
+                        ? "border-accent bg-secondary button-glow-unisex"
                         : "border-border bg-card hover:border-accent/50"
                     }`}
                   >
-                    <span className="text-xl sm:text-2xl mb-1 block">{"\u2728"}</span>
+                    <span className="text-xl sm:text-2xl mb-1 block">♂♀</span>
                     <span className="font-heading text-base sm:text-lg">Both / We don&apos;t know yet</span>
                   </button>
                 </div>

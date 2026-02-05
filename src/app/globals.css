@@ -413,8 +413,8 @@ html {
   .card-glow-unisex {
     position: relative;
     box-shadow:
-      0 0 20px rgba(200, 170, 190, 0.3),
-      inset 0 0 30px rgba(200, 170, 190, 0.05);
+      0 0 20px rgba(180, 140, 200, 0.3),
+      inset 0 0 30px rgba(180, 140, 200, 0.05);
   }
 
   .card-glow-unisex::before {
@@ -424,10 +424,9 @@ html {
     border-radius: 1.25rem;
     background: linear-gradient(
       135deg,
-      rgba(245, 168, 154, 0.7) 0%,
-      rgba(245, 168, 154, 0.5) 40%,
-      rgba(130, 177, 220, 0.5) 60%,
-      rgba(130, 177, 220, 0.7) 100%
+      rgba(180, 140, 200, 0.7) 0%,
+      rgba(180, 140, 200, 0.5) 50%,
+      rgba(180, 140, 200, 0.7) 100%
     );
     z-index: -1;
     filter: blur(15px);
@@ -440,13 +439,34 @@ html {
     border-radius: 1.5rem;
     background: linear-gradient(
       135deg,
-      rgba(245, 168, 154, 0.4) 0%,
-      rgba(245, 168, 154, 0.2) 40%,
-      rgba(130, 177, 220, 0.2) 60%,
-      rgba(130, 177, 220, 0.4) 100%
+      rgba(180, 140, 200, 0.4) 0%,
+      rgba(180, 140, 200, 0.2) 50%,
+      rgba(180, 140, 200, 0.4) 100%
     );
     z-index: -2;
     filter: blur(25px);
+  }
+
+  /* Gender selection button glows */
+  .button-glow-boy {
+    box-shadow:
+      0 0 10px rgba(130, 177, 220, 0.4),
+      0 0 20px rgba(130, 177, 220, 0.3),
+      0 0 30px rgba(130, 177, 220, 0.2);
+  }
+
+  .button-glow-girl {
+    box-shadow:
+      0 0 10px rgba(245, 168, 154, 0.4),
+      0 0 20px rgba(245, 168, 154, 0.3),
+      0 0 30px rgba(245, 168, 154, 0.2);
+  }
+
+  .button-glow-unisex {
+    box-shadow:
+      0 0 10px rgba(180, 140, 200, 0.4),
+      0 0 20px rgba(180, 140, 200, 0.3),
+      0 0 30px rgba(180, 140, 200, 0.2);
   }
 
   /* Optimize animations - use GPU layer */
