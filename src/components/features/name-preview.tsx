@@ -18,7 +18,11 @@ interface NamePreviewProps {
   onToggleLock: (field: "firstName" | "middleName") => void;
 }
 
-const partTransition = { duration: 0.15 };
+const slotTransition = {
+  y: { duration: 0.35, ease: [0.33, 0, 0, 1] as const },
+  opacity: { duration: 0.2, ease: "easeOut" as const },
+};
+const widthTransition = { duration: 0.3, ease: [0.33, 0, 0, 1] as const };
 
 export function NamePreview({
   cardFirstName,
@@ -34,11 +38,12 @@ export function NamePreview({
   // Use custom first name if set, otherwise use card's name
   const displayFirstName = customFirstName || cardFirstName;
 
-  // Build initials
-  const initials = [displayFirstName, middleName, surname]
-    .filter(Boolean)
-    .map((part) => part!.charAt(0).toUpperCase())
-    .join(" · ");
+  // Per-letter initials for staggered animation
+  const initialParts = useMemo(() => {
+    return [displayFirstName, middleName, surname]
+      .filter(Boolean)
+      .map((part) => part!.charAt(0).toUpperCase());
+  }, [displayFirstName, middleName, surname]);
 
   // Compute warnings
   const warnings = useMemo(() => {
@@ -59,11 +64,14 @@ export function NamePreview({
     return result;
   }, [displayFirstName, middleName, surname]);
 
+  // Key for first name slot — stable when locked or typing
+  const firstNameKey = lockedNames.firstName ? "locked" : cardFirstName;
+
   return (
     <div className="text-center mb-3 sm:mb-6">
       {/* Full name with inline editable names */}
       <div className="flex items-center justify-center gap-1.5 text-lg sm:text-xl md:text-2xl font-heading text-foreground tracking-wide mb-2 sm:mb-3 whitespace-nowrap">
-        {/* First name — pin button stays static, input area crossfades */}
+        {/* First name — pin button stays static, slot-machine slide on card change */}
         <span className="relative inline-flex items-center flex-shrink-0">
           <button
             onClick={() => onToggleLock("firstName")}
@@ -76,36 +84,45 @@ export function NamePreview({
               ? <Pin className="w-3.5 h-3.5" />
               : <PinOff className="w-3.5 h-3.5" />}
           </button>
-          <AnimatePresence mode="popLayout">
+          {/* Sizer stays in flow — layout prop animates width smoothly */}
+          <span className="relative inline-block">
             <motion.span
-              key={displayFirstName}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={partTransition}
-              className="relative inline-block"
+              className="invisible whitespace-pre px-0.5 inline-block"
+              aria-hidden="true"
+              layout
+              transition={widthTransition}
             >
-              {/* Hidden sizer */}
-              <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
-                {displayFirstName}
-              </span>
-              {/* Actual input overlaid */}
-              <input
-                type="text"
-                value={customFirstName ?? ""}
-                onChange={(e) => onFirstNameChange(e.target.value || undefined)}
-                placeholder={cardFirstName}
-                readOnly={lockedNames.firstName}
-                maxLength={50}
-                className={`absolute inset-0 w-full bg-transparent border-b text-center outline-none focus:border-accent placeholder:text-foreground ${
-                  lockedNames.firstName ? "border-solid border-accent/40" : "border-dashed border-muted/50"
-                }`}
-              />
+              {displayFirstName}
             </motion.span>
-          </AnimatePresence>
+            {/* Slot window — absolute, clips vertical slide */}
+            <span className="absolute inset-0 overflow-hidden">
+              <AnimatePresence mode="popLayout" initial={false}>
+                <motion.span
+                  key={firstNameKey}
+                  initial={{ y: "110%", opacity: 0 }}
+                  animate={{ y: "0%", opacity: 1 }}
+                  exit={{ y: "-110%", opacity: 0 }}
+                  transition={slotTransition}
+                  className="absolute inset-0 inline-flex items-center"
+                >
+                  <input
+                    type="text"
+                    value={customFirstName ?? ""}
+                    onChange={(e) => onFirstNameChange(e.target.value || undefined)}
+                    placeholder={cardFirstName}
+                    readOnly={lockedNames.firstName}
+                    maxLength={50}
+                    className={`w-full h-full bg-transparent border-b text-center outline-none focus:border-accent placeholder:text-foreground ${
+                      lockedNames.firstName ? "border-solid border-accent/40" : "border-dashed border-muted/50"
+                    }`}
+                  />
+                </motion.span>
+              </AnimatePresence>
+            </span>
+          </span>
         </span>
 
-        {/* Middle name — crossfades on value change */}
+        {/* Middle name — slot-machine slide on value change */}
         {middleName && (
           <span className="inline-flex items-center flex-shrink-0">
             <button
@@ -119,30 +136,39 @@ export function NamePreview({
                 ? <Pin className="w-3.5 h-3.5" />
                 : <PinOff className="w-3.5 h-3.5" />}
             </button>
-            <AnimatePresence mode="popLayout">
+            <span className="relative inline-block">
               <motion.span
-                key={middleName}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={partTransition}
-                className="relative inline-block"
+                className="invisible whitespace-pre px-0.5 inline-block"
+                aria-hidden="true"
+                layout
+                transition={widthTransition}
               >
-                <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
-                  {middleName}
-                </span>
-                <input
-                  type="text"
-                  value={middleName}
-                  onChange={(e) => onMiddleNameChange(e.target.value || undefined)}
-                  readOnly={lockedNames.middleName}
-                  maxLength={50}
-                  className={`absolute inset-0 w-full bg-transparent border-b text-center outline-none focus:border-accent ${
-                    lockedNames.middleName ? "border-solid border-accent/40" : "border-dashed border-accent/50"
-                  }`}
-                />
+                {middleName}
               </motion.span>
-            </AnimatePresence>
+              <span className="absolute inset-0 overflow-hidden">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.span
+                    key={middleName}
+                    initial={{ y: "110%", opacity: 0 }}
+                    animate={{ y: "0%", opacity: 1 }}
+                    exit={{ y: "-110%", opacity: 0 }}
+                    transition={slotTransition}
+                    className="absolute inset-0 inline-flex items-center"
+                  >
+                    <input
+                      type="text"
+                      value={middleName}
+                      onChange={(e) => onMiddleNameChange(e.target.value || undefined)}
+                      readOnly={lockedNames.middleName}
+                      maxLength={50}
+                      className={`w-full h-full bg-transparent border-b text-center outline-none focus:border-accent ${
+                        lockedNames.middleName ? "border-solid border-accent/40" : "border-dashed border-accent/50"
+                      }`}
+                    />
+                  </motion.span>
+                </AnimatePresence>
+              </span>
+            </span>
           </span>
         )}
 
@@ -164,20 +190,37 @@ export function NamePreview({
         </span>
       </div>
 
-      {/* Initials pill — container stays, text inside crossfades */}
+      {/* Initials pill — per-letter slot animation with stagger */}
       <div className="inline-flex items-center gap-2 px-3 sm:px-5 py-1.5 sm:py-2 bg-secondary/50 rounded-full">
-        <AnimatePresence mode="popLayout">
-          <motion.span
-            key={initials}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={partTransition}
-            className="text-sm sm:text-base md:text-lg font-medium tracking-[0.25em] sm:tracking-[0.3em] text-foreground/80 uppercase"
-          >
-            {initials}
-          </motion.span>
-        </AnimatePresence>
+        <span className="text-sm sm:text-base md:text-lg font-medium tracking-[0.25em] sm:tracking-[0.3em] text-foreground/80 uppercase inline-flex items-center">
+          {initialParts.map((letter, i) => (
+            <span key={i} className="inline-flex items-center">
+              {i > 0 && (
+                <span className="mx-[0.1em]" aria-hidden="true"> · </span>
+              )}
+              <span
+                className="relative inline-block overflow-hidden"
+                style={{ width: "0.75em", height: "1.3em" }}
+              >
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.span
+                    key={letter}
+                    initial={{ y: "110%", opacity: 0 }}
+                    animate={{ y: "0%", opacity: 1 }}
+                    exit={{ y: "-110%", opacity: 0 }}
+                    transition={{
+                      y: { duration: 0.35, ease: [0.33, 0, 0, 1], delay: i * 0.06 },
+                      opacity: { duration: 0.2, ease: "easeOut", delay: i * 0.06 },
+                    }}
+                    className="absolute inset-0 flex items-center justify-center"
+                  >
+                    {letter}
+                  </motion.span>
+                </AnimatePresence>
+              </span>
+            </span>
+          ))}
+        </span>
       </div>
 
       {/* Warning pills — render statically, recalculate via useMemo */}
