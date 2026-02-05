@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Pin, PinOff } from "lucide-react";
-import { isBadAcronym, getInitials, hasRhyme } from "@/lib/analysis";
+import { isBadAcronym, getInitials, hasRhyme, hasDuplicateNames } from "@/lib/analysis";
 import { calcTeasingResistance } from "@/lib/name-analysis";
 
 interface NamePreviewProps {
@@ -50,12 +50,30 @@ export function NamePreview({
     const rawInitials = getInitials(parts);
     const result: string[] = [];
 
+    // Labels parallel to parts — shifts when middle name is absent
+    const partLabels = [
+      displayFirstName ? "first" : null,
+      middleName ? "middle" : null,
+      surname ? "last" : null,
+    ].filter(Boolean) as string[];
+
+    // 1. Duplicate names (most specific — check first)
+    const dup = hasDuplicateNames(parts);
+    if (dup) {
+      result.push(`Duplicate ${partLabels[dup[0]]} and ${partLabels[dup[1]]} name`);
+    }
+
+    // 2. Rhyming names — skip if already flagged as duplicate (duplicate ⊂ rhyming)
+    if (!dup && parts.length >= 2 && hasRhyme(parts)) {
+      result.push("Names rhyme with each other");
+    }
+
+    // 3. Bad initials
     if (rawInitials.length >= 2 && isBadAcronym(rawInitials)) {
       result.push(`Initials spell "${rawInitials}"`);
     }
-    if (parts.length >= 2 && hasRhyme(parts)) {
-      result.push("Names rhyme with each other");
-    }
+
+    // 4. Teasing risk
     if (displayFirstName && calcTeasingResistance(displayFirstName) < 50) {
       result.push("Name may attract teasing");
     }

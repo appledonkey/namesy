@@ -163,6 +163,20 @@ export function hasAlliteration(names: string[]): boolean {
 }
 
 /**
+ * Check if any two name parts are identical (case-insensitive)
+ * Returns the pair of indices that match, or null if no duplicates
+ */
+export function hasDuplicateNames(names: string[]): [number, number] | null {
+  const filtered = names.map((n) => n.trim().toLowerCase()).filter((n) => n.length > 0);
+  for (let i = 0; i < filtered.length; i++) {
+    for (let j = i + 1; j < filtered.length; j++) {
+      if (filtered[i] === filtered[j]) return [i, j];
+    }
+  }
+  return null;
+}
+
+/**
  * Check if names have rhyming endings
  */
 export function hasRhyme(names: string[]): boolean {
