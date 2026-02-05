@@ -109,9 +109,7 @@ export function NamePreview({
                     placeholder={cardFirstName}
                     readOnly={lockedNames.firstName}
                     maxLength={50}
-                    className={`w-full h-full bg-transparent border-b text-center outline-none focus:border-accent placeholder:text-foreground ${
-                      lockedNames.firstName ? "border-solid border-accent/40" : "border-dashed border-muted/50"
-                    }`}
+                    className="w-full h-full bg-transparent text-center outline-none placeholder:text-foreground"
                   />
                 </motion.span>
               </AnimatePresence>
@@ -156,9 +154,7 @@ export function NamePreview({
                       onChange={(e) => onMiddleNameChange(e.target.value || undefined)}
                       readOnly={lockedNames.middleName}
                       maxLength={50}
-                      className={`w-full h-full bg-transparent border-b text-center outline-none focus:border-accent ${
-                        lockedNames.middleName ? "border-solid border-accent/40" : "border-dashed border-accent/50"
-                      }`}
+                      className="w-full h-full bg-transparent text-center outline-none"
                     />
                   </motion.span>
                 </AnimatePresence>
@@ -180,7 +176,7 @@ export function NamePreview({
             onChange={(e) => onSurnameChange(e.target.value || undefined)}
             placeholder="last"
             maxLength={50}
-            className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-muted/40"
+            className="absolute inset-0 w-full bg-transparent text-center outline-none placeholder:text-muted/40"
           />
         </span>
       </div>
