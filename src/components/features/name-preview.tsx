@@ -85,7 +85,7 @@ export function NamePreview({
               : <PinOff className="w-3.5 h-3.5" />}
           </button>
           {/* Sizer stays in flow — layout prop animates width smoothly */}
-          <span className="relative inline-block">
+          <span className="relative inline-block pb-[2px]">
             <motion.span
               className="invisible whitespace-pre px-0.5 inline-block"
               aria-hidden="true"
@@ -136,7 +136,7 @@ export function NamePreview({
                 ? <Pin className="w-3.5 h-3.5" />
                 : <PinOff className="w-3.5 h-3.5" />}
             </button>
-            <span className="relative inline-block">
+            <span className="relative inline-block pb-[2px]">
               <motion.span
                 className="invisible whitespace-pre px-0.5 inline-block"
                 aria-hidden="true"
@@ -200,7 +200,7 @@ export function NamePreview({
               )}
               <span
                 className="relative inline-block overflow-hidden"
-                style={{ width: "0.75em", height: "1.3em" }}
+                style={{ width: "0.85em", height: "1.5em" }}
               >
                 <AnimatePresence mode="popLayout" initial={false}>
                   <motion.span
