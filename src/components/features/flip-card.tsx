@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState, useEffect, useCallback } from "react";
+import { memo, useState, useEffect, useCallback, useRef } from "react";
 import { motion, useMotionValue, useTransform, useAnimationControls, PanInfo } from "framer-motion";
 import { type NameData } from "@/lib/names";
 import { SPRING_CONFIG, SWIPE_THRESHOLD, VELOCITY_THRESHOLD } from "@/lib/swipe-config";
@@ -32,6 +32,7 @@ export const FlipCard = memo(function FlipCard({
 }: FlipCardProps) {
   const controls = useAnimationControls();
   const [isExiting, setIsExiting] = useState(false);
+  const hasDragged = useRef(false);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
@@ -122,6 +123,10 @@ export const FlipCard = memo(function FlipCard({
         }
       });
     }
+
+    setTimeout(() => {
+      hasDragged.current = false;
+    }, 300);
   };
 
   const genderGlowClass =
@@ -139,48 +144,16 @@ export const FlipCard = memo(function FlipCard({
         zIndex: 10 - stackIndex,
       }}
     >
-      {/* Floating indicators — overlaid on card face */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          x: isTop ? x : 0,
-          y: isTop ? y : stackY,
-          rotate: isTop ? rotate : 0,
-          scale: isTop ? scale : stackScale,
-        }}
-      >
-        {/* LIKE stamp - upper left */}
-        <motion.div
-          style={{ opacity: likeOpacity }}
-          className="absolute top-6 left-4 sm:top-8 sm:left-5 px-3 sm:px-4 py-1.5 sm:py-2 border-[3px] border-partner2 text-partner2 rounded-lg font-bold text-lg sm:text-xl -rotate-12 uppercase tracking-wider"
-        >
-          LIKE
-        </motion.div>
-        {/* NOPE stamp - upper right */}
-        <motion.div
-          style={{ opacity: nopeOpacity }}
-          className="absolute top-6 right-4 sm:top-8 sm:right-5 px-3 sm:px-4 py-1.5 sm:py-2 border-[3px] border-partner1 text-partner1 rounded-lg font-bold text-lg sm:text-xl rotate-12 uppercase tracking-wider"
-        >
-          NOPE
-        </motion.div>
-        {/* MIDDLE stamp - top center */}
-        <motion.div
-          style={{ opacity: middleOpacity }}
-          className="absolute top-6 sm:top-8 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1.5 sm:py-2 border-[3px] border-accent text-accent rounded-lg font-bold text-lg sm:text-xl uppercase tracking-wider"
-        >
-          MIDDLE
-        </motion.div>
-      </motion.div>
-
       <motion.div
         drag={isTop && !isExiting}
         dragElastic={0.9}
         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
         onDragStart={(e) => {
           e.stopPropagation();
+          hasDragged.current = true;
         }}
         onDragEnd={handleDragEnd}
-        onTap={isTop ? onTap : undefined}
+        onTap={isTop ? () => { if (!hasDragged.current) onTap(); } : undefined}
         className={`relative w-full h-full ${isTop ? "cursor-pointer" : ""}`}
         animate={controls}
         initial={{
@@ -202,6 +175,28 @@ export const FlipCard = memo(function FlipCard({
           className={`absolute inset-0 bg-card rounded-2xl flex flex-col items-center justify-center p-4 sm:p-8 backface-hidden ${genderGlowClass}`}
           style={{ backfaceVisibility: "hidden" }}
         >
+          {/* LIKE stamp - upper left */}
+          <motion.div
+            style={{ opacity: likeOpacity }}
+            className="absolute top-6 left-4 sm:top-8 sm:left-5 px-3 sm:px-4 py-1.5 sm:py-2 border-[3px] border-partner2 text-partner2 rounded-lg font-bold text-lg sm:text-xl -rotate-12 uppercase tracking-wider pointer-events-none z-10"
+          >
+            LIKE
+          </motion.div>
+          {/* NOPE stamp - upper right */}
+          <motion.div
+            style={{ opacity: nopeOpacity }}
+            className="absolute top-6 right-4 sm:top-8 sm:right-5 px-3 sm:px-4 py-1.5 sm:py-2 border-[3px] border-partner1 text-partner1 rounded-lg font-bold text-lg sm:text-xl rotate-12 uppercase tracking-wider pointer-events-none z-10"
+          >
+            NOPE
+          </motion.div>
+          {/* MIDDLE stamp - top center */}
+          <motion.div
+            style={{ opacity: middleOpacity }}
+            className="absolute top-6 sm:top-8 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1.5 sm:py-2 border-[3px] border-accent text-accent rounded-lg font-bold text-lg sm:text-xl uppercase tracking-wider pointer-events-none z-10"
+          >
+            MIDDLE
+          </motion.div>
+
           {/* Name */}
           <h1 className="font-heading text-4xl sm:text-5xl font-light tracking-tight text-foreground mb-1 sm:mb-2">
             {name.name}

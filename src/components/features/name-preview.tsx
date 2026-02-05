@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
+import { Lock, Unlock } from "lucide-react";
 import { isBadAcronym, getInitials, hasRhyme } from "@/lib/analysis";
 import { calcTeasingResistance } from "@/lib/name-analysis";
 
@@ -13,6 +14,8 @@ interface NamePreviewProps {
   onFirstNameChange: (name: string | undefined) => void;
   onMiddleNameChange: (name: string | undefined) => void;
   onSurnameChange: (name: string | undefined) => void;
+  lockedNames: { firstName: boolean; middleName: boolean; surname: boolean };
+  onToggleLock: (field: "firstName" | "middleName" | "surname") => void;
 }
 
 const nameVariants = {
@@ -35,6 +38,8 @@ export function NamePreview({
   onFirstNameChange,
   onMiddleNameChange,
   onSurnameChange,
+  lockedNames,
+  onToggleLock,
 }: NamePreviewProps) {
   // Use custom first name if set, otherwise use card's name
   const displayFirstName = customFirstName || cardFirstName;
@@ -78,58 +83,91 @@ export function NamePreview({
         transition={{ type: "spring", stiffness: 380, damping: 28, mass: 0.8 }}
         className="flex items-center justify-center gap-1.5 text-lg sm:text-xl md:text-2xl font-heading text-foreground tracking-wide mb-2 sm:mb-3 whitespace-nowrap"
       >
-        <span className="relative inline-block flex-shrink-0">
-          {/* Hidden sizer */}
-          <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
-            {displayFirstName}
-          </span>
-          {/* Actual input overlaid */}
-          <input
-            type="text"
-            value={customFirstName ?? ""}
-            onChange={(e) => onFirstNameChange(e.target.value || undefined)}
-            placeholder={cardFirstName}
-            maxLength={50}
-            className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-foreground"
-          />
-        </span>
-        {middleName && (
-          <span className="relative inline-flex items-center flex-shrink-0">
+        <span className="relative inline-flex items-center flex-shrink-0">
+          <button
+            onClick={() => onToggleLock("firstName")}
+            className="text-muted/40 hover:text-muted/70 transition-colors mr-0.5 flex-shrink-0"
+            aria-label={lockedNames.firstName ? "Unlock first name" : "Lock first name"}
+          >
+            {lockedNames.firstName
+              ? <Lock className="w-3 h-3" />
+              : <Unlock className="w-3 h-3" />}
+          </button>
+          <span className="relative inline-block">
+            {/* Hidden sizer */}
             <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
-              {middleName}__
+              {displayFirstName}
             </span>
+            {/* Actual input overlaid */}
             <input
               type="text"
-              value={middleName}
-              onChange={(e) => onMiddleNameChange(e.target.value || undefined)}
+              value={customFirstName ?? ""}
+              onChange={(e) => onFirstNameChange(e.target.value || undefined)}
+              placeholder={cardFirstName}
+              readOnly={lockedNames.firstName}
               maxLength={50}
-              className="absolute inset-y-0 left-0 right-5 bg-transparent border-b border-dashed border-accent/50 text-center outline-none focus:border-accent"
+              className={`absolute inset-0 w-full bg-transparent border-b text-center outline-none focus:border-accent placeholder:text-foreground ${
+                lockedNames.firstName ? "border-solid border-muted/30" : "border-dashed border-muted/50"
+              }`}
             />
+          </span>
+        </span>
+        {middleName && (
+          <span className="inline-flex items-center flex-shrink-0">
             <button
-              onClick={() => onMiddleNameChange(undefined)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 text-muted/60 hover:text-foreground transition-colors"
-              aria-label="Clear middle name"
+              onClick={() => onToggleLock("middleName")}
+              className="text-muted/40 hover:text-muted/70 transition-colors mr-0.5 flex-shrink-0"
+              aria-label={lockedNames.middleName ? "Unlock middle name" : "Lock middle name"}
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
+              {lockedNames.middleName
+                ? <Lock className="w-3 h-3" />
+                : <Unlock className="w-3 h-3" />}
             </button>
+            <span className="relative inline-block">
+              <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
+                {middleName}
+              </span>
+              <input
+                type="text"
+                value={middleName}
+                onChange={(e) => onMiddleNameChange(e.target.value || undefined)}
+                readOnly={lockedNames.middleName}
+                maxLength={50}
+                className={`absolute inset-0 w-full bg-transparent border-b text-center outline-none focus:border-accent ${
+                  lockedNames.middleName ? "border-solid border-muted/30" : "border-dashed border-accent/50"
+                }`}
+              />
+            </span>
           </span>
         )}
-        <span className="relative inline-block flex-shrink-0">
-          {/* Hidden sizer */}
-          <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
-            {surname || "last"}
+        <span className="inline-flex items-center flex-shrink-0">
+          <button
+            onClick={() => onToggleLock("surname")}
+            className="text-muted/40 hover:text-muted/70 transition-colors mr-0.5 flex-shrink-0"
+            aria-label={lockedNames.surname ? "Unlock surname" : "Lock surname"}
+          >
+            {lockedNames.surname
+              ? <Lock className="w-3 h-3" />
+              : <Unlock className="w-3 h-3" />}
+          </button>
+          <span className="relative inline-block">
+            {/* Hidden sizer */}
+            <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
+              {surname || "last"}
+            </span>
+            {/* Actual input overlaid */}
+            <input
+              type="text"
+              value={surname || ""}
+              onChange={(e) => onSurnameChange(e.target.value || undefined)}
+              placeholder="last"
+              readOnly={lockedNames.surname}
+              maxLength={50}
+              className={`absolute inset-0 w-full bg-transparent border-b text-center outline-none focus:border-accent placeholder:text-muted/40 ${
+                lockedNames.surname ? "border-solid border-muted/30" : "border-dashed border-muted/50"
+              }`}
+            />
           </span>
-          {/* Actual input overlaid */}
-          <input
-            type="text"
-            value={surname || ""}
-            onChange={(e) => onSurnameChange(e.target.value || undefined)}
-            placeholder="last"
-            maxLength={50}
-            className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-muted/40"
-          />
         </span>
       </motion.div>
 

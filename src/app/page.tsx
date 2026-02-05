@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
-import { Heart, X, ChevronUp, ChevronLeft, TrendingUp, TrendingDown, Minus, Settings, Sun, Moon } from "lucide-react";
+import { Heart, X, ChevronUp, ChevronLeft, TrendingUp, TrendingDown, Minus, Settings, Sun, Moon, HelpCircle } from "lucide-react";
 import { namesData, type NameData } from "@/lib/names";
 import { haptics } from "@/lib/haptics";
 import {
@@ -13,6 +13,7 @@ import {
   updateOnboardingSettings,
   advanceIndex,
   updateSettings,
+  updateLockedNames,
   applyTheme,
   type AppState,
   type ThemePreference,
@@ -177,10 +178,38 @@ export default function Home() {
     setAppState(newState);
   }, [appState]);
 
+  // Handle lock toggle for name parts
+  const handleToggleLock = useCallback((field: "firstName" | "middleName" | "surname") => {
+    if (!appState) return;
+    haptics.tap();
+    const isLocked = appState.lockedNames[field];
+    if (field === "firstName") {
+      if (!isLocked && currentName) {
+        // Locking: set firstName to current card name
+        updateOnboardingSettings({ firstName: currentName.name });
+      } else {
+        // Unlocking: clear firstName so it follows cards again
+        updateOnboardingSettings({ firstName: undefined });
+      }
+    }
+    const newState = updateLockedNames({ [field]: !isLocked });
+    setAppState(newState);
+  }, [appState, currentName]);
+
   // Handle swipe up to use current name as middle name
   const handleSwipeUp = useCallback(() => {
     if (!currentName || !appState) return;
     haptics.save();
+
+    // If middle name is locked, just advance (don't overwrite)
+    if (appState.lockedNames.middleName) {
+      const finalState = advanceIndex(activePartner);
+      setAppState(finalState);
+      setIsFlipped(false);
+      setIsAnimating(false);
+      setButtonSwipe(null);
+      return;
+    }
 
     // Set current name as middle name
     updateOnboardingSettings({ middleName: currentName.name });
@@ -324,6 +353,13 @@ export default function Home() {
               </button>
             )}
             <button
+              onClick={() => setShowTutorial(true)}
+              className="w-10 h-10 flex items-center justify-center text-muted hover:text-foreground transition-colors touch-target"
+              aria-label="How to use"
+            >
+              <HelpCircle className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => {
                 const current = appState.settings.theme;
                 let next: ThemePreference;
@@ -385,6 +421,8 @@ export default function Home() {
                       onFirstNameChange={handleFirstNameChange}
                       onMiddleNameChange={handleMiddleNameChange}
                       onSurnameChange={handleSurnameChange}
+                      lockedNames={appState.lockedNames}
+                      onToggleLock={handleToggleLock}
                     />
                   </AnimatePresence>
                 </div>

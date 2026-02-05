@@ -48,6 +48,11 @@ export interface AppState {
   genderFilter: "all" | "M" | "F";
   sessionCode?: string;
   partnerMode: "solo" | "partner";
+  lockedNames: {
+    firstName: boolean;
+    middleName: boolean;
+    surname: boolean;
+  };
 }
 
 const STORAGE_KEY = "namesy-partner-app";
@@ -79,6 +84,7 @@ const defaultState: AppState = {
   genderFilter: "all",
   sessionCode: undefined,
   partnerMode: "solo",
+  lockedNames: { firstName: false, middleName: false, surname: false },
 };
 
 /**
@@ -108,6 +114,7 @@ export function getAppState(): AppState {
       genderFilter: parsed.genderFilter || "all",
       sessionCode: parsed.sessionCode,
       partnerMode: parsed.partnerMode || "solo",
+      lockedNames: { firstName: false, middleName: false, surname: false, ...parsed.lockedNames },
     };
   } catch {
     return { ...defaultState, shuffleSeed: Math.floor(Math.random() * 10000) };
@@ -311,6 +318,16 @@ export function updateOnboardingSettings(data: Partial<OnboardingData>): AppStat
 export function markTutorialSeen(): AppState {
   const state = getAppState();
   state.hasSeenTutorial = true;
+  saveAppState(state);
+  return state;
+}
+
+/**
+ * Update locked name states
+ */
+export function updateLockedNames(locks: Partial<AppState['lockedNames']>): AppState {
+  const state = getAppState();
+  state.lockedNames = { ...state.lockedNames, ...locks };
   saveAppState(state);
   return state;
 }

@@ -33,6 +33,7 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
   const [sessionCode, setSessionCode] = useState(appState.sessionCode || "");
   const [copied, setCopied] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [joinCode, setJoinCode] = useState("");
   const [hapticEnabled, setHapticEnabled] = useState(appState.settings.hapticEnabled);
   const [theme, setTheme] = useState<ThemePreference>(appState.settings.theme || "system");
   const { showToast, ToastComponent } = useToast();
@@ -107,6 +108,18 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
       haptics.error();
       showToast("Couldn't copy code. Try selecting manually.", "error");
     }
+  };
+
+  const handleJoinCode = () => {
+    if (!joinCode.trim()) return;
+    setSessionCode(joinCode.trim());
+    const newState = updateOnboardingSettings({
+      sessionCode: joinCode.trim(),
+      partnerMode: "partner",
+    });
+    onStateChange(newState);
+    setJoinCode("");
+    haptics.save();
   };
 
   const handleReset = () => {
@@ -335,11 +348,28 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
                       <p className="text-xs text-muted">
                         Share this code with your partner to sync your likes
                       </p>
+                      <details className="text-sm">
+                        <summary className="text-muted cursor-pointer hover:text-foreground transition-colors">
+                          Join a different code
+                        </summary>
+                        <div className="mt-3 space-y-2">
+                          <Input
+                            variant="pill"
+                            placeholder="Enter partner's code"
+                            value={joinCode}
+                            onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                            maxLength={12}
+                          />
+                          <Button onClick={handleJoinCode} variant="secondary" className="w-full" disabled={!joinCode.trim()}>
+                            Join partner
+                          </Button>
+                        </div>
+                      </details>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       <p className="text-sm text-foreground/80">
-                        Generate a code to sync likes with your partner on their device.
+                        Generate a code to sync likes, or join your partner&apos;s code.
                       </p>
                       <Button
                         onClick={handleGenerateCode}
@@ -347,6 +377,21 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
                         className="w-full"
                       >
                         Generate partner code
+                      </Button>
+                      <div className="relative flex items-center gap-1 text-xs text-muted">
+                        <div className="flex-1 border-t border-border" />
+                        <span>or</span>
+                        <div className="flex-1 border-t border-border" />
+                      </div>
+                      <Input
+                        variant="pill"
+                        placeholder="Enter partner's code"
+                        value={joinCode}
+                        onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                        maxLength={12}
+                      />
+                      <Button onClick={handleJoinCode} variant="secondary" className="w-full" disabled={!joinCode.trim()}>
+                        Join partner
                       </Button>
                     </div>
                   )}
