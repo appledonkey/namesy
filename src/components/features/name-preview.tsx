@@ -22,7 +22,6 @@ const slotTransition = {
   y: { duration: 0.35, ease: [0.33, 0, 0, 1] as const },
   opacity: { duration: 0.2, ease: "easeOut" as const },
 };
-const widthTransition = { duration: 0.3, ease: [0.33, 0, 0, 1] as const };
 
 export function NamePreview({
   cardFirstName,
@@ -84,18 +83,16 @@ export function NamePreview({
               ? <Pin className="w-3.5 h-3.5" />
               : <PinOff className="w-3.5 h-3.5" />}
           </button>
-          {/* Sizer stays in flow — layout prop animates width smoothly */}
-          <span className="relative inline-block pb-[2px]">
-            <motion.span
+          {/* Sizer stays in flow — determines slot width */}
+          <span className="relative inline-block">
+            <span
               className="invisible whitespace-pre px-0.5 inline-block"
               aria-hidden="true"
-              layout
-              transition={widthTransition}
             >
               {displayFirstName}
-            </motion.span>
+            </span>
             {/* Slot window — absolute, clips vertical slide */}
-            <span className="absolute inset-0 overflow-hidden">
+            <span className="absolute inset-0" style={{ clipPath: "inset(-6px 0px)" }}>
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.span
                   key={firstNameKey}
@@ -136,16 +133,14 @@ export function NamePreview({
                 ? <Pin className="w-3.5 h-3.5" />
                 : <PinOff className="w-3.5 h-3.5" />}
             </button>
-            <span className="relative inline-block pb-[2px]">
-              <motion.span
+            <span className="relative inline-block">
+              <span
                 className="invisible whitespace-pre px-0.5 inline-block"
                 aria-hidden="true"
-                layout
-                transition={widthTransition}
               >
                 {middleName}
-              </motion.span>
-              <span className="absolute inset-0 overflow-hidden">
+              </span>
+              <span className="absolute inset-0" style={{ clipPath: "inset(-6px 0px)" }}>
                 <AnimatePresence mode="popLayout" initial={false}>
                   <motion.span
                     key={middleName}
@@ -199,9 +194,12 @@ export function NamePreview({
                 <span className="mx-[0.1em]" aria-hidden="true"> · </span>
               )}
               <span
-                className="relative inline-block overflow-hidden"
-                style={{ width: "0.85em", height: "1.5em" }}
+                className="relative inline-flex items-center justify-center"
+                style={{ clipPath: "inset(-4px -2px)" }}
               >
+                {/* Invisible sizer — determines natural width/height */}
+                <span className="invisible" aria-hidden="true">{letter}</span>
+                {/* Animated letter slides within */}
                 <AnimatePresence mode="popLayout" initial={false}>
                   <motion.span
                     key={letter}
