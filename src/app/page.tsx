@@ -191,7 +191,8 @@ export default function Home() {
       }
     } else if (field === "firstName" && isLocked) {
       // Unpinning: clear custom first name so card name shows through
-      updateOnboardingSettings({ firstName: undefined });
+      // Pass "" (not undefined) because updateOnboardingSettings skips undefined values
+      updateOnboardingSettings({ firstName: "" });
     }
     const newState = updateLockedNames({ [field]: !isLocked });
     setAppState(newState);
