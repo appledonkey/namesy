@@ -158,21 +158,21 @@ export const FlipCard = memo(function FlipCard({
           {/* LIKE stamp - upper left */}
           <motion.div
             style={{ opacity: likeOpacity }}
-            className="absolute top-6 left-4 sm:top-8 sm:left-5 px-3 sm:px-4 py-1.5 sm:py-2 border-[3px] border-partner2 text-partner2 rounded-lg font-bold text-lg sm:text-xl -rotate-12 uppercase tracking-wider pointer-events-none z-10"
+            className="absolute top-6 left-4 sm:top-8 sm:left-5 px-3 sm:px-4 py-1.5 sm:py-2 border-[3px] border-partner2 text-partner2 rounded-xl font-bold text-lg sm:text-xl -rotate-12 uppercase tracking-wider pointer-events-none z-10"
           >
             LIKE
           </motion.div>
           {/* NOPE stamp - upper right */}
           <motion.div
             style={{ opacity: nopeOpacity }}
-            className="absolute top-6 right-4 sm:top-8 sm:right-5 px-3 sm:px-4 py-1.5 sm:py-2 border-[3px] border-partner1 text-partner1 rounded-lg font-bold text-lg sm:text-xl rotate-12 uppercase tracking-wider pointer-events-none z-10"
+            className="absolute top-6 right-4 sm:top-8 sm:right-5 px-3 sm:px-4 py-1.5 sm:py-2 border-[3px] border-partner1 text-partner1 rounded-xl font-bold text-lg sm:text-xl rotate-12 uppercase tracking-wider pointer-events-none z-10"
           >
             NOPE
           </motion.div>
           {/* MIDDLE stamp - top center */}
           <motion.div
             style={{ opacity: middleOpacity }}
-            className="absolute top-6 sm:top-8 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1.5 sm:py-2 border-[3px] border-accent text-accent rounded-lg font-bold text-lg sm:text-xl uppercase tracking-wider pointer-events-none z-10"
+            className="absolute top-6 sm:top-8 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1.5 sm:py-2 border-[3px] border-accent text-accent rounded-xl font-bold text-lg sm:text-xl uppercase tracking-wider pointer-events-none z-10"
           >
             MIDDLE
           </motion.div>

@@ -287,31 +287,31 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
                       onClick={() => handleGenderChange("M")}
                       className={`flex-1 py-3.5 px-3 rounded-full text-sm font-medium transition-all touch-target ${
                         genderFilter === "M"
-                          ? "bg-partner2 text-white"
-                          : "bg-card border border-border text-foreground hover:border-partner2/50"
+                          ? "bg-gender-boy text-white"
+                          : "bg-card border border-border text-foreground hover:border-gender-boy/50"
                       }`}
                     >
-                      {"\uD83D\uDC66"} Boy
+                      ♂ Boy
                     </button>
                     <button
                       onClick={() => handleGenderChange("F")}
                       className={`flex-1 py-3.5 px-3 rounded-full text-sm font-medium transition-all touch-target ${
                         genderFilter === "F"
-                          ? "bg-partner1 text-white"
-                          : "bg-card border border-border text-foreground hover:border-partner1/50"
+                          ? "bg-gender-girl text-white"
+                          : "bg-card border border-border text-foreground hover:border-gender-girl/50"
                       }`}
                     >
-                      {"\uD83D\uDC67"} Girl
+                      ♀ Girl
                     </button>
                     <button
                       onClick={() => handleGenderChange("all")}
                       className={`flex-1 py-3.5 px-3 rounded-full text-sm font-medium transition-all touch-target ${
                         genderFilter === "all"
-                          ? "bg-accent text-white"
-                          : "bg-card border border-border text-foreground hover:border-accent/50"
+                          ? "bg-gender-unisex text-white"
+                          : "bg-card border border-border text-foreground hover:border-gender-unisex/50"
                       }`}
                     >
-                      {"\u2728"} Both
+                      ♂♀ Both
                     </button>
                   </div>
                   <p className="text-xs text-muted mt-2">

@@ -576,7 +576,7 @@ export default function Home() {
                         >
                           <div
                             className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${
-                              m.gender === "F" ? "bg-partner1" : m.gender === "M" ? "bg-partner2" : "bg-muted"
+                              m.gender === "F" ? "bg-gender-girl" : m.gender === "M" ? "bg-gender-boy" : "bg-muted"
                             }`}
                           />
                           <div className="flex-1 min-w-0">
@@ -609,7 +609,7 @@ export default function Home() {
                         >
                           <div
                             className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${
-                              m.gender === "F" ? "bg-partner1" : m.gender === "M" ? "bg-partner2" : "bg-muted"
+                              m.gender === "F" ? "bg-gender-girl" : m.gender === "M" ? "bg-gender-boy" : "bg-muted"
                             }`}
                           />
                           <div className="flex-1 min-w-0">

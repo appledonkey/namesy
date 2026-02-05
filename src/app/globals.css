@@ -31,6 +31,14 @@
   --girl-glow: #F5A89A;            /* Coral pink */
   --boy-glow: #82B1DC;             /* Soft blue */
 
+  /* Gender-specific colors (for gender indicators, not actions) */
+  --gender-girl: #F5A89A;
+  --gender-girl-light: #FDDCD6;
+  --gender-boy: #82B1DC;
+  --gender-boy-light: #D4E6F5;
+  --gender-unisex: #B48CC8;
+  --gender-unisex-light: #E8D8F0;
+
   /* Match popup gradient */
   --match-gradient: linear-gradient(135deg, #FDDCD6 0%, #C5E8DA 100%);
 
@@ -73,6 +81,14 @@
     --girl-glow: #F5A89A;
     --boy-glow: #82B1DC;
 
+    /* Gender-specific colors (for gender indicators, not actions) */
+    --gender-girl: #F5A89A;
+    --gender-girl-light: #3A2A28;
+    --gender-boy: #82B1DC;
+    --gender-boy-light: #283848;
+    --gender-unisex: #B48CC8;
+    --gender-unisex-light: #3A2838;
+
     /* Match popup gradient - darker variant */
     --match-gradient: linear-gradient(135deg, #4A2E2A 0%, #2A4A3E 100%);
 
@@ -113,6 +129,14 @@
   --girl-glow: #F5A89A;
   --boy-glow: #82B1DC;
 
+  /* Gender-specific colors (for gender indicators, not actions) */
+  --gender-girl: #F5A89A;
+  --gender-girl-light: #3A2A28;
+  --gender-boy: #82B1DC;
+  --gender-boy-light: #283848;
+  --gender-unisex: #B48CC8;
+  --gender-unisex-light: #3A2838;
+
   --match-gradient: linear-gradient(135deg, #4A2E2A 0%, #2A4A3E 100%);
 
   --shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.30), 0 1px 4px rgba(0, 0, 0, 0.20);
@@ -144,6 +168,12 @@
   --color-partner2: var(--partner2);
   --color-partner2-light: var(--partner2-light);
   --color-partner2-dark: var(--partner2-dark);
+  --color-gender-girl: var(--gender-girl);
+  --color-gender-girl-light: var(--gender-girl-light);
+  --color-gender-boy: var(--gender-boy);
+  --color-gender-boy-light: var(--gender-boy-light);
+  --color-gender-unisex: var(--gender-unisex);
+  --color-gender-unisex-light: var(--gender-unisex-light);
 
   /* Typography - Fonts defined in layout */
   /* Using --font-family-* prefix for Tailwind v4 font utilities */

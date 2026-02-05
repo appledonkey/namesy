@@ -179,8 +179,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     onClick={() => handleGenderSelect("M")}
                     className={`p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 touch-target ${
                       genderFilter === "M"
-                        ? "border-partner2 bg-partner2-light button-glow-boy"
-                        : "border-border bg-card hover:border-partner2/50"
+                        ? "border-gender-boy bg-gender-boy-light button-glow-boy"
+                        : "border-border bg-card hover:border-gender-boy/50"
                     }`}
                   >
                     <span className="text-xl sm:text-2xl mb-1 block">♂</span>
@@ -191,8 +191,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     onClick={() => handleGenderSelect("F")}
                     className={`p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 touch-target ${
                       genderFilter === "F"
-                        ? "border-partner1 bg-partner1-light button-glow-girl"
-                        : "border-border bg-card hover:border-partner1/50"
+                        ? "border-gender-girl bg-gender-girl-light button-glow-girl"
+                        : "border-border bg-card hover:border-gender-girl/50"
                     }`}
                   >
                     <span className="text-xl sm:text-2xl mb-1 block">♀</span>
@@ -203,8 +203,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     onClick={() => handleGenderSelect("all")}
                     className={`p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 touch-target ${
                       genderFilter === "all"
-                        ? "border-accent bg-secondary button-glow-unisex"
-                        : "border-border bg-card hover:border-accent/50"
+                        ? "border-gender-unisex bg-gender-unisex-light button-glow-unisex"
+                        : "border-border bg-card hover:border-gender-unisex/50"
                     }`}
                   >
                     <span className="text-xl sm:text-2xl mb-1 block">♂♀</span>
