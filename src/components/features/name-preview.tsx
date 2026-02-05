@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Pin, PinOff } from "lucide-react";
 import { isBadAcronym, getInitials, hasRhyme } from "@/lib/analysis";
 import { calcTeasingResistance } from "@/lib/name-analysis";
@@ -18,17 +18,7 @@ interface NamePreviewProps {
   onToggleLock: (field: "firstName" | "middleName") => void;
 }
 
-const nameVariants = {
-  initial: { opacity: 0, y: 16, scale: 0.96, filter: "blur(4px)" },
-  animate: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" },
-  exit: { opacity: 0, y: -12, scale: 0.97, filter: "blur(4px)" },
-};
-
-const initialsVariants = {
-  initial: { opacity: 0, scale: 0.9 },
-  animate: { opacity: 1, scale: 1 },
-  exit: { opacity: 0, scale: 0.9 },
-};
+const partTransition = { duration: 0.15 };
 
 export function NamePreview({
   cardFirstName,
@@ -70,19 +60,10 @@ export function NamePreview({
   }, [displayFirstName, middleName, surname]);
 
   return (
-    <motion.div
-      key={cardFirstName}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      className="text-center mb-3 sm:mb-6"
-    >
+    <div className="text-center mb-3 sm:mb-6">
       {/* Full name with inline editable names */}
-      <motion.div
-        variants={nameVariants}
-        transition={{ type: "spring", stiffness: 380, damping: 28, mass: 0.8 }}
-        className="flex items-center justify-center gap-1.5 text-lg sm:text-xl md:text-2xl font-heading text-foreground tracking-wide mb-2 sm:mb-3 whitespace-nowrap"
-      >
+      <div className="flex items-center justify-center gap-1.5 text-lg sm:text-xl md:text-2xl font-heading text-foreground tracking-wide mb-2 sm:mb-3 whitespace-nowrap">
+        {/* First name — pin button stays static, input area crossfades */}
         <span className="relative inline-flex items-center flex-shrink-0">
           <button
             onClick={() => onToggleLock("firstName")}
@@ -95,25 +76,36 @@ export function NamePreview({
               ? <Pin className="w-3.5 h-3.5" />
               : <PinOff className="w-3.5 h-3.5" />}
           </button>
-          <span className="relative inline-block">
-            {/* Hidden sizer */}
-            <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
-              {displayFirstName}
-            </span>
-            {/* Actual input overlaid */}
-            <input
-              type="text"
-              value={customFirstName ?? ""}
-              onChange={(e) => onFirstNameChange(e.target.value || undefined)}
-              placeholder={cardFirstName}
-              readOnly={lockedNames.firstName}
-              maxLength={50}
-              className={`absolute inset-0 w-full bg-transparent border-b text-center outline-none focus:border-accent placeholder:text-foreground ${
-                lockedNames.firstName ? "border-solid border-accent/40" : "border-dashed border-muted/50"
-              }`}
-            />
-          </span>
+          <AnimatePresence mode="popLayout">
+            <motion.span
+              key={displayFirstName}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={partTransition}
+              className="relative inline-block"
+            >
+              {/* Hidden sizer */}
+              <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
+                {displayFirstName}
+              </span>
+              {/* Actual input overlaid */}
+              <input
+                type="text"
+                value={customFirstName ?? ""}
+                onChange={(e) => onFirstNameChange(e.target.value || undefined)}
+                placeholder={cardFirstName}
+                readOnly={lockedNames.firstName}
+                maxLength={50}
+                className={`absolute inset-0 w-full bg-transparent border-b text-center outline-none focus:border-accent placeholder:text-foreground ${
+                  lockedNames.firstName ? "border-solid border-accent/40" : "border-dashed border-muted/50"
+                }`}
+              />
+            </motion.span>
+          </AnimatePresence>
         </span>
+
+        {/* Middle name — crossfades on value change */}
         {middleName && (
           <span className="inline-flex items-center flex-shrink-0">
             <button
@@ -127,23 +119,34 @@ export function NamePreview({
                 ? <Pin className="w-3.5 h-3.5" />
                 : <PinOff className="w-3.5 h-3.5" />}
             </button>
-            <span className="relative inline-block">
-              <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
-                {middleName}
-              </span>
-              <input
-                type="text"
-                value={middleName}
-                onChange={(e) => onMiddleNameChange(e.target.value || undefined)}
-                readOnly={lockedNames.middleName}
-                maxLength={50}
-                className={`absolute inset-0 w-full bg-transparent border-b text-center outline-none focus:border-accent ${
-                  lockedNames.middleName ? "border-solid border-accent/40" : "border-dashed border-accent/50"
-                }`}
-              />
-            </span>
+            <AnimatePresence mode="popLayout">
+              <motion.span
+                key={middleName}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={partTransition}
+                className="relative inline-block"
+              >
+                <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
+                  {middleName}
+                </span>
+                <input
+                  type="text"
+                  value={middleName}
+                  onChange={(e) => onMiddleNameChange(e.target.value || undefined)}
+                  readOnly={lockedNames.middleName}
+                  maxLength={50}
+                  className={`absolute inset-0 w-full bg-transparent border-b text-center outline-none focus:border-accent ${
+                    lockedNames.middleName ? "border-solid border-accent/40" : "border-dashed border-accent/50"
+                  }`}
+                />
+              </motion.span>
+            </AnimatePresence>
           </span>
         )}
+
+        {/* Surname — static, no animation wrapper */}
         <span className="relative inline-block flex-shrink-0">
           {/* Hidden sizer */}
           <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
@@ -159,26 +162,27 @@ export function NamePreview({
             className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-muted/40"
           />
         </span>
-      </motion.div>
+      </div>
 
-      {/* Initials pill */}
-      <motion.div
-        variants={initialsVariants}
-        transition={{ type: "spring", stiffness: 300, damping: 24, delay: 0.06 }}
-        className="inline-flex items-center gap-2 px-3 sm:px-5 py-1.5 sm:py-2 bg-secondary/50 rounded-full"
-      >
-        <span className="text-sm sm:text-base md:text-lg font-medium tracking-[0.25em] sm:tracking-[0.3em] text-foreground/80 uppercase">
-          {initials}
-        </span>
-      </motion.div>
+      {/* Initials pill — container stays, text inside crossfades */}
+      <div className="inline-flex items-center gap-2 px-3 sm:px-5 py-1.5 sm:py-2 bg-secondary/50 rounded-full">
+        <AnimatePresence mode="popLayout">
+          <motion.span
+            key={initials}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={partTransition}
+            className="text-sm sm:text-base md:text-lg font-medium tracking-[0.25em] sm:tracking-[0.3em] text-foreground/80 uppercase"
+          >
+            {initials}
+          </motion.span>
+        </AnimatePresence>
+      </div>
 
-      {/* Warning pills */}
+      {/* Warning pills — render statically, recalculate via useMemo */}
       {warnings.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center gap-1.5 mt-2"
-        >
+        <div className="flex flex-col items-center gap-1.5 mt-2">
           {warnings.map((w) => (
             <span
               key={w}
@@ -192,8 +196,8 @@ export function NamePreview({
               {w}
             </span>
           ))}
-        </motion.div>
+        </div>
       )}
-    </motion.div>
+    </div>
   );
 }

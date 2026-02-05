@@ -411,20 +411,17 @@ export default function Home() {
               <>
                 {/* Name Preview with inline editable names */}
                 <div className="flex-shrink-0">
-                  <AnimatePresence mode="wait">
-                    <NamePreview
-                      key={currentName.id}
-                      cardFirstName={currentName.name}
-                      customFirstName={appState.firstName}
-                      middleName={appState.middleName}
-                      surname={appState.surname}
-                      onFirstNameChange={handleFirstNameChange}
-                      onMiddleNameChange={handleMiddleNameChange}
-                      onSurnameChange={handleSurnameChange}
-                      lockedNames={appState.lockedNames}
-                      onToggleLock={handleToggleLock}
-                    />
-                  </AnimatePresence>
+                  <NamePreview
+                    cardFirstName={currentName.name}
+                    customFirstName={appState.firstName}
+                    middleName={appState.middleName}
+                    surname={appState.surname}
+                    onFirstNameChange={handleFirstNameChange}
+                    onMiddleNameChange={handleMiddleNameChange}
+                    onSurnameChange={handleSurnameChange}
+                    lockedNames={appState.lockedNames}
+                    onToggleLock={handleToggleLock}
+                  />
                 </div>
 
                 {/* Card Stack - tarot card proportions */}
