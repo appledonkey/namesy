@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Lock, Unlock } from "lucide-react";
+import { Pin, PinOff } from "lucide-react";
 import { isBadAcronym, getInitials, hasRhyme } from "@/lib/analysis";
 import { calcTeasingResistance } from "@/lib/name-analysis";
 
@@ -15,7 +15,7 @@ interface NamePreviewProps {
   onMiddleNameChange: (name: string | undefined) => void;
   onSurnameChange: (name: string | undefined) => void;
   lockedNames: { firstName: boolean; middleName: boolean; surname: boolean };
-  onToggleLock: (field: "firstName" | "middleName" | "surname") => void;
+  onToggleLock: (field: "firstName" | "middleName") => void;
 }
 
 const nameVariants = {
@@ -86,12 +86,14 @@ export function NamePreview({
         <span className="relative inline-flex items-center flex-shrink-0">
           <button
             onClick={() => onToggleLock("firstName")}
-            className="text-muted/40 hover:text-muted/70 transition-colors mr-0.5 flex-shrink-0"
-            aria-label={lockedNames.firstName ? "Unlock first name" : "Lock first name"}
+            className={`transition-colors mr-0.5 flex-shrink-0 ${
+              lockedNames.firstName ? "text-accent" : "text-muted/30 hover:text-muted/60"
+            }`}
+            aria-label={lockedNames.firstName ? "Unpin first name" : "Pin first name"}
           >
             {lockedNames.firstName
-              ? <Lock className="w-3 h-3" />
-              : <Unlock className="w-3 h-3" />}
+              ? <Pin className="w-3.5 h-3.5" />
+              : <PinOff className="w-3.5 h-3.5" />}
           </button>
           <span className="relative inline-block">
             {/* Hidden sizer */}
@@ -107,7 +109,7 @@ export function NamePreview({
               readOnly={lockedNames.firstName}
               maxLength={50}
               className={`absolute inset-0 w-full bg-transparent border-b text-center outline-none focus:border-accent placeholder:text-foreground ${
-                lockedNames.firstName ? "border-solid border-muted/30" : "border-dashed border-muted/50"
+                lockedNames.firstName ? "border-solid border-accent/40" : "border-dashed border-muted/50"
               }`}
             />
           </span>
@@ -116,12 +118,14 @@ export function NamePreview({
           <span className="inline-flex items-center flex-shrink-0">
             <button
               onClick={() => onToggleLock("middleName")}
-              className="text-muted/40 hover:text-muted/70 transition-colors mr-0.5 flex-shrink-0"
-              aria-label={lockedNames.middleName ? "Unlock middle name" : "Lock middle name"}
+              className={`transition-colors mr-0.5 flex-shrink-0 ${
+                lockedNames.middleName ? "text-accent" : "text-muted/30 hover:text-muted/60"
+              }`}
+              aria-label={lockedNames.middleName ? "Unpin middle name" : "Pin middle name"}
             >
               {lockedNames.middleName
-                ? <Lock className="w-3 h-3" />
-                : <Unlock className="w-3 h-3" />}
+                ? <Pin className="w-3.5 h-3.5" />
+                : <PinOff className="w-3.5 h-3.5" />}
             </button>
             <span className="relative inline-block">
               <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
@@ -134,40 +138,26 @@ export function NamePreview({
                 readOnly={lockedNames.middleName}
                 maxLength={50}
                 className={`absolute inset-0 w-full bg-transparent border-b text-center outline-none focus:border-accent ${
-                  lockedNames.middleName ? "border-solid border-muted/30" : "border-dashed border-accent/50"
+                  lockedNames.middleName ? "border-solid border-accent/40" : "border-dashed border-accent/50"
                 }`}
               />
             </span>
           </span>
         )}
-        <span className="inline-flex items-center flex-shrink-0">
-          <button
-            onClick={() => onToggleLock("surname")}
-            className="text-muted/40 hover:text-muted/70 transition-colors mr-0.5 flex-shrink-0"
-            aria-label={lockedNames.surname ? "Unlock surname" : "Lock surname"}
-          >
-            {lockedNames.surname
-              ? <Lock className="w-3 h-3" />
-              : <Unlock className="w-3 h-3" />}
-          </button>
-          <span className="relative inline-block">
-            {/* Hidden sizer */}
-            <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
-              {surname || "last"}
-            </span>
-            {/* Actual input overlaid */}
-            <input
-              type="text"
-              value={surname || ""}
-              onChange={(e) => onSurnameChange(e.target.value || undefined)}
-              placeholder="last"
-              readOnly={lockedNames.surname}
-              maxLength={50}
-              className={`absolute inset-0 w-full bg-transparent border-b text-center outline-none focus:border-accent placeholder:text-muted/40 ${
-                lockedNames.surname ? "border-solid border-muted/30" : "border-dashed border-muted/50"
-              }`}
-            />
+        <span className="relative inline-block flex-shrink-0">
+          {/* Hidden sizer */}
+          <span className="invisible whitespace-pre px-0.5" aria-hidden="true">
+            {surname || "last"}
           </span>
+          {/* Actual input overlaid */}
+          <input
+            type="text"
+            value={surname || ""}
+            onChange={(e) => onSurnameChange(e.target.value || undefined)}
+            placeholder="last"
+            maxLength={50}
+            className="absolute inset-0 w-full bg-transparent border-b border-dashed border-muted/50 text-center outline-none focus:border-accent placeholder:text-muted/40"
+          />
         </span>
       </motion.div>
 

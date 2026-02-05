@@ -179,17 +179,15 @@ export default function Home() {
   }, [appState]);
 
   // Handle lock toggle for name parts
-  const handleToggleLock = useCallback((field: "firstName" | "middleName" | "surname") => {
+  const handleToggleLock = useCallback((field: "firstName" | "middleName") => {
     if (!appState) return;
     haptics.tap();
     const isLocked = appState.lockedNames[field];
-    if (field === "firstName") {
-      if (!isLocked && currentName) {
-        // Locking: set firstName to current card name
-        updateOnboardingSettings({ firstName: currentName.name });
-      } else {
-        // Unlocking: clear firstName so it follows cards again
-        updateOnboardingSettings({ firstName: undefined });
+    if (field === "firstName" && !isLocked) {
+      // Pinning: capture whatever is currently displayed (custom or card name)
+      const displayed = appState.firstName || currentName?.name;
+      if (displayed) {
+        updateOnboardingSettings({ firstName: displayed });
       }
     }
     const newState = updateLockedNames({ [field]: !isLocked });
@@ -199,10 +197,10 @@ export default function Home() {
   // Handle swipe up to use current name as middle name
   const handleSwipeUp = useCallback(() => {
     if (!currentName || !appState) return;
-    haptics.save();
 
-    // If middle name is locked, just advance (don't overwrite)
+    // If middle name is pinned, just advance (don't overwrite)
     if (appState.lockedNames.middleName) {
+      haptics.error();
       const finalState = advanceIndex(activePartner);
       setAppState(finalState);
       setIsFlipped(false);
@@ -210,6 +208,8 @@ export default function Home() {
       setButtonSwipe(null);
       return;
     }
+
+    haptics.save();
 
     // Set current name as middle name
     updateOnboardingSettings({ middleName: currentName.name });
