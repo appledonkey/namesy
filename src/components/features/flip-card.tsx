@@ -46,11 +46,7 @@ export const FlipCard = memo(function FlipCard({
     if (isExiting) return;
     setIsExiting(true);
 
-    // Process state immediately for snappy feel
-    onSwipe(direction);
-    onSwipeComplete?.();
-
-    // Animation runs in parallel with state update
+    // Start exit animation first so the card flies off-screen
     if (direction === "up") {
       controls.start({
         x: 0,
@@ -77,6 +73,11 @@ export const FlipCard = memo(function FlipCard({
         }
       });
     }
+
+    // Let the card animate off-screen before processing state
+    await new Promise(resolve => setTimeout(resolve, 200));
+    onSwipe(direction);
+    onSwipeComplete?.();
   }, [isExiting, onSwipe, onSwipeComplete, controls]);
 
   // Handle programmatic swipe from buttons
