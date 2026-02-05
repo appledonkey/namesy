@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Pin, PinOff } from "lucide-react";
 import { isBadAcronym, getInitials, hasRhyme, hasDuplicateNames } from "@/lib/analysis";
@@ -23,7 +23,7 @@ const slotTransition = {
   opacity: { duration: 0.2, ease: "easeOut" as const },
 };
 
-export function NamePreview({
+export const NamePreview = memo(function NamePreview({
   cardFirstName,
   customFirstName,
   middleName,
@@ -255,4 +255,4 @@ export function NamePreview({
       )}
     </div>
   );
-}
+});

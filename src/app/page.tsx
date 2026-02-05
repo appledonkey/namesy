@@ -28,6 +28,19 @@ import { FlipCard } from "@/components/features/flip-card";
 type Screen = "swipe" | "matches";
 type Partner = 1 | 2;
 
+// Helper functions moved outside component to avoid recreation on each render
+const getTrendIcon = (trend: string) => {
+  if (trend === "rising") return <TrendingUp className="w-4 h-4" />;
+  if (trend === "falling") return <TrendingDown className="w-4 h-4" />;
+  return <Minus className="w-4 h-4" />;
+};
+
+const getTrendColor = (trend: string) => {
+  if (trend === "rising") return "text-partner2-dark";
+  if (trend === "falling") return "text-partner1-dark";
+  return "text-muted";
+};
+
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("swipe");
   const [activePartner, setActivePartner] = useState<Partner>(1);
@@ -55,42 +68,20 @@ export default function Home() {
     }
   }, [appState?.onboardingComplete, appState?.hasSeenTutorial]);
 
-  // Prevent iOS pull-to-refresh and bounce scrolling
+  // Prevent iOS pull-to-refresh on swipe cards
+  // CSS overscroll-behavior: none on html/body handles general overscroll
   useEffect(() => {
     const preventPullToRefresh = (e: TouchEvent) => {
-      // Only prevent if we're at the top of the page and pulling down
-      // or if the target is within a swipe-card
       const target = e.target as HTMLElement;
       if (target.closest('.swipe-card')) {
         e.preventDefault();
       }
     };
 
-    const preventOverscroll = (e: TouchEvent) => {
-      // Prevent overscroll on the document
-      if (e.touches.length === 1) {
-        const target = e.target as HTMLElement;
-        // Allow scrolling inside scrollable elements
-        const scrollableParent = target.closest('.overflow-y-auto, .scrollbar-hide');
-        if (!scrollableParent) {
-          // Check if we're on a swipe card or the main swipe area
-          if (target.closest('.swipe-card') || target.closest('main')) {
-            // Only prevent if not in a scrollable container
-            const isScrollable = target.scrollHeight > target.clientHeight;
-            if (!isScrollable) {
-              e.preventDefault();
-            }
-          }
-        }
-      }
-    };
-
     document.addEventListener('touchmove', preventPullToRefresh, { passive: false });
-    document.addEventListener('touchstart', preventOverscroll, { passive: false });
 
     return () => {
       document.removeEventListener('touchmove', preventPullToRefresh);
-      document.removeEventListener('touchstart', preventOverscroll);
     };
   }, []);
 
@@ -144,7 +135,13 @@ export default function Home() {
       ? appState.partner1
       : appState.partner2
     : null;
-  const currentName = currentState ? namePool[currentState.currentIndex] : null;
+
+  // Memoize currentName to prevent unnecessary recalculations
+  const currentName = useMemo(() => {
+    if (!currentState) return null;
+    return namePool[currentState.currentIndex];
+  }, [currentState, namePool]);
+
   const isFinished = currentState ? currentState.currentIndex >= namePool.length : false;
 
   // Process the swipe result - now batched for better performance
@@ -311,18 +308,6 @@ export default function Home() {
       haptics.tap();
       setIsFlipped(!isFlipped);
     }
-  };
-
-  const getTrendIcon = (trend: string) => {
-    if (trend === "rising") return <TrendingUp className="w-4 h-4" />;
-    if (trend === "falling") return <TrendingDown className="w-4 h-4" />;
-    return <Minus className="w-4 h-4" />;
-  };
-
-  const getTrendColor = (trend: string) => {
-    if (trend === "rising") return "text-partner2-dark";
-    if (trend === "falling") return "text-partner1-dark";
-    return "text-muted";
   };
 
   // Show loading state

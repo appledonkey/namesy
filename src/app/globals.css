@@ -254,13 +254,15 @@ html {
 }
 
 /* Theme transition — only active during user-initiated toggle */
+/* Optimized: target specific elements instead of expensive universal selector */
 .theme-transitioning,
-.theme-transitioning *,
-.theme-transitioning *::before,
-.theme-transitioning *::after {
-  transition: background-color 0.3s ease, color 0.3s ease,
-              border-color 0.3s ease, box-shadow 0.3s ease,
-              fill 0.3s ease, stroke 0.3s ease !important;
+.theme-transitioning .bg-background,
+.theme-transitioning .bg-card,
+.theme-transitioning .bg-secondary,
+.theme-transitioning .text-foreground,
+.theme-transitioning .text-muted,
+.theme-transitioning .border-border {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
 }
 
 /* Custom Utilities */
@@ -362,8 +364,8 @@ html {
 
     .glass-sheet {
       background: rgba(255, 251, 247, 0.90);
-      backdrop-filter: blur(40px) saturate(180%);
-      -webkit-backdrop-filter: blur(40px) saturate(180%);
+      backdrop-filter: blur(20px) saturate(150%);
+      -webkit-backdrop-filter: blur(20px) saturate(150%);
       border-top: 1px solid rgba(255, 248, 240, 0.6);
     }
 
@@ -419,62 +421,27 @@ html {
     -webkit-transform: translateZ(0);
   }
 
-  /* Gender-based card glows */
+  /* Gender-based card glows - optimized: 3 layers instead of 6 for 50% less paint cost */
   .card-glow-girl {
     box-shadow:
-      0 0 15px rgba(245, 168, 154, 0.5),
-      0 0 30px rgba(245, 168, 154, 0.4),
-      0 0 45px rgba(245, 168, 154, 0.3),
-      0 0 60px rgba(245, 168, 154, 0.2),
-      0 0 80px rgba(245, 168, 154, 0.1),
-      inset 0 0 30px rgba(245, 168, 154, 0.05);
+      0 0 20px rgba(245, 168, 154, 0.5),
+      0 0 40px rgba(245, 168, 154, 0.3),
+      0 0 60px rgba(245, 168, 154, 0.15);
   }
 
   .card-glow-boy {
     box-shadow:
-      0 0 15px rgba(130, 177, 220, 0.5),
-      0 0 30px rgba(130, 177, 220, 0.4),
-      0 0 45px rgba(130, 177, 220, 0.3),
-      0 0 60px rgba(130, 177, 220, 0.2),
-      0 0 80px rgba(130, 177, 220, 0.1),
-      inset 0 0 30px rgba(130, 177, 220, 0.05);
+      0 0 20px rgba(130, 177, 220, 0.5),
+      0 0 40px rgba(130, 177, 220, 0.3),
+      0 0 60px rgba(130, 177, 220, 0.15);
   }
 
+  /* Unisex glow - optimized: replaced expensive blur pseudo-elements with box-shadow */
   .card-glow-unisex {
-    position: relative;
     box-shadow:
-      0 0 20px rgba(180, 140, 200, 0.3),
-      inset 0 0 30px rgba(180, 140, 200, 0.05);
-  }
-
-  .card-glow-unisex::before {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border-radius: 1.25rem;
-    background: linear-gradient(
-      135deg,
-      rgba(180, 140, 200, 0.7) 0%,
-      rgba(180, 140, 200, 0.5) 50%,
-      rgba(180, 140, 200, 0.7) 100%
-    );
-    z-index: -1;
-    filter: blur(15px);
-  }
-
-  .card-glow-unisex::after {
-    content: '';
-    position: absolute;
-    inset: -8px;
-    border-radius: 1.5rem;
-    background: linear-gradient(
-      135deg,
-      rgba(180, 140, 200, 0.4) 0%,
-      rgba(180, 140, 200, 0.2) 50%,
-      rgba(180, 140, 200, 0.4) 100%
-    );
-    z-index: -2;
-    filter: blur(25px);
+      0 0 20px rgba(180, 140, 200, 0.5),
+      0 0 40px rgba(180, 140, 200, 0.3),
+      0 0 60px rgba(180, 140, 200, 0.15);
   }
 
   /* Gender selection button glows */
