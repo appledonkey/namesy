@@ -32,7 +32,9 @@ export const FlipCard = memo(function FlipCard({
 }: FlipCardProps) {
   const controls = useAnimationControls();
   const [isExiting, setIsExiting] = useState(false);
+  const [isPromoting, setIsPromoting] = useState(false);
   const hasDragged = useRef(false);
+  const wasTop = useRef(isTop);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
@@ -76,6 +78,27 @@ export const FlipCard = memo(function FlipCard({
       });
     }
   }, [isFlipped, isTop, isExiting, controls]);
+
+  // Animate stack promotion when card becomes top
+  useEffect(() => {
+    if (isTop && !wasTop.current && !isExiting) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Responding to prop change to trigger promotion animation
+      setIsPromoting(true);
+      // Start from previous stack position
+      controls.set({ scale: 0.95, y: 8 });
+      // Animate to front position
+      controls.start({
+        scale: 1,
+        y: 0,
+        transition: {
+          type: "spring",
+          stiffness: 400,
+          damping: 30,
+        }
+      }).then(() => setIsPromoting(false));
+    }
+    wasTop.current = isTop;
+  }, [isTop, isExiting, controls]);
 
   const handleDragEnd = async (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if (isExiting || !isTop) return;
@@ -144,9 +167,9 @@ export const FlipCard = memo(function FlipCard({
         style={{
           transformStyle: "preserve-3d",
           x: isTop ? x : 0,
-          y: isTop ? y : stackY,
+          y: isTop && !isPromoting ? y : (!isTop ? stackY : undefined),
           rotate: isTop ? rotate : 0,
-          scale: isTop ? scale : stackScale,
+          scale: isTop && !isPromoting ? scale : (!isTop ? stackScale : undefined),
           touchAction: "none",
         }}
       >
