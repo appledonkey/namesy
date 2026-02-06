@@ -92,8 +92,8 @@ export const FlipCard = memo(function FlipCard({
         y: 0,
         transition: {
           type: "spring",
-          stiffness: 400,
-          damping: 30,
+          stiffness: 180,
+          damping: 20,
         }
       }).then(() => setIsPromoting(false));
     }
