@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useState, useEffect, useCallback, useRef } from "react";
-import { motion, useMotionValue, useTransform, useAnimationControls, PanInfo } from "framer-motion";
+import { motion, useMotionValue, useTransform, useAnimationControls, PanInfo, animate } from "framer-motion";
 import { type NameData } from "@/lib/names";
 import { SPRING_CONFIG, SWIPE_THRESHOLD, VELOCITY_THRESHOLD } from "@/lib/swipe-config";
 
@@ -32,7 +32,6 @@ export const FlipCard = memo(function FlipCard({
 }: FlipCardProps) {
   const controls = useAnimationControls();
   const [isExiting, setIsExiting] = useState(false);
-  const [isPromoting, setIsPromoting] = useState(false);
   const hasDragged = useRef(false);
   const wasTop = useRef(isTop);
   const x = useMotionValue(0);
@@ -42,7 +41,13 @@ export const FlipCard = memo(function FlipCard({
   const nopeOpacity = useTransform(x, [-100, 0], [1, 0]);
   const middleOpacity = useTransform(y, [-100, 0], [1, 0]);
   // Scale up slightly when dragging for "lifted" feel
-  const scale = useTransform(x, [-200, 0, 200], [1.02, 1, 1.02]);
+  const dragScale = useTransform(x, [-200, 0, 200], [1.02, 1, 1.02]);
+  // Separate scale for promotion animation (multiplied with drag scale)
+  const promotionScale = useMotionValue(1);
+  const scale = useTransform(
+    [dragScale, promotionScale],
+    ([d, p]) => (d as number) * (p as number)
+  );
 
   const performSwipe = useCallback(async (direction: "left" | "right" | "up") => {
     if (isExiting) return;
@@ -82,23 +87,15 @@ export const FlipCard = memo(function FlipCard({
   // Animate stack promotion when card becomes top
   useEffect(() => {
     if (isTop && !wasTop.current && !isExiting) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Responding to prop change to trigger promotion animation
-      setIsPromoting(true);
-      // Start from previous stack position
-      controls.set({ scale: 0.95, y: 8 });
-      // Animate to front position
-      controls.start({
-        scale: 1,
-        y: 0,
-        transition: {
-          type: "spring",
-          stiffness: 180,
-          damping: 20,
-        }
-      }).then(() => setIsPromoting(false));
+      // Start from stack position and animate to front
+      y.set(8);
+      promotionScale.set(0.95);
+      const springConfig = { type: "spring" as const, stiffness: 180, damping: 20 };
+      animate(y, 0, springConfig);
+      animate(promotionScale, 1, springConfig);
     }
     wasTop.current = isTop;
-  }, [isTop, isExiting, controls]);
+  }, [isTop, isExiting, y, promotionScale]);
 
   const handleDragEnd = async (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if (isExiting || !isTop) return;
@@ -167,9 +164,9 @@ export const FlipCard = memo(function FlipCard({
         style={{
           transformStyle: "preserve-3d",
           x: isTop ? x : 0,
-          y: isTop && !isPromoting ? y : (!isTop ? stackY : undefined),
+          y: isTop ? y : stackY,
           rotate: isTop ? rotate : 0,
-          scale: isTop && !isPromoting ? scale : (!isTop ? stackScale : undefined),
+          scale: isTop ? scale : stackScale,
           touchAction: "none",
         }}
       >
