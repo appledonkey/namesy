@@ -90,7 +90,7 @@ export const FlipCard = memo(function FlipCard({
       // Start from stack position and animate to front
       y.set(8);
       promotionScale.set(0.95);
-      const springConfig = { type: "spring" as const, stiffness: 180, damping: 20 };
+      const springConfig = { type: "spring" as const, stiffness: 300, damping: 30 };
       animate(y, 0, springConfig);
       animate(promotionScale, 1, springConfig);
     }
