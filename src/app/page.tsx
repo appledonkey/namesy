@@ -15,7 +15,6 @@ import {
   updateSettings,
   updateLockedNames,
   applyTheme,
-  removeLike,
   type AppState,
   type ThemePreference,
 } from "@/lib/partner-storage";
@@ -52,7 +51,6 @@ export default function Home() {
   const [buttonSwipe, setButtonSwipe] = useState<"left" | "right" | "up" | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
-  const [matchesTab, setMatchesTab] = useState<"matches" | "liked">("matches");
 
   // Load state from localStorage on mount
   useEffect(() => {
@@ -112,23 +110,27 @@ export default function Home() {
       .filter((n): n is NameData => n !== undefined);
   }, [appState?.matches]);
 
-  // Get liked names (excluding matches) for active partner
-  const likedNames = useMemo(() => {
+  // Get Partner 1 likes as NameData objects
+  const partner1Likes = useMemo(() => {
     if (!appState) return [];
-    const partnerData = activePartner === 1 ? appState.partner1 : appState.partner2;
-    const matchSet = new Set(appState.matches);
-    return partnerData.likes
-      .filter((id) => !matchSet.has(id))
+    return appState.partner1.likes
       .map((id) => namesData.find((n) => n.id === id))
       .filter((n): n is NameData => n !== undefined);
-  }, [appState, activePartner]);
+  }, [appState?.partner1.likes]);
 
-  // Handle unliking a name
-  const handleUnlike = useCallback((nameId: string) => {
-    haptics.tap();
-    const newState = removeLike(activePartner, nameId);
-    setAppState(newState);
-  }, [activePartner]);
+  // Get Partner 2 likes as NameData objects
+  const partner2Likes = useMemo(() => {
+    if (!appState) return [];
+    return appState.partner2.likes
+      .map((id) => namesData.find((n) => n.id === id))
+      .filter((n): n is NameData => n !== undefined);
+  }, [appState?.partner2.likes]);
+
+  // Set of match IDs for quick lookup
+  const matchSet = useMemo(() => {
+    if (!appState) return new Set<string>();
+    return new Set(appState.matches);
+  }, [appState?.matches]);
 
   const currentState = appState
     ? activePartner === 1
@@ -335,7 +337,7 @@ export default function Home() {
         <div className="max-w-xl mx-auto flex items-center justify-between">
           {screen === "matches" ? (
             <button
-              onClick={() => { setScreen("swipe"); setMatchesTab("matches"); }}
+              onClick={() => setScreen("swipe")}
               className="flex items-center gap-1 text-muted hover:text-foreground transition-colors touch-target"
               aria-label="Go back to swipe screen"
             >
@@ -353,12 +355,10 @@ export default function Home() {
               <button
                 onClick={() => setScreen("matches")}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary hover:bg-secondary-dark rounded-full transition-colors touch-target"
-                aria-label={`View ${matchedNames.length} ${matchedNames.length === 1 ? "match" : "matches"}`}
+                aria-label="View liked names"
               >
                 <Heart className="w-4 h-4 text-partner1" fill="currentColor" />
-                <span className="text-sm font-medium">
-                  {matchedNames.length} {matchedNames.length === 1 ? "match" : "matches"}
-                </span>
+                <span className="text-sm font-medium">Likes</span>
               </button>
             )}
             <button
@@ -507,115 +507,80 @@ export default function Home() {
         )}
 
         {screen === "matches" && (
-          <div className="w-full max-w-md flex-1 flex flex-col min-h-0 safe-bottom pt-2">
-            {/* Segmented tab control */}
-            <div className="flex-shrink-0 flex bg-secondary/50 rounded-full p-1 mb-4">
-              <button
-                onClick={() => setMatchesTab("matches")}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-sm font-medium transition-colors ${
-                  matchesTab === "matches"
-                    ? "bg-foreground text-background"
-                    : "text-muted"
-                }`}
-              >
-                Matches
-                {matchedNames.length > 0 && (
-                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                    matchesTab === "matches" ? "bg-background/20" : "bg-secondary"
-                  }`}>
-                    {matchedNames.length}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => setMatchesTab("liked")}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-sm font-medium transition-colors ${
-                  matchesTab === "liked"
-                    ? "bg-foreground text-background"
-                    : "text-muted"
-                }`}
-              >
-                Liked
-                {likedNames.length > 0 && (
-                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                    matchesTab === "liked" ? "bg-background/20" : "bg-secondary"
-                  }`}>
-                    {likedNames.length}
-                  </span>
-                )}
-              </button>
+          <div className="w-full max-w-lg flex-1 flex flex-col min-h-0 safe-bottom pt-2">
+            {/* Column headers */}
+            <div className="flex-shrink-0 flex gap-2 mb-3">
+              <div className="flex-1 text-center">
+                <span className="text-sm font-medium text-muted">Partner 1</span>
+              </div>
+              <div className="flex-1 text-center">
+                <span className="text-sm font-medium text-muted">Partner 2</span>
+              </div>
             </div>
 
-            {/* Tab content */}
-            <div className="flex-1 overflow-y-auto scrollbar-hide">
-              {matchesTab === "matches" && (
-                <>
-                  {matchedNames.length === 0 ? (
-                    <p className="text-center text-muted">No matches yet. Keep swiping!</p>
-                  ) : (
-                    <ul className="space-y-2 sm:space-y-3 pb-4">
-                      {matchedNames.map((m) => (
-                        <li
-                          key={m.id}
-                          className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-card rounded-2xl shadow-sm"
-                        >
-                          <div
-                            className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${
-                              m.gender === "F" ? "bg-gender-girl" : m.gender === "M" ? "bg-gender-boy" : "bg-muted"
-                            }`}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-heading text-lg sm:text-xl">{m.name}</p>
-                            <p className="text-xs sm:text-sm text-muted truncate">
-                              {m.origin} · {m.meaning}
-                            </p>
-                          </div>
-                          <div className={`flex items-center gap-1 text-xs sm:text-sm flex-shrink-0 ${getTrendColor(m.trend)}`}>
-                            {getTrendIcon(m.trend)}
-                            <span>{m.popularity}</span>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </>
-              )}
+            {/* Two-column layout */}
+            <div className="flex-1 flex gap-2 min-h-0">
+              {/* Partner 1 column */}
+              <div className="flex-1 overflow-y-auto scrollbar-hide">
+                {partner1Likes.length === 0 ? (
+                  <p className="text-center text-muted text-sm py-4">No likes yet</p>
+                ) : (
+                  <ul className="space-y-2 pb-4">
+                    {partner1Likes.map((name) => (
+                      <li
+                        key={name.id}
+                        className={`flex items-center gap-2 p-2.5 bg-card rounded-xl shadow-sm ${
+                          matchSet.has(name.id) ? "ring-1 ring-partner1/30" : ""
+                        }`}
+                      >
+                        <div
+                          className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                            name.gender === "F" ? "bg-gender-girl" :
+                            name.gender === "M" ? "bg-gender-boy" : "bg-muted"
+                          }`}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-heading text-base truncate">{name.name}</p>
+                        </div>
+                        {matchSet.has(name.id) && (
+                          <Heart className="w-4 h-4 text-partner1 flex-shrink-0" fill="currentColor" />
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
 
-              {matchesTab === "liked" && (
-                <>
-                  {likedNames.length === 0 ? (
-                    <p className="text-center text-muted">No liked names yet. Swipe right to like!</p>
-                  ) : (
-                    <ul className="space-y-2 sm:space-y-3 pb-4">
-                      {likedNames.map((m) => (
-                        <li
-                          key={m.id}
-                          className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-card rounded-2xl shadow-sm"
-                        >
-                          <div
-                            className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${
-                              m.gender === "F" ? "bg-gender-girl" : m.gender === "M" ? "bg-gender-boy" : "bg-muted"
-                            }`}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-heading text-lg sm:text-xl">{m.name}</p>
-                            <p className="text-xs sm:text-sm text-muted truncate">
-                              {m.origin} · {m.meaning}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => handleUnlike(m.id)}
-                            className="w-8 h-8 flex items-center justify-center rounded-full text-muted hover:text-partner1 hover:bg-partner1/10 transition-colors flex-shrink-0"
-                            aria-label={`Unlike ${m.name}`}
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </>
-              )}
+              {/* Partner 2 column */}
+              <div className="flex-1 overflow-y-auto scrollbar-hide">
+                {partner2Likes.length === 0 ? (
+                  <p className="text-center text-muted text-sm py-4">No likes yet</p>
+                ) : (
+                  <ul className="space-y-2 pb-4">
+                    {partner2Likes.map((name) => (
+                      <li
+                        key={name.id}
+                        className={`flex items-center gap-2 p-2.5 bg-card rounded-xl shadow-sm ${
+                          matchSet.has(name.id) ? "ring-1 ring-partner1/30" : ""
+                        }`}
+                      >
+                        <div
+                          className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                            name.gender === "F" ? "bg-gender-girl" :
+                            name.gender === "M" ? "bg-gender-boy" : "bg-muted"
+                          }`}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-heading text-base truncate">{name.name}</p>
+                        </div>
+                        {matchSet.has(name.id) && (
+                          <Heart className="w-4 h-4 text-partner1 flex-shrink-0" fill="currentColor" />
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           </div>
         )}
