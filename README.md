@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Namesy
+
+**Namesy** is a baby name discovery app: swipe through names, see meanings and origins, preview full names with your surname, and (optionally) match names with a partner on the same device.
+
+- [Live on GitHub Pages](https://appledonkey.github.io/namesy/)
+- [Repository](https://github.com/appledonkey/namesy)
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). No account or API keys required; everything runs in the browser with localStorage.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command        | Description                |
+|----------------|----------------------------|
+| `npm run dev`  | Start dev server (port 3000) |
+| `npm run build`| Static export → `out/`      |
+| `npm run start`| Serve production build     |
+| `npm run lint` | Run ESLint                 |
+| `npm test`     | Run Vitest                 |
 
-## Learn More
+## Deploy to GitHub Pages
 
-To learn more about Next.js, take a look at the following resources:
+The app is set up to deploy to **https://&lt;username&gt;.github.io/namesy/** via GitHub Actions.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Enable GitHub Pages (Actions)**
+   - In your repo: **Settings → Pages**
+   - Under **Build and deployment**, set **Source** to **GitHub Actions**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. **Push to `main`**
+   - Each push to `main` runs the workflow, builds the static site with base path `/namesy`, and deploys to GitHub Pages.
+   - After the first successful run, the site is available at:
+     - **https://appledonkey.github.io/namesy/**
 
-## Deploy on Vercel
+3. **Manual run**
+   - **Actions → Deploy to GitHub Pages → Run workflow** (no need to push)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Local builds (`npm run build`) do not use the base path, so they work as usual for Vercel, Capacitor, or local static hosting.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Tech Stack
+
+- **Next.js 16** (App Router, static export)
+- **React 19**, **TypeScript**, **Tailwind CSS v4**, **Framer Motion**
+- State: **localStorage** (no backend)
+- Deploy: **GitHub Pages** or **Vercel**
+
+## License
+
+Private / unlicensed unless stated otherwise.

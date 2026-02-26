@@ -27,6 +27,13 @@ const meowScript = Meow_Script({
   weight: "400",
 });
 
+// GitHub Pages: app is at https://appledonkey.github.io/namesy/
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const baseUrl = basePath
+  ? "https://appledonkey.github.io"
+  : "https://namesy.app";
+const fullBaseUrl = basePath ? `${baseUrl}${basePath}` : baseUrl;
+
 export const metadata: Metadata = {
   title: {
     default: "Namesy - Find the Perfect Baby Name",
@@ -48,14 +55,14 @@ export const metadata: Metadata = {
   authors: [{ name: "Namesy" }],
   creator: "Namesy",
   publisher: "Namesy",
-  metadataBase: new URL("https://namesy.app"),
+  metadataBase: new URL(fullBaseUrl),
   alternates: {
-    canonical: "/",
+    canonical: basePath ? `${basePath}/` : "/",
   },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://namesy.app",
+    url: fullBaseUrl,
     siteName: "Namesy",
     title: "Namesy - Find the Perfect Baby Name",
     description:
@@ -89,14 +96,6 @@ const websiteSchema = {
   url: "https://namesy.app",
   description:
     "Find the perfect baby name with comprehensive insights, popularity trends, and meaning origins.",
-  potentialAction: {
-    "@type": "SearchAction",
-    target: {
-      "@type": "EntryPoint",
-      urlTemplate: "https://namesy.app/browse?q={search_term_string}",
-    },
-    "query-input": "required name=search_term_string",
-  },
 };
 
 const organizationSchema = {
@@ -133,9 +132,9 @@ export default function RootLayout({
         {/* PWA meta tags */}
         <meta name="theme-color" content="#E8A0A0" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#1A1614" media="(prefers-color-scheme: dark)" />
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" href="/icon.png" />
-        <link rel="apple-touch-icon" href="/icon.png" />
+        <link rel="manifest" href={`${basePath}/manifest.json`} />
+        <link rel="icon" href={`${basePath}/icon.png`} />
+        <link rel="apple-touch-icon" href={`${basePath}/icon.png`} />
         <meta name="apple-mobile-web-app-title" content="Namesy" />
         {/* iOS web app meta tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />

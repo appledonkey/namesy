@@ -269,7 +269,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     <div>
                       <h2 className="font-heading text-2xl mb-2">Share your code</h2>
                       <p className="text-muted text-sm">
-                        Your partner enters this to join your session
+                        Pass the phone to your partner—they enter this code on the same device to add their likes. Matches appear when you both like a name.
                       </p>
                     </div>
 
@@ -329,7 +329,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     <div>
                       <h2 className="font-heading text-2xl mb-2">Enter their code</h2>
                       <p className="text-muted text-sm">
-                        Join your partner&apos;s session
+                        Enter the code your partner shared. Your likes will be stored on this device and matched with theirs.
                       </p>
                     </div>
 

@@ -9,9 +9,10 @@ interface NavLink {
   label: string;
 }
 
+// Only include routes that exist (app/page.tsx, app/privacy/page.tsx)
 const navLinks: NavLink[] = [
-  { href: "/browse", label: "Browse Names" },
-  { href: "/builder", label: "Name Builder" },
+  { href: "/", label: "Home" },
+  { href: "/privacy", label: "Privacy" },
 ];
 
 interface NavBarProps {

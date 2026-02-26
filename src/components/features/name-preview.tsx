@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Pin, PinOff } from "lucide-react";
 import { isBadAcronym, getInitials, hasRhyme, hasDuplicateNames } from "@/lib/analysis";
 import { calcTeasingResistance } from "@/lib/name-analysis";
+import { analyzeNameFlow } from "@/lib/name-flow";
 
 interface NamePreviewProps {
   cardFirstName: string;
@@ -79,6 +80,16 @@ export const NamePreview = memo(function NamePreview({
     }
 
     return result;
+  }, [displayFirstName, middleName, surname]);
+
+  // Name flow (when we have at least first + one other part)
+  const flowAnalysis = useMemo(() => {
+    const last = surname?.trim();
+    const middle = middleName?.trim();
+    if (!displayFirstName?.trim()) return null;
+    if (last) return analyzeNameFlow(displayFirstName.trim(), last, middle || undefined);
+    if (middle) return analyzeNameFlow(displayFirstName.trim(), middle, undefined);
+    return null;
   }, [displayFirstName, middleName, surname]);
 
   // Key for first name slot — stable when locked or typing
@@ -234,6 +245,25 @@ export const NamePreview = memo(function NamePreview({
           ))}
         </span>
       </div>
+
+      {/* Flow rating — when we have first + another part */}
+      {flowAnalysis && (
+        <p
+          className={`text-xs sm:text-sm mt-1.5 ${
+            flowAnalysis.rating === "excellent" || flowAnalysis.rating === "good"
+              ? "text-success"
+              : flowAnalysis.rating === "fair"
+                ? "text-muted"
+                : "text-warning"
+          }`}
+          aria-live="polite"
+        >
+          {flowAnalysis.rating === "excellent" && "Flows beautifully"}
+          {flowAnalysis.rating === "good" && "Flows well"}
+          {flowAnalysis.rating === "fair" && "Flows okay"}
+          {flowAnalysis.rating === "poor" && "Consider reordering or alternatives"}
+        </p>
+      )}
 
       {/* Warning pills — render statically, recalculate via useMemo */}
       {warnings.length > 0 && (

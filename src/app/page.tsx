@@ -26,6 +26,7 @@ import { FlipCard } from "@/components/features/flip-card";
 
 type Screen = "swipe" | "matches";
 type Partner = 1 | 2;
+type LikesView = "all" | "matches";
 
 // Helper functions moved outside component to avoid recreation on each render
 const getTrendIcon = (trend: string) => {
@@ -51,6 +52,7 @@ export default function Home() {
   const [buttonSwipe, setButtonSwipe] = useState<"left" | "right" | "up" | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [likesView, setLikesView] = useState<LikesView>("all");
 
   // Load state from localStorage on mount
   useEffect(() => {
@@ -100,7 +102,7 @@ export default function Home() {
     }
 
     return shuffleWithSeed(filtered, appState.shuffleSeed);
-  }, [appState?.shuffleSeed, appState?.genderFilter]);
+  }, [appState, namesData]);
 
   // Get matches as NameData objects
   const matchedNames = useMemo(() => {
@@ -108,7 +110,7 @@ export default function Home() {
     return appState.matches
       .map((id) => namesData.find((n) => n.id === id))
       .filter((n): n is NameData => n !== undefined);
-  }, [appState?.matches]);
+  }, [appState, namesData]);
 
   // Get Partner 1 likes as NameData objects
   const partner1Likes = useMemo(() => {
@@ -116,7 +118,7 @@ export default function Home() {
     return appState.partner1.likes
       .map((id) => namesData.find((n) => n.id === id))
       .filter((n): n is NameData => n !== undefined);
-  }, [appState?.partner1.likes]);
+  }, [appState, namesData]);
 
   // Get Partner 2 likes as NameData objects
   const partner2Likes = useMemo(() => {
@@ -124,13 +126,13 @@ export default function Home() {
     return appState.partner2.likes
       .map((id) => namesData.find((n) => n.id === id))
       .filter((n): n is NameData => n !== undefined);
-  }, [appState?.partner2.likes]);
+  }, [appState, namesData]);
 
   // Set of match IDs for quick lookup
   const matchSet = useMemo(() => {
     if (!appState) return new Set<string>();
     return new Set(appState.matches);
-  }, [appState?.matches]);
+  }, [appState]);
 
   const currentState = appState
     ? activePartner === 1
@@ -348,6 +350,36 @@ export default function Home() {
             <div className="flex items-center gap-2">
               <Image src="/icon.png" alt="Namesy" width={24} height={24} className="rounded-lg sm:w-7 sm:h-7" />
               <span className="font-heading text-lg sm:text-xl font-semibold">namesy</span>
+              {screen === "swipe" && appState.partnerMode === "partner" && (
+                <div
+                  className="ml-2 flex rounded-full bg-secondary p-0.5"
+                  role="tablist"
+                  aria-label="Switch swiping partner"
+                >
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activePartner === 1}
+                    onClick={() => { haptics.tap(); setActivePartner(1); }}
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors touch-target ${
+                      activePartner === 1 ? "bg-partner1 text-white shadow-sm" : "text-muted hover:text-foreground"
+                    }`}
+                  >
+                    P1
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activePartner === 2}
+                    onClick={() => { haptics.tap(); setActivePartner(2); }}
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors touch-target ${
+                      activePartner === 2 ? "bg-partner2 text-white shadow-sm" : "text-muted hover:text-foreground"
+                    }`}
+                  >
+                    P2
+                  </button>
+                </div>
+              )}
             </div>
           )}
           <div className="flex items-center gap-2">
@@ -355,10 +387,10 @@ export default function Home() {
               <button
                 onClick={() => setScreen("matches")}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary hover:bg-secondary-dark rounded-full transition-colors touch-target"
-                aria-label="View liked names"
+                aria-label="View likes and matches"
               >
                 <Heart className="w-4 h-4 text-partner1" fill="currentColor" />
-                <span className="text-sm font-medium">Likes</span>
+                <span className="text-sm font-medium">Likes & matches</span>
               </button>
             )}
             <button
@@ -508,80 +540,131 @@ export default function Home() {
 
         {screen === "matches" && (
           <div className="w-full max-w-lg flex-1 flex flex-col min-h-0 safe-bottom pt-2">
-            {/* Column headers */}
-            <div className="flex-shrink-0 flex gap-2 mb-3">
-              <div className="flex-1 text-center">
-                <span className="text-sm font-medium text-muted">Partner 1</span>
+            {/* Filter: All likes vs Matches only (when partner mode and has matches) */}
+            {appState.partnerMode === "partner" && matchedNames.length > 0 && (
+              <div className="flex-shrink-0 flex rounded-full bg-secondary p-0.5 mb-3" role="tablist" aria-label="Filter likes view">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={likesView === "all"}
+                  onClick={() => { haptics.tap(); setLikesView("all"); }}
+                  className={`flex-1 rounded-full py-2 text-sm font-medium transition-colors touch-target ${
+                    likesView === "all" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  All likes
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={likesView === "matches"}
+                  onClick={() => { haptics.tap(); setLikesView("matches"); }}
+                  className={`flex-1 rounded-full py-2 text-sm font-medium transition-colors touch-target flex items-center justify-center gap-1.5 ${
+                    likesView === "matches" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  <Heart className="w-4 h-4 text-partner1" fill="currentColor" />
+                  Matches ({matchedNames.length})
+                </button>
               </div>
-              <div className="flex-1 text-center">
-                <span className="text-sm font-medium text-muted">Partner 2</span>
-              </div>
-            </div>
+            )}
 
-            {/* Two-column layout */}
-            <div className="flex-1 flex gap-2 min-h-0">
-              {/* Partner 1 column */}
+            {likesView === "matches" && appState.partnerMode === "partner" ? (
+              /* Single list: matches only */
               <div className="flex-1 overflow-y-auto scrollbar-hide">
-                {partner1Likes.length === 0 ? (
-                  <p className="text-center text-muted text-sm py-4">No likes yet</p>
-                ) : (
-                  <ul className="space-y-2 pb-4">
-                    {partner1Likes.map((name) => (
-                      <li
-                        key={name.id}
-                        className={`flex items-center gap-2 p-2.5 bg-card rounded-xl shadow-sm ${
-                          matchSet.has(name.id) ? "ring-1 ring-partner1/30" : ""
+                <ul className="space-y-2 pb-4">
+                  {matchedNames.map((name) => (
+                    <li
+                      key={name.id}
+                      className="flex items-center gap-2 p-2.5 bg-card rounded-xl shadow-sm ring-1 ring-partner1/30"
+                    >
+                      <div
+                        className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                          name.gender === "F" ? "bg-gender-girl" :
+                          name.gender === "M" ? "bg-gender-boy" : "bg-muted"
                         }`}
-                      >
-                        <div
-                          className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                            name.gender === "F" ? "bg-gender-girl" :
-                            name.gender === "M" ? "bg-gender-boy" : "bg-muted"
-                          }`}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-heading text-base truncate">{name.name}</p>
-                        </div>
-                        {matchSet.has(name.id) && (
-                          <Heart className="w-4 h-4 text-partner1 flex-shrink-0" fill="currentColor" />
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-heading text-base truncate">{name.name}</p>
+                      </div>
+                      <Heart className="w-4 h-4 text-partner1 flex-shrink-0" fill="currentColor" />
+                    </li>
+                  ))}
+                </ul>
               </div>
-
-              {/* Partner 2 column */}
-              <div className="flex-1 overflow-y-auto scrollbar-hide">
-                {partner2Likes.length === 0 ? (
-                  <p className="text-center text-muted text-sm py-4">No likes yet</p>
-                ) : (
-                  <ul className="space-y-2 pb-4">
-                    {partner2Likes.map((name) => (
-                      <li
-                        key={name.id}
-                        className={`flex items-center gap-2 p-2.5 bg-card rounded-xl shadow-sm ${
-                          matchSet.has(name.id) ? "ring-1 ring-partner1/30" : ""
-                        }`}
-                      >
-                        <div
-                          className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                            name.gender === "F" ? "bg-gender-girl" :
-                            name.gender === "M" ? "bg-gender-boy" : "bg-muted"
-                          }`}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-heading text-base truncate">{name.name}</p>
-                        </div>
-                        {matchSet.has(name.id) && (
-                          <Heart className="w-4 h-4 text-partner1 flex-shrink-0" fill="currentColor" />
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
+            ) : (
+              /* Two-column layout: Partner 1 | Partner 2 */
+              <>
+                <div className="flex-shrink-0 flex gap-2 mb-3">
+                  <div className="flex-1 text-center">
+                    <span className="text-sm font-medium text-muted">Partner 1</span>
+                  </div>
+                  <div className="flex-1 text-center">
+                    <span className="text-sm font-medium text-muted">Partner 2</span>
+                  </div>
+                </div>
+                <div className="flex-1 flex gap-2 min-h-0">
+                  <div className="flex-1 overflow-y-auto scrollbar-hide">
+                    {partner1Likes.length === 0 ? (
+                      <p className="text-center text-muted text-sm py-4">No likes yet</p>
+                    ) : (
+                      <ul className="space-y-2 pb-4">
+                        {partner1Likes.map((name) => (
+                          <li
+                            key={name.id}
+                            className={`flex items-center gap-2 p-2.5 bg-card rounded-xl shadow-sm ${
+                              matchSet.has(name.id) ? "ring-1 ring-partner1/30" : ""
+                            }`}
+                          >
+                            <div
+                              className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                name.gender === "F" ? "bg-gender-girl" :
+                                name.gender === "M" ? "bg-gender-boy" : "bg-muted"
+                              }`}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-heading text-base truncate">{name.name}</p>
+                            </div>
+                            {matchSet.has(name.id) && (
+                              <Heart className="w-4 h-4 text-partner1 flex-shrink-0" fill="currentColor" />
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div className="flex-1 overflow-y-auto scrollbar-hide">
+                    {partner2Likes.length === 0 ? (
+                      <p className="text-center text-muted text-sm py-4">No likes yet</p>
+                    ) : (
+                      <ul className="space-y-2 pb-4">
+                        {partner2Likes.map((name) => (
+                          <li
+                            key={name.id}
+                            className={`flex items-center gap-2 p-2.5 bg-card rounded-xl shadow-sm ${
+                              matchSet.has(name.id) ? "ring-1 ring-partner1/30" : ""
+                            }`}
+                          >
+                            <div
+                              className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                name.gender === "F" ? "bg-gender-girl" :
+                                name.gender === "M" ? "bg-gender-boy" : "bg-muted"
+                              }`}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-heading text-base truncate">{name.name}</p>
+                            </div>
+                            {matchSet.has(name.id) && (
+                              <Heart className="w-4 h-4 text-partner1 flex-shrink-0" fill="currentColor" />
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
       </main>

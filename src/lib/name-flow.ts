@@ -11,9 +11,7 @@ export interface FlowAnalysis {
 }
 
 // Vowel and consonant patterns
-const VOWELS = /[aeiou]/gi;
 const HARD_ENDINGS = /[ktpbdg]$/i;
-const SOFT_ENDINGS = /[aeiounlrsy]$/i;
 
 /**
  * Count syllables in a word (approximation)
@@ -67,7 +65,6 @@ function hasRhymingEndings(names: string[]): boolean {
  */
 function analyzeRhythm(names: string[]): { pattern: number[]; isBalanced: boolean } {
   const pattern = names.map(countSyllables);
-  const total = pattern.reduce((a, b) => a + b, 0);
 
   // Good rhythm: varied syllables, not all the same
   const uniqueCounts = new Set(pattern).size;

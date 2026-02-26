@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Copy, Check, AlertTriangle, Sun, Monitor, Moon } from "lucide-react";
+import { X, Copy, Check, AlertTriangle, Sun, Monitor, Moon, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
@@ -46,7 +47,7 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
     setSessionCode(appState.sessionCode || "");
     setHapticEnabled(appState.settings.hapticEnabled);
     setTheme(appState.settings.theme || "system");
-  }, [appState]);
+  }, [appState.surname, appState.middleName, appState.genderFilter, appState.sessionCode, appState.settings.hapticEnabled, appState.settings.theme]);
 
   const handleSurnameBlur = () => {
     if (surname !== (appState.surname || "")) {
@@ -399,6 +400,16 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
 
                 {/* Divider */}
                 <div className="border-t border-border" />
+
+                {/* Privacy */}
+                <Link
+                  href="/privacy"
+                  className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
+                  onClick={onClose}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Privacy policy
+                </Link>
 
                 {/* Reset */}
                 <div>
