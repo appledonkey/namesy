@@ -1,7 +1,7 @@
 import { forwardRef, ButtonHTMLAttributes } from "react";
 
 type ButtonVariant = "primary" | "secondary" | "ghost";
-type ButtonSize = "sm" | "md" | "lg";
+type ButtonSize = "sm" | "md" | "lg" | "icon";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -21,6 +21,7 @@ const sizeStyles: Record<ButtonSize, string> = {
   sm: "h-9 px-4 text-xs",
   md: "h-11 px-6 text-sm",
   lg: "h-14 px-8 text-base",
+  icon: "h-10 w-10 p-0",
 };
 
 /**
@@ -29,12 +30,14 @@ const sizeStyles: Record<ButtonSize, string> = {
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className = "", variant = "primary", size = "md", children, ...props }, ref) => {
+    const isIcon = size === "icon";
     return (
       <button
         ref={ref}
         className={`
           inline-flex items-center justify-center
-          rounded-full font-heading font-medium uppercase tracking-widest
+          rounded-full
+          ${isIcon ? "" : "font-heading font-medium uppercase tracking-widest"}
           transition-all duration-300 ease-out
           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
           disabled:pointer-events-none disabled:opacity-50

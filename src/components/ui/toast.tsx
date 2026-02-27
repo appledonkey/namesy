@@ -30,7 +30,7 @@ export function Toast({ message, type = "success", duration = 3000, onDismiss }:
       initial={{ opacity: 0, y: 50, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 20, scale: 0.9 }}
-      className={`fixed bottom-20 left-1/2 -translate-x-1/2 z-50 ${bgColor} text-white px-4 py-3 rounded-full shadow-lg flex items-center gap-2 safe-bottom`}
+      className={`fixed bottom-20 left-1/2 -translate-x-1/2 z-50 ${bgColor} text-white px-4 py-3 rounded-full shadow-[var(--shadow-lg)] flex items-center gap-2 safe-bottom`}
     >
       <Icon className="w-5 h-5 flex-shrink-0" />
       <span className="text-sm font-medium whitespace-nowrap">{message}</span>

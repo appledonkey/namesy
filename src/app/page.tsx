@@ -23,6 +23,7 @@ import { SettingsSheet } from "@/components/features/settings-sheet";
 import { NamePreview } from "@/components/features/name-preview";
 import { SwipeTutorial } from "@/components/features/swipe-tutorial";
 import { FlipCard } from "@/components/features/flip-card";
+import { Button } from "@/components/ui/button";
 
 type Screen = "swipe" | "matches";
 type Partner = 1 | 2;
@@ -338,14 +339,16 @@ export default function Home() {
       <header className="flex-shrink-0 px-4 pt-3 pb-2 sm:pt-5 sm:pb-3">
         <div className="max-w-xl mx-auto flex items-center justify-between">
           {screen === "matches" ? (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setScreen("swipe")}
-              className="flex items-center gap-1 text-muted hover:text-foreground transition-colors touch-target"
               aria-label="Go back to swipe screen"
+              className="normal-case tracking-normal gap-1 px-2"
             >
               <ChevronLeft className="w-5 h-5" />
               <span className="text-sm">Back</span>
-            </button>
+            </Button>
           ) : (
             <div className="flex items-center gap-2">
               <Image src="/icon.png" alt="Namesy" width={24} height={24} className="rounded-lg sm:w-7 sm:h-7" />
@@ -362,7 +365,7 @@ export default function Home() {
                     aria-selected={activePartner === 1}
                     onClick={() => { haptics.tap(); setActivePartner(1); }}
                     className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors touch-target ${
-                      activePartner === 1 ? "bg-partner1 text-white shadow-sm" : "text-muted hover:text-foreground"
+                      activePartner === 1 ? "bg-partner1 text-white shadow-[var(--shadow-sm)]" : "text-muted hover:text-foreground"
                     }`}
                   >
                     P1
@@ -373,7 +376,7 @@ export default function Home() {
                     aria-selected={activePartner === 2}
                     onClick={() => { haptics.tap(); setActivePartner(2); }}
                     className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors touch-target ${
-                      activePartner === 2 ? "bg-partner2 text-white shadow-sm" : "text-muted hover:text-foreground"
+                      activePartner === 2 ? "bg-partner2 text-white shadow-[var(--shadow-sm)]" : "text-muted hover:text-foreground"
                     }`}
                   >
                     P2
@@ -393,14 +396,17 @@ export default function Home() {
                 <span className="text-sm font-medium">Likes & matches</span>
               </button>
             )}
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setShowTutorial(true)}
-              className="w-10 h-10 flex items-center justify-center text-muted hover:text-foreground transition-colors touch-target"
               aria-label="How to use"
             >
               <HelpCircle className="w-4 h-4" />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => {
                 const current = appState.settings.theme;
                 let next: ThemePreference;
@@ -414,7 +420,6 @@ export default function Home() {
                 const newState = updateSettings({ theme: next });
                 setAppState(newState);
               }}
-              className="w-10 h-10 flex items-center justify-center text-muted hover:text-foreground transition-colors touch-target"
               aria-label="Toggle theme"
             >
               {(appState.settings.theme === "dark" ||
@@ -423,20 +428,21 @@ export default function Home() {
                   window.matchMedia("(prefers-color-scheme: dark)").matches))
                 ? <Moon className="w-4 h-4" />
                 : <Sun className="w-4 h-4" />}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setShowSettings(true)}
-              className="w-10 h-10 flex items-center justify-center text-muted hover:text-foreground transition-colors touch-target"
               aria-label="Open settings"
             >
               <Settings className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center px-6 py-3 sm:py-6">
+      <main className="flex-1 flex flex-col items-center px-5 sm:px-6 py-3 sm:py-6">
         {screen === "swipe" && (
           <div className="w-full max-w-sm flex flex-col items-center flex-1 min-h-0">
             {isFinished || !currentName ? (
@@ -506,7 +512,7 @@ export default function Home() {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     disabled={isFlipped || isAnimating}
-                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-card border-2 border-partner1/30 text-partner1 flex items-center justify-center shadow-md hover:border-partner1 transition-colors disabled:opacity-40 touch-target"
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-card border-2 border-partner1/30 text-partner1 flex items-center justify-center shadow-[var(--shadow-md)] hover:border-partner1 transition-colors disabled:opacity-40 touch-target"
                     aria-label="Pass on this name"
                   >
                     <X className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2.5} />
@@ -517,7 +523,7 @@ export default function Home() {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     disabled={isFlipped || isAnimating}
-                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-card border-2 border-accent/30 text-accent flex items-center justify-center shadow-md hover:border-accent transition-colors disabled:opacity-40 touch-target"
+                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-card border-2 border-accent/30 text-accent flex items-center justify-center shadow-[var(--shadow-md)] hover:border-accent transition-colors disabled:opacity-40 touch-target"
                     aria-label="Use as middle name"
                   >
                     <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -527,7 +533,7 @@ export default function Home() {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     disabled={isFlipped || isAnimating}
-                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-card border-2 border-partner2/30 text-partner2 flex items-center justify-center shadow-md hover:border-partner2 transition-colors disabled:opacity-40 touch-target"
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-card border-2 border-partner2/30 text-partner2 flex items-center justify-center shadow-[var(--shadow-md)] hover:border-partner2 transition-colors disabled:opacity-40 touch-target"
                     aria-label="Like this name"
                   >
                     <Heart className="w-6 h-6 sm:w-7 sm:h-7" />
@@ -549,7 +555,7 @@ export default function Home() {
                   aria-selected={likesView === "all"}
                   onClick={() => { haptics.tap(); setLikesView("all"); }}
                   className={`flex-1 rounded-full py-2 text-sm font-medium transition-colors touch-target ${
-                    likesView === "all" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"
+                    likesView === "all" ? "bg-card text-foreground shadow-[var(--shadow-sm)]" : "text-muted hover:text-foreground"
                   }`}
                 >
                   All likes
@@ -560,7 +566,7 @@ export default function Home() {
                   aria-selected={likesView === "matches"}
                   onClick={() => { haptics.tap(); setLikesView("matches"); }}
                   className={`flex-1 rounded-full py-2 text-sm font-medium transition-colors touch-target flex items-center justify-center gap-1.5 ${
-                    likesView === "matches" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"
+                    likesView === "matches" ? "bg-card text-foreground shadow-[var(--shadow-sm)]" : "text-muted hover:text-foreground"
                   }`}
                 >
                   <Heart className="w-4 h-4 text-partner1" fill="currentColor" />
@@ -576,7 +582,7 @@ export default function Home() {
                   {matchedNames.map((name) => (
                     <li
                       key={name.id}
-                      className="flex items-center gap-2 p-2.5 bg-card rounded-xl shadow-sm ring-1 ring-partner1/30"
+                      className="flex items-center gap-2 p-2.5 bg-card rounded-xl shadow-[var(--shadow-sm)] ring-1 ring-partner1/30"
                     >
                       <div
                         className={`w-2 h-2 rounded-full flex-shrink-0 ${
@@ -612,7 +618,7 @@ export default function Home() {
                         {partner1Likes.map((name) => (
                           <li
                             key={name.id}
-                            className={`flex items-center gap-2 p-2.5 bg-card rounded-xl shadow-sm ${
+                            className={`flex items-center gap-2 p-2.5 bg-card rounded-xl shadow-[var(--shadow-sm)] ${
                               matchSet.has(name.id) ? "ring-1 ring-partner1/30" : ""
                             }`}
                           >
@@ -641,7 +647,7 @@ export default function Home() {
                         {partner2Likes.map((name) => (
                           <li
                             key={name.id}
-                            className={`flex items-center gap-2 p-2.5 bg-card rounded-xl shadow-sm ${
+                            className={`flex items-center gap-2 p-2.5 bg-card rounded-xl shadow-[var(--shadow-sm)] ${
                               matchSet.has(name.id) ? "ring-1 ring-partner1/30" : ""
                             }`}
                           >
@@ -682,7 +688,7 @@ export default function Home() {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-card p-8 sm:p-10 rounded-3xl text-center shadow-xl mx-4 max-w-[280px] sm:max-w-none"
+              className="bg-card p-8 sm:p-10 rounded-3xl text-center shadow-[var(--shadow-xl)] mx-4 max-w-[280px] sm:max-w-none"
               style={{
                 background: "var(--match-gradient)",
               }}

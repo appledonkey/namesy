@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { Heart, X } from "lucide-react";
 import { haptics } from "@/lib/haptics";
+import { Button } from "@/components/ui/button";
 import { markTutorialSeen } from "@/lib/partner-storage";
 
 interface SwipeTutorialProps {
@@ -99,7 +100,7 @@ export function SwipeTutorial({ onComplete }: SwipeTutorialProps) {
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-card rounded-3xl p-6 sm:p-8 max-w-[320px] w-full text-center shadow-xl"
+        className="bg-card rounded-3xl p-6 sm:p-8 max-w-[320px] w-full text-center shadow-[var(--shadow-xl)]"
       >
         <h2 className="font-heading text-2xl mb-2">How to swipe</h2>
         <p className="text-muted text-sm mb-6">Swipe to rate names</p>
@@ -130,7 +131,7 @@ export function SwipeTutorial({ onComplete }: SwipeTutorialProps) {
 
           {/* Demo card */}
           <motion.div
-            className="absolute top-10 left-1/2 -translate-x-1/2 w-32 h-32 bg-secondary rounded-2xl shadow-lg flex items-center justify-center"
+            className="absolute top-10 left-1/2 -translate-x-1/2 w-32 h-32 bg-secondary rounded-2xl shadow-[var(--shadow-lg)] flex items-center justify-center"
             style={{ x: demoX, y: demoY, rotate: demoRotate }}
           >
             <span className="font-heading text-2xl text-foreground">Emma</span>
@@ -159,12 +160,9 @@ export function SwipeTutorial({ onComplete }: SwipeTutorialProps) {
           </div>
         </div>
 
-        <button
-          onClick={handleComplete}
-          className="w-full py-3 bg-primary hover:bg-primary-light text-white font-medium rounded-full transition-colors touch-target"
-        >
+        <Button variant="primary" size="lg" onClick={handleComplete} className="w-full">
           Got it!
-        </button>
+        </Button>
       </motion.div>
     </motion.div>
   );

@@ -161,13 +161,15 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
               {/* Header */}
               <div className="flex items-center justify-between px-5 sm:px-6 pb-4 border-b border-border">
                 <h2 className="font-heading text-xl">Settings</h2>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={onClose}
-                  className="p-2.5 -mr-2 text-muted hover:text-foreground transition-colors touch-target"
                   aria-label="Close settings"
+                  className="-mr-2"
                 >
                   <X className="w-5 h-5" />
-                </button>
+                </Button>
               </div>
 
               {/* Content */}
@@ -192,7 +194,7 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
                       aria-label="Toggle haptic feedback"
                     >
                       <motion.div
-                        className="absolute top-1 left-1 w-5 h-5 bg-background rounded-full shadow-sm"
+                        className="absolute top-1 left-1 w-5 h-5 bg-background rounded-full shadow-[var(--shadow-sm)]"
                         animate={{ x: hapticEnabled ? 20 : 0 }}
                         transition={{ type: "spring", stiffness: 500, damping: 30 }}
                       />
