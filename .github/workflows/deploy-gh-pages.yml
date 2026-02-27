@@ -1,4 +1,4 @@
-# Build and deploy Namesy to GitHub Pages (https://appledonkey.github.io/namesy/)
+# Build and deploy Namesy to GitHub Pages (https://namesy.io)
 # Docs: https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site
 
 name: Deploy to GitHub Pages
@@ -34,17 +34,7 @@ jobs:
         run: npm ci
 
       - name: Build for GitHub Pages
-        env:
-          NEXT_PUBLIC_BASE_PATH: "/namesy"
         run: npm run build
-
-      - name: Patch manifest for subpath
-        run: |
-          MANIFEST="out/manifest.json"
-          if [ -f "$MANIFEST" ]; then
-            sed -i 's|"start_url":"/"|"start_url":"/namesy/"|g' "$MANIFEST"
-            sed -i 's|"/icon|"/namesy/icon|g' "$MANIFEST"
-          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
