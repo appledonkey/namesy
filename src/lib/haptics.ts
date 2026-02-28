@@ -3,8 +3,6 @@
  * Uses the Vibration API where available
  */
 
-import { getAppState } from "./partner-storage";
-
 type HapticType = 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error' | 'selection';
 
 const patterns: Record<HapticType, number[]> = {
@@ -17,30 +15,44 @@ const patterns: Record<HapticType, number[]> = {
   selection: [5],
 };
 
+// Cached haptic enabled state — avoids parsing localStorage JSON on every haptic call
+let cachedEnabled: boolean | null = null;
+
 /**
- * Check if haptics are enabled in settings
+ * Update the cached haptic enabled state.
+ * Call this when settings change.
+ */
+export function setHapticEnabled(enabled: boolean): void {
+  cachedEnabled = enabled;
+}
+
+/**
+ * Check if haptics are enabled (reads cache, falls back to localStorage once)
  */
 function isHapticEnabled(): boolean {
+  if (cachedEnabled !== null) return cachedEnabled;
   if (typeof window === 'undefined') return true;
   try {
-    const state = getAppState();
-    return state.settings.hapticEnabled;
+    const raw = localStorage.getItem("namesy-partner-app");
+    if (raw) {
+      const state = JSON.parse(raw);
+      cachedEnabled = state?.settings?.hapticEnabled ?? true;
+    } else {
+      cachedEnabled = true;
+    }
   } catch {
-    return true; // Default to enabled if settings can't be read
+    cachedEnabled = true;
   }
+  return cachedEnabled!;
 }
 
 /**
  * Trigger haptic feedback on supported devices
  */
 export function haptic(type: HapticType = 'light'): void {
-  // Only run on client side
   if (typeof window === 'undefined') return;
-
-  // Check if haptics are enabled in settings
   if (!isHapticEnabled()) return;
 
-  // Check if vibration API is available
   if ('vibrate' in navigator) {
     try {
       navigator.vibrate(patterns[type]);

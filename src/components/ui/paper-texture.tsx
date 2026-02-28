@@ -1,12 +1,12 @@
 /**
  * PaperTexture - SVG noise overlay that creates a warm, tactile paper-like feel.
- * This is a critical design element that transforms the digital interface into
- * something that feels hand-touched and organic.
+ * Uses z-0 so it sits behind interactive content and modals (z-40/z-50).
+ * Static layer — no animation, so no compositing cost during swipe animations.
  */
 export function PaperTexture() {
   return (
     <div
-      className="pointer-events-none fixed inset-0 z-50 opacity-[0.015]"
+      className="pointer-events-none fixed inset-0 z-0 opacity-[0.015]"
       aria-hidden="true"
       style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,

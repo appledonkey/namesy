@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
-import { Heart, X, ChevronUp, ChevronLeft, TrendingUp, TrendingDown, Minus, Settings, Sun, Moon, HelpCircle } from "lucide-react";
+import { Heart, X, ChevronUp, ChevronLeft, TrendingUp, TrendingDown, Minus, Settings } from "lucide-react";
 import { namesData, type NameData } from "@/lib/names";
 import { haptics } from "@/lib/haptics";
 import {
@@ -12,11 +12,8 @@ import {
   shuffleWithSeed,
   updateOnboardingSettings,
   advanceIndex,
-  updateSettings,
   updateLockedNames,
-  applyTheme,
   type AppState,
-  type ThemePreference,
 } from "@/lib/partner-storage";
 import { Onboarding } from "@/components/features/onboarding";
 import { SettingsSheet } from "@/components/features/settings-sheet";
@@ -385,50 +382,17 @@ export default function Home() {
               )}
             </div>
           )}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             {screen === "swipe" && (
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setScreen("matches")}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary hover:bg-secondary-dark rounded-full transition-colors touch-target"
                 aria-label="View likes and matches"
               >
-                <Heart className="w-4 h-4 text-partner1" fill="currentColor" />
-                <span className="text-sm font-medium">Likes & matches</span>
-              </button>
+                <Heart className="w-5 h-5 text-partner1" fill="currentColor" />
+              </Button>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowTutorial(true)}
-              aria-label="How to use"
-            >
-              <HelpCircle className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                const current = appState.settings.theme;
-                let next: ThemePreference;
-                if (current === "system") {
-                  const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-                  next = isDark ? "light" : "dark";
-                } else {
-                  next = current === "dark" ? "light" : "dark";
-                }
-                applyTheme(next);
-                const newState = updateSettings({ theme: next });
-                setAppState(newState);
-              }}
-              aria-label="Toggle theme"
-            >
-              {(appState.settings.theme === "dark" ||
-                (appState.settings.theme === "system" &&
-                  typeof window !== "undefined" &&
-                  window.matchMedia("(prefers-color-scheme: dark)").matches))
-                ? <Moon className="w-4 h-4" />
-                : <Sun className="w-4 h-4" />}
-            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -505,8 +469,13 @@ export default function Home() {
                     })}
                 </div>
 
+                {/* Progress counter */}
+                <p className="flex-shrink-0 text-[10px] text-muted/50 mt-2 sm:mt-4 tabular-nums">
+                  {currentState!.currentIndex + 1} of {namePool.length}
+                </p>
+
                 {/* Action Buttons */}
-                <div className="flex-shrink-0 flex items-center gap-4 sm:gap-6 mt-4 sm:mt-8 safe-bottom pb-4">
+                <div className="flex-shrink-0 flex items-center gap-4 sm:gap-6 mt-2 sm:mt-4 safe-bottom pb-4">
                   <motion.button
                     onClick={() => handleButtonSwipe("left")}
                     whileHover={{ scale: 1.1 }}

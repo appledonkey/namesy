@@ -7,7 +7,7 @@ import { X, Copy, Check, AlertTriangle, Sun, Monitor, Moon, ExternalLink } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
-import { haptics } from "@/lib/haptics";
+import { haptics, setHapticEnabled as updateHapticCache } from "@/lib/haptics";
 import {
   updateOnboardingSettings,
   updateSettings,
@@ -75,6 +75,7 @@ export function SettingsSheet({ isOpen, onClose, appState, onStateChange }: Sett
   const handleHapticToggle = () => {
     const newEnabled = !hapticEnabled;
     setHapticEnabled(newEnabled);
+    updateHapticCache(newEnabled);
     const newState = updateSettings({ hapticEnabled: newEnabled });
     onStateChange(newState);
     if (newEnabled) {
