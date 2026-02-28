@@ -292,12 +292,6 @@ export default function Home() {
             setIsFlipped(!isFlipped);
           }
           break;
-        case "1":
-          setActivePartner(1);
-          break;
-        case "2":
-          setActivePartner(2);
-          break;
       }
     };
 
@@ -350,36 +344,6 @@ export default function Home() {
             <div className="flex items-center gap-2">
               <Image src="/icon.png" alt="Namesy" width={24} height={24} className="rounded-lg sm:w-7 sm:h-7" />
               <span className="font-heading text-lg sm:text-xl font-semibold">namesy</span>
-              {screen === "swipe" && appState.partnerMode === "partner" && (
-                <div
-                  className="ml-2 flex rounded-full bg-secondary p-0.5"
-                  role="tablist"
-                  aria-label="Switch swiping partner"
-                >
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={activePartner === 1}
-                    onClick={() => { haptics.tap(); setActivePartner(1); }}
-                    className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors touch-target ${
-                      activePartner === 1 ? "bg-partner1 text-white shadow-[var(--shadow-sm)]" : "text-muted hover:text-foreground"
-                    }`}
-                  >
-                    P1
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={activePartner === 2}
-                    onClick={() => { haptics.tap(); setActivePartner(2); }}
-                    className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors touch-target ${
-                      activePartner === 2 ? "bg-partner2 text-white shadow-[var(--shadow-sm)]" : "text-muted hover:text-foreground"
-                    }`}
-                  >
-                    P2
-                  </button>
-                </div>
-              )}
             </div>
           )}
           <div className="flex items-center gap-1">
