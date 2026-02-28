@@ -16,18 +16,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className = "", variant = "pill", label, error, id, ...props }, ref) => {
     const inputId = id || props.name;
 
-    const variantStyles = {
-      underlined: `
-        bg-transparent border-0 border-b border-border
-        rounded-none px-0 py-3
-        focus:border-primary
-      `,
-      pill: `
-        bg-card-alt border border-transparent
-        rounded-full px-5 py-3
-        focus:border-primary focus:bg-card
-      `,
-    };
+    const isPill = variant === "pill";
 
     return (
       <div className="w-full">
@@ -42,12 +31,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           id={inputId}
+          style={isPill ? { borderRadius: "9999px" } : undefined}
           className={`
             w-full text-foreground placeholder:text-muted/60
             transition-all duration-300 ease-out
-            focus:outline-none
+            focus:outline-none focus-visible:outline-none
             disabled:cursor-not-allowed disabled:opacity-50
-            ${variantStyles[variant]}
+            ${isPill
+              ? "bg-card-alt border border-transparent px-5 py-3 focus:border-primary focus:bg-card rounded-full"
+              : "bg-transparent border-0 border-b border-border rounded-none px-0 py-3 focus:border-primary"
+            }
             ${error ? "border-accent" : ""}
             ${className}
           `}

@@ -236,8 +236,8 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.2;
 }
 
-/* Focus States - Sage green ring */
-*:focus-visible {
+/* Focus States - Sage green ring (inputs use border instead, so outline is excluded) */
+*:focus-visible:not(input):not(textarea):not(select) {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }

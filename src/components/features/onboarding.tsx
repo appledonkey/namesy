@@ -135,7 +135,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
                 <div className="space-y-4 mb-8">
                   <Input
-                    variant="underlined"
+                    variant="pill"
                     placeholder="Middle name (optional)"
                     value={middleName}
                     onChange={(e) => setMiddleName(e.target.value)}
@@ -144,7 +144,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     autoFocus
                   />
                   <Input
-                    variant="underlined"
+                    variant="pill"
                     placeholder="Surname (optional)"
                     value={surname}
                     onChange={(e) => setSurname(e.target.value)}
@@ -334,7 +334,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     </div>
 
                     <Input
-                      variant="underlined"
+                      variant="pill"
                       placeholder="e.g., MAPLE-7X3K"
                       value={joinCode}
                       onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
